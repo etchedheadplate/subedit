@@ -1,6 +1,6 @@
 import chardet
 
-class SubtitlesFile():
+class SubSync():
     def __init__(self, text_source: str, timing_source: str):
         '''
         Contructor for dictionaries with data of source subtitles files
@@ -95,5 +95,5 @@ class SubtitlesFile():
 
 
 if __name__ == '__main__':
-    input = SubtitlesFile('Breathless.srt', 'Childle.srt')
+    input = SubSync('Breathless.srt', 'Childle.srt')
     output = input.sync()
