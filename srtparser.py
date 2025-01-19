@@ -1,20 +1,52 @@
 import chardet
 
 class SubtitlesFile():
-    def __init__(self, file):
-        self.filename = str(file)
+    def __init__(self, text_source: str, timing_source: str):
+        '''
+        Contructor for dictionaries with data of source subtitles files
 
-    def detect_encoding(self):
-        with open(self.filename, 'rb') as file:
+        :param text_source: file with text that should be in corrected subtitles
+        :param timing_source: file with timing that should be in corrected subtitles
+        '''
+
+        self.text_data = self.extract_metadata(text_source)
+        self.timing_data = self.extract_metadata(timing_source)
+
+    def extract_metadata(self, source_file: str) -> dict:
+        '''
+        Extracts metadata from subtitle files. Metadata is needed for later parsing.
+
+        :param source_file: text or timing subtitles file
+        '''
+
+        with open(source_file, 'rb') as file:
             raw_data = file.read()
-            result = chardet.detect(raw_data)
-            self.encoding = result['encoding']
-            self.confidence = result['confidence']
-            self.language = result['language']
+            raw_metadata = chardet.detect(raw_data)
+            metadata = {
+                'filename': source_file,
+                'encoding': raw_metadata['encoding'],
+                'confidence': raw_metadata['confidence'],
+                'language': raw_metadata['language']
+            }
 
-    def parse(self):
-        self.detect_encoding()
-        with open(self.filename, 'r', encoding=self.encoding) as file:
+        return metadata
+
+    def parse_subtitles(self, source_data: dict) -> None:
+        '''
+        Parses subtitles and adds them to source dictionary by this template:
+
+            subtitles: {
+                index: {
+                    start: time
+                    end: time
+                    text: subtitle
+                }
+            }
+
+        :param source_data: dictionary with data of source file
+        '''
+
+        with open(source_data['filename'], 'r', encoding=source_data['encoding']) as file:
             raw_subtitles = file.readlines()
             parsed_subtitles = {}
 
@@ -42,11 +74,26 @@ class SubtitlesFile():
                     'text': '\n'.join(text_lines)
                 }
 
-            return parsed_subtitles
+            source_data['subtitles'] = parsed_subtitles
+
+    def show(self, data: dict, indent=0) -> None:
+        for key, value in data.items():
+            if isinstance(value, dict):
+                print('  ' * indent + str(key) + ':')
+                self.show(value, indent + 1)
+            else:
+                print('  ' * indent + f"{key}: {value}")
+
+    def sync(self):
+        self.parse_subtitles(self.text_data)
+        self.parse_subtitles(self.timing_data)
+
+        self.show(self.text_data)
+        self.show(self.timing_data)
+
+
 
 
 if __name__ == '__main__':
-    files = ['Breathless.srt', 'Childle.srt']
-    for file in files:
-        subtitles_file = SubtitlesFile(file)
-        print(file, subtitles_file.parse().keys(), sep='\n')
+    input = SubtitlesFile('Breathless.srt', 'Childle.srt')
+    output = input.sync()
