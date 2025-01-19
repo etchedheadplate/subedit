@@ -1,0 +1,14 @@
+# Enviroment
+/venv
+/.ropeproject
+/.zed
+.env
+
+# Junk files
+/temp
+/tmp
+**/__pycache__
+*.pyc
+*.DS_Store
+*.log
+*.srt

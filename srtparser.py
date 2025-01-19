@@ -1,62 +1,52 @@
-from __future__ import print_function
+import chardet
 
-'''
-Correct subtitles are parsed in list blocks [№, time, text] for each subtitle. All
-blocks are syntax-checked and must contain: newline '\n', number and '-->'characters.
-Finally each block is pushed in list [subtitle1, subtitle2, ...].
-'''
+class SubtitlesFile():
+    def __init__(self, file):
+        self.filename = str(file)
 
-def parse_correct(input_file):
-    corSrtIn = open(str(input_file), 'r', encoding='utf-8-sig')
+    def detect_encoding(self):
+        with open(self.filename, 'rb') as file:
+            raw_data = file.read()
+            result = chardet.detect(raw_data)
+            self.encoding = result['encoding']
+            self.confidence = result['confidence']
+            self.language = result['language']
 
-    corSrt = corSrtIn.readlines()
-    corSrt.insert(len(corSrt), '\n')
-    corSrt.insert(len(corSrt), '0')
-    corSrt.insert(len(corSrt), '-->')
+    def parse(self):
+        self.detect_encoding()
+        with open(self.filename, 'r', encoding=self.encoding) as file:
+            raw_subtitles = file.readlines()
+            parsed_subtitles = {}
 
-    corSrtParsed = list()
+            # Iterate over the file lines
+            current_line_index = 0
+            while current_line_index < len(raw_subtitles):
+                index_line = raw_subtitles[current_line_index].strip()  # Line with index e.g., '1'
 
-    corLine = 0
-    corPhraseStart = 0
+                if not index_line.isdigit():
+                    current_line_index += 1
+                    continue
 
-    for corLine in range(len(corSrt)):
-        if corSrt[corLine] == '\n':
-            if corSrt[corLine+1].strip().isdigit():
-                if '-->' in corSrt[corLine+2]:
-                    phraseStop = corLine
-                    corSrtParsed.append(corSrt[corPhraseStart:phraseStop])
-                    corPhraseStart = phraseStop+1
-        corLine += 1
+                time_code_line = raw_subtitles[current_line_index + 1].strip()  # Line with timestamps e.g., '00:00:51,590 --> 00:00:54,930'
+                text_lines = []
+                current_line_index += 2
 
-    corSrtIn.close()
-    return corSrtParsed
+                # Collect all lines of the subtitle text
+                while current_line_index < len(raw_subtitles) and raw_subtitles[current_line_index].strip() != '':
+                    text_lines.append(raw_subtitles[current_line_index].strip())
+                    current_line_index += 1
 
-'''
-Same process for incorrect subtitles
-'''
+                parsed_subtitles[index_line] = {
+                    'start': time_code_line.split(' --> ')[0],
+                    'end': time_code_line.split(' --> ')[1],
+                    'text': '\n'.join(text_lines)
+                }
 
-def parse_incorrect(input_file):
-    incorSrtIn = open(str(input_file), 'r', encoding='utf-8-sig')
+            return parsed_subtitles
 
-    incorSrt = incorSrtIn.readlines()
-    incorSrt.insert(len(incorSrt), '\n')
-    incorSrt.insert(len(incorSrt), '0')
-    incorSrt.insert(len(incorSrt), '-->')
 
-    incorSrtParsed = list()
-
-    incorLine = 0
-    incorPhraseStart = 0
-
-    for incorLine in range(len(incorSrt)):
-        if incorSrt[incorLine] == '\n':
-            if incorSrt[incorLine+1].strip().isdigit():
-                if '-->' in incorSrt[incorLine+2]:
-                    incorPhraseStop = incorLine
-                    incorSrtParsed.append(incorSrt[incorPhraseStart:incorPhraseStop])
-                    incorPhraseStart = incorPhraseStop+1
-        incorLine += 1
-
-    incorSrtIn.close()
-    return incorSrtParsed
-    
+if __name__ == '__main__':
+    files = ['Breathless.srt', 'Childle.srt']
+    for file in files:
+        subtitles_file = SubtitlesFile(file)
+        print(file, subtitles_file.parse().keys(), sep='\n')
