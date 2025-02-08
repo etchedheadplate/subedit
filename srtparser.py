@@ -41,8 +41,8 @@ class SubParse():
             extracted_metadata = {
                 'metadata': {
                     'encoding': raw_metadata['encoding'],
-                    'confidence': raw_metadata['confidence'],
-                    'language': raw_metadata['language']
+                    'confidence': f"{int(raw_metadata['confidence']) * 100}%",
+                    'language': raw_metadata['language'] if len(raw_metadata['language']) > 0 else 'unknown'
                 }
             }
 
