@@ -1,6 +1,7 @@
 import chardet
+from datetime import datetime, timedelta
 
-class SubParse():
+class SubEdit():
     def __init__(self, file_list: list):
         '''
         Constructor for dictionary with subtitles and files metadata.
@@ -8,7 +9,7 @@ class SubParse():
         :param source: List with 1 or 2 subtitle file names.
         '''
 
-        # Empty dictionary for storing subtitles and files metadata
+        # Empty main dictionary for storing subtitles and files metadata
         self.subtitles_data = {}
 
         # Pointers to passed files
@@ -24,6 +25,9 @@ class SubParse():
         # If more than 2 files passed raise an error
         else:
             raise ValueError("Source must be a single string or a tuple of two strings.")
+
+        # Shift source subtitles
+        self.shift(2468)
 
         # Show all collected data
         self.show(self.subtitles_data)
@@ -103,11 +107,62 @@ class SubParse():
             else:
                 print('  ' * indent + f"{key}: {value}")
 
+    def shift(self, delay: int, items: list = None) -> None:
+        '''
+        Shifts subtitles by user-defined milliseconds.
+
+        :param delay: Milliseconds to delay.
+        :param items: List of subtitles numbers to shift. If not provided, all subtitles are shifted.
+        '''
+
+        # Empty dictionary for storing shifted subtitles
+        self.shifted_file = f'{self.source_file}_shifted'
+        self.subtitles_data[self.shifted_file] = {'metadata': {}, 'subtitles': {}}
+
+        # Pointers to original and shifted subtitles data
+        parsed_subtitles = self.subtitles_data[f'{self.source_file}']['subtitles']
+        shifted_subtitles = self.subtitles_data[f'{self.shifted_file}']['subtitles']
+
+        # Copy original metadata
+        extracted_metadata = self.subtitles_data[f'{self.source_file}']['metadata']
+        self.subtitles_data[f'{self.shifted_file}']['metadata'] = extracted_metadata
+
+        # Set which subtitles to shift and define time format
+        subtitle_items = items if items else list(parsed_subtitles.keys())
+        time_format = "%H:%M:%S,%f"
+
+        for index in subtitle_items:
+            # Pointer to original subtitles
+            subtitle = parsed_subtitles[f'{index}']
+            original_text = subtitle['text']
+
+            # Parse original time into a datetime objects
+            original_start = datetime.strptime(subtitle['start'], time_format)
+            original_end = datetime.strptime(subtitle['end'], time_format)
+
+            # Add delay in milliseconds using timedelta
+            delay_start = original_start + timedelta(milliseconds=delay)
+            delay_end = original_end + timedelta(milliseconds=delay)
+
+            # Format new time back to string format and remove microseconds
+            new_start = delay_start.strftime(time_format)[:-3]
+            new_end = delay_end.strftime(time_format)[:-3]
+
+            # Write shifted subtitles data in main dictionary
+            shifted_subtitles[f'{index}'] = {}
+            shifted_subtitles[f'{index}']['start'] = new_start
+            shifted_subtitles[f'{index}']['end'] = new_end
+            shifted_subtitles[f'{index}']['text'] = original_text
+
+
+
+
+
 
 
 
 if __name__ == '__main__':
-    single_source = ['generated_original.srt',]
-    multiple_sources = ['generated_original.srt', 'generated_example.srt']
-    SubParse(single_source)
-    # SubParse(multiple_sources)
+    single_source = ['generated_source.srt',]
+    multiple_sources = ['generated_source.srt', 'generated_example.srt']
+    SubEdit(single_source)
+    # SubEdit(multiple_sources)
