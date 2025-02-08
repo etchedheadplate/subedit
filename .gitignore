@@ -5,6 +5,8 @@
 .env
 
 # Junk files
+/testing
+test.py
 /temp
 /tmp
 **/__pycache__
@@ -12,3 +14,4 @@
 *.DS_Store
 *.log
 *.srt
+*.txt

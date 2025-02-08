@@ -1,52 +1,64 @@
 import chardet
 
-class SubSync():
-    def __init__(self, text_source: str, timing_source: str):
+class SubParse():
+    def __init__(self, file_list: list):
         '''
-        Contructor for dictionaries with data of source subtitles files
+        Constructor for dictionary with subtitles and files metadata.
 
-        :param text_source: file with text that should be in corrected subtitles
-        :param timing_source: file with timing that should be in corrected subtitles
-        '''
-
-        self.text_data = self.extract_metadata(text_source)
-        self.timing_data = self.extract_metadata(timing_source)
-
-    def extract_metadata(self, source_file: str) -> dict:
-        '''
-        Extracts metadata from subtitle files. Metadata is needed for later parsing.
-
-        :param source_file: text or timing subtitles file
+        :param source: List with 1 or 2 subtitle file names.
         '''
 
-        with open(source_file, 'rb') as file:
+        # Empty dictionary for storing subtitles and files metadata
+        self.subtitles_data = {}
+
+        # Pointers to passed files
+        self.source_file = file_list[0]
+        self.example_file = file_list[1] if len(file_list) == 2 else None
+
+        # Check if no more than 2 files passed as input
+        if len(file_list) <= 2:
+            for file in file_list:
+                self.extract_metadata(file)
+                self.parse_subtitles(file)
+
+        # If more than 2 files passed raise an error
+        else:
+            raise ValueError("Source must be a single string or a tuple of two strings.")
+
+        # Show all collected data
+        self.show(self.subtitles_data)
+
+    def extract_metadata(self, file_name: str) -> None:
+        '''
+        Extracts metadata from file into a dictionary.
+
+        :param file_name: String with file name.
+        '''
+
+        with open(file_name, 'rb') as file:
             raw_data = file.read()
             raw_metadata = chardet.detect(raw_data)
-            metadata = {
-                'filename': source_file,
-                'encoding': raw_metadata['encoding'],
-                'confidence': raw_metadata['confidence'],
-                'language': raw_metadata['language']
-            }
-
-        return metadata
-
-    def parse_subtitles(self, source_data: dict) -> None:
-        '''
-        Parses subtitles and adds them to source dictionary by this template:
-
-            subtitles: {
-                index: {
-                    start: time
-                    end: time
-                    text: subtitle
+            extracted_metadata = {
+                'metadata': {
+                    'encoding': raw_metadata['encoding'],
+                    'confidence': raw_metadata['confidence'],
+                    'language': raw_metadata['language']
                 }
             }
 
-        :param source_data: dictionary with data of source file
+        self.subtitles_data[file_name] = extracted_metadata
+
+    def parse_subtitles(self, file_name: str) -> None:
+        '''
+        Parses subtitles from file into a dictionary.
+
+        :param file_name: String with file name.
         '''
 
-        with open(source_data['filename'], 'r', encoding=source_data['encoding']) as file:
+        # Pointer to subtitles metadata
+        file_metadata = self.subtitles_data[file_name]['metadata']
+
+        with open(file_name, 'r', encoding=file_metadata['encoding']) as file:
             raw_subtitles = file.readlines()
             parsed_subtitles = {}
 
@@ -74,9 +86,16 @@ class SubSync():
                     'text': '\n'.join(text_lines)
                 }
 
-            source_data['subtitles'] = parsed_subtitles
+            self.subtitles_data[file_name]['subtitles'] = parsed_subtitles
 
     def show(self, data: dict, indent=0) -> None:
+        '''
+        Prints subtitles data to terminal.
+
+        :param data: Dictionary with subtitles data.
+        :param indent: Indent for subdictionaries.
+        '''
+
         for key, value in data.items():
             if isinstance(value, dict):
                 print('  ' * indent + str(key) + ':')
@@ -84,16 +103,11 @@ class SubSync():
             else:
                 print('  ' * indent + f"{key}: {value}")
 
-    def sync(self):
-        self.parse_subtitles(self.text_data)
-        self.parse_subtitles(self.timing_data)
-
-        self.show(self.text_data)
-        self.show(self.timing_data)
-
 
 
 
 if __name__ == '__main__':
-    input = SubSync('Breathless.srt', 'Childle.srt')
-    output = input.sync()
+    single_source = ['generated_original.srt',]
+    multiple_sources = ['generated_original.srt', 'generated_example.srt']
+    SubParse(single_source)
+    # SubParse(multiple_sources)
