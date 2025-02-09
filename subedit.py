@@ -1,4 +1,5 @@
 import os
+import re
 import chardet
 from datetime import datetime, timedelta
 
@@ -26,15 +27,6 @@ class SubEdit():
         # If more than 2 files passed raise an error
         else:
             raise ValueError("Source must be a single string or a tuple of two strings.")
-
-        # Shift source subtitles
-        self.shift_subtitles(delay=2468)
-
-        # Write shifted subtitles into a file:
-        self.write_subtitles(self.shifted_file)
-
-        # Show all collected data
-        self.show_subtitles(self.subtitles_data)
 
     def extract_metadata(self, file_name: str) -> None:
         '''
@@ -96,13 +88,15 @@ class SubEdit():
 
             self.subtitles_data[file_name]['subtitles'] = parsed_subtitles
 
-    def show_subtitles(self, data: dict, indent=0) -> None:
+    def show_subtitles(self, data=None, indent=0) -> None:
         '''
         Prints subtitles data to terminal.
 
         :param data: Dictionary with subtitles data.
         :param indent: Indent for subdictionaries.
         '''
+        if data is None:
+            data = self.subtitles_data
 
         for key, value in data.items():
             if isinstance(value, dict):
@@ -111,7 +105,28 @@ class SubEdit():
             else:
                 print('  ' * indent + f"{key}: {value}")
 
-    def shift_subtitles(self, delay: int, items: list = None) -> None:
+    def create_file(self, file_name: str) -> None:
+        '''
+        Writes subtitles into a file.
+
+        :param file_name: String with file name.
+        '''
+
+        # Pointers to dictionary with subtitles and their indexes
+        subtitles_data = self.subtitles_data[file_name]['subtitles']
+        subtitle_items = list(subtitles_data.keys())
+
+        # Write subtitles data formatted to SubRip spec with UTF-8 encoding
+        with open(file_name, 'w', encoding='utf-8') as file:
+            for index in subtitle_items:
+                file.write(
+                    f'{index}\n'
+                    f'{subtitles_data[index]['start']} --> {subtitles_data[index]['end']}\n'
+                    f'{subtitles_data[index]['text']}\n'
+                    f'\n'
+                )
+
+    def shift_timing(self, delay: int, items: list = None) -> None:
         '''
         Shifts subtitles by user-defined milliseconds.
 
@@ -139,6 +154,8 @@ class SubEdit():
         for index in subtitle_items:
             # Pointer to original subtitles
             subtitle = parsed_subtitles[f'{index}']
+
+            # Copy original text
             original_text = subtitle['text']
 
             # Parse original time into a datetime objects
@@ -159,41 +176,102 @@ class SubEdit():
             shifted_subtitles[f'{index}']['end'] = new_end
             shifted_subtitles[f'{index}']['text'] = original_text
 
-    def write_subtitles(self, file_name: str) -> None:
+        # Write shifted subtitles into a file:
+        self.create_file(self.shifted_file)
+
+    def clean_markup(
+        self,
+        all: bool = False,
+        bold: bool = False,
+        italic: bool = False,
+        underline: bool = False,
+        strikethrough: bool = False,
+        color: bool = False,
+        font: bool = False
+    ) -> None:
         '''
-        Writes subtitles into a file.
+        Removes user-defined markup tags from subtitles.
 
-        :param file_name: String with file name.
+        :param all: Removes all tags.
+        :param bold: Removes <b></b> tags.
+        :param italic: Removes <i></i> tags.
+        :param underline: Removes <u></u> tags.
+        :param strikethrough: Removes <s></s> tags.
+        :param color: Removes <font color="color name or #hex"></font> tags.
+        :param font: Removes <font face="font-family-name"></font> tags.
         '''
 
-        # Pointers to dictionary with subtitles and their indexes
-        subtitles_data = self.subtitles_data[file_name]['subtitles']
-        subtitle_items = list(subtitles_data.keys())
+        # Empty dictionary for storing cleaned subtitles
+        source_name, source_ext = os.path.splitext(self.source_file)
+        self.cleaned_file = f'{source_name}_cleaned{source_ext}'
+        self.subtitles_data[self.cleaned_file] = {'metadata': {}, 'subtitles': {}}
 
-        # Write subtitles data formatted to SubRip spec with UTF-8 encoding
-        with open(file_name, 'w', encoding='utf-8') as file:
-            for index in subtitle_items:
-                start = subtitles_data[index]['start']
-                end = subtitles_data[index]['end']
-                text = subtitles_data[index]['text']
-                indent = ''
+        # Pointers to original and cleaned subtitles data
+        parsed_subtitles = self.subtitles_data[f'{self.source_file}']['subtitles']
+        cleaned_subtitles = self.subtitles_data[f'{self.cleaned_file}']['subtitles']
 
-                file.write(
-                    f'{index}\n'
-                    f'{start} --> {end}\n'
-                    f'{text}\n'
-                    f'{indent}\n'
-                )
+        # Copy original metadata
+        extracted_metadata = self.subtitles_data[f'{self.source_file}']['metadata']
+        self.subtitles_data[f'{self.cleaned_file}']['metadata'] = extracted_metadata
 
+        # Set which subtitles to clean
+        subtitle_items = list(parsed_subtitles.keys())
 
+        for index in subtitle_items:
+            # Pointer to original subtitles
+            subtitle = parsed_subtitles[f'{index}']
 
+            # Copy original data
+            original_start = subtitle['start']
+            original_end = subtitle['end']
+            original_text = subtitle['text']
 
+            # Create new text and remove markups
+            new_text = original_text
 
+            if bold:
+                new_text = re.sub(r'<b>|</b>', '', original_text)
 
+            if italic:
+                new_text = re.sub(r'<i>|</i>', '', original_text)
+
+            if underline:
+                new_text = re.sub(r'<u>|</u>', '', original_text)
+
+            if strikethrough:
+                new_text = re.sub(r'<s>|</s>', '', original_text)
+
+            if color and '<font color=' in original_text:
+                new_text = re.sub(r'<font\s+color=["\'].*?["\'].*?>|</font>', '', original_text)
+
+            if font and '<font face=' in original_text:
+                new_text = re.sub(r'<font\s+face=["\'].*?["\'].*?>|</font>', '', original_text)
+
+            if all:
+                new_text = re.sub(r'<.*?>', '', original_text)
+
+            # Write cleaned subtitles data in main dictionary
+            cleaned_subtitles[f'{index}'] = {}
+            cleaned_subtitles[f'{index}']['start'] = original_start
+            cleaned_subtitles[f'{index}']['end'] = original_end
+            cleaned_subtitles[f'{index}']['text'] = new_text
+
+        # Write cleaned subtitles into a file:
+        self.create_file(self.cleaned_file)
 
 
 if __name__ == '__main__':
-    single_source = ['generated_source.srt',]
-    multiple_sources = ['generated_source.srt', 'generated_example.srt']
-    SubEdit(single_source)
-    # SubEdit(multiple_sources)
+
+    # source = ['generated_source.srt',] # Single file
+    source = ['generated_source.srt', 'generated_example.srt'] # Multiple files
+
+    test_exemplar = SubEdit(source)
+
+    # Shift source subtitles
+    test_exemplar.shift_timing(delay=2468)
+
+    # Clean source subtitles
+    test_exemplar.clean_markup(all=True)
+
+    # Show all collected data
+    test_exemplar.show_subtitles()
