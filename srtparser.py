@@ -1,3 +1,4 @@
+import os
 import chardet
 from datetime import datetime, timedelta
 
@@ -27,10 +28,13 @@ class SubEdit():
             raise ValueError("Source must be a single string or a tuple of two strings.")
 
         # Shift source subtitles
-        self.shift(2468)
+        self.shift_subtitles(delay=2468)
+
+        # Write shifted subtitles into a file:
+        self.write_subtitles(self.shifted_file)
 
         # Show all collected data
-        self.show(self.subtitles_data)
+        self.show_subtitles(self.subtitles_data)
 
     def extract_metadata(self, file_name: str) -> None:
         '''
@@ -92,7 +96,7 @@ class SubEdit():
 
             self.subtitles_data[file_name]['subtitles'] = parsed_subtitles
 
-    def show(self, data: dict, indent=0) -> None:
+    def show_subtitles(self, data: dict, indent=0) -> None:
         '''
         Prints subtitles data to terminal.
 
@@ -103,11 +107,11 @@ class SubEdit():
         for key, value in data.items():
             if isinstance(value, dict):
                 print('  ' * indent + str(key) + ':')
-                self.show(value, indent + 1)
+                self.show_subtitles(value, indent + 1)
             else:
                 print('  ' * indent + f"{key}: {value}")
 
-    def shift(self, delay: int, items: list = None) -> None:
+    def shift_subtitles(self, delay: int, items: list = None) -> None:
         '''
         Shifts subtitles by user-defined milliseconds.
 
@@ -116,7 +120,8 @@ class SubEdit():
         '''
 
         # Empty dictionary for storing shifted subtitles
-        self.shifted_file = f'{self.source_file}_shifted'
+        source_name, source_ext = os.path.splitext(self.source_file)
+        self.shifted_file = f'{source_name}_shifted{source_ext}'
         self.subtitles_data[self.shifted_file] = {'metadata': {}, 'subtitles': {}}
 
         # Pointers to original and shifted subtitles data
@@ -153,6 +158,32 @@ class SubEdit():
             shifted_subtitles[f'{index}']['start'] = new_start
             shifted_subtitles[f'{index}']['end'] = new_end
             shifted_subtitles[f'{index}']['text'] = original_text
+
+    def write_subtitles(self, file_name: str) -> None:
+        '''
+        Writes subtitles into a file.
+
+        :param file_name: String with file name.
+        '''
+
+        # Pointers to dictionary with subtitles and their indexes
+        subtitles_data = self.subtitles_data[file_name]['subtitles']
+        subtitle_items = list(subtitles_data.keys())
+
+        # Write subtitles data formatted to SubRip spec with UTF-8 encoding
+        with open(file_name, 'w', encoding='utf-8') as file:
+            for index in subtitle_items:
+                start = subtitles_data[index]['start']
+                end = subtitles_data[index]['end']
+                text = subtitles_data[index]['text']
+                indent = ''
+
+                file.write(
+                    f'{index}\n'
+                    f'{start} --> {end}\n'
+                    f'{text}\n'
+                    f'{indent}\n'
+                )
 
 
 
