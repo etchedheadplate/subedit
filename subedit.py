@@ -179,14 +179,14 @@ class SubEdit():
         # Write shifted subtitles into a file:
         self.create_file(self.shifted_file)
 
-    def align_timing(self, source_slice: list = None, example_slice: list = None) -> None:
+    def align_timing(self, source_slice: list[str] = None, example_slice: list[str] = None) -> None:
         '''
-        Shifts subtitles by user-defined milliseconds.
+        Aligns source subtitles timing to match example subtitles timing for the specified slices.
 
-        :param items: List of subtitles numbers to shift. If not provided, all subtitles are shifted.
+        :param source_slice: List containing start and end subtitle numbers for source file
+        :param example_slice: List containing start and end subtitle numbers for example file
         '''
-
-        # Empty dictionary for storing shifted subtitles
+        # Empty dictionary for storing aligned subtitles
         source_name, source_ext = os.path.splitext(self.source_file)
         self.aligned_file = f'{source_name}_aligned{source_ext}'
         self.subtitles_data[self.aligned_file] = {'metadata': {}, 'subtitles': {}}
@@ -208,66 +208,71 @@ class SubEdit():
             example_items = list(parsed_example.keys())
             example_slice = [example_items[0], example_items[-1]]
 
-        # If more than 2 items passed in slices raise an error
+        # Validate slice inputs
         if len(source_slice) != 2 or len(example_slice) != 2:
             raise ValueError(f'Slices must include exactly 2 items (provided {len(source_slice)} source and {len(example_slice)} example items).')
 
-        # Define time format
-        time_format = '%H:%M:%S,%f'
+        # Check if slices contain same numbers and are the same size
+        source_slice_range = range(int(source_slice[0]), int(source_slice[1]) + 1)
+        example_slice_range = range(int(example_slice[0]), int(example_slice[1]) + 1)
+        exact_match = (len(source_slice_range) == len(example_slice_range) and
+                      source_slice[0] == example_slice[0] and
+                      source_slice[1] == example_slice[1])
 
-        # Calculate effective length of source subtitles
-        source_start = datetime.strptime(parsed_source[source_slice[0]]['start'], time_format)
-        sourcel_end = datetime.strptime(parsed_source[source_slice[1]]['end'], time_format)
-        source_length = sourcel_end - source_start
-
-        # Calculate effective length of example subtitles
-        example_start = datetime.strptime(parsed_example[example_slice[0]]['start'], time_format)
-        example_end = datetime.strptime(parsed_example[example_slice[1]]['end'], time_format)
-        example_length = example_end - example_start
-
-        # Calculate time difference ratio between source and example subtitles
-        if source_length.total_seconds() == 0:
-            raise ValueError("Source length is zero, cannot calculate percentage difference.")
-
-        difference_ratio = (example_length.total_seconds() - source_length.total_seconds()) / source_length.total_seconds()
-        print(difference_ratio)
-
-        # Align source timing by pogression difference of example
+        # Process each subtitle
         subtitle_items = list(parsed_source.keys())
 
         for index in subtitle_items:
-            # Pointer to original subtitles
             subtitle = parsed_source[f'{index}']
+            aligned_subtitles[f'{index}'] = {'text': subtitle['text']}
 
-            # Condition for aligning only those subtitles that included in slice
             if int(index) >= int(source_slice[0]) and int(index) <= int(source_slice[1]):
-                # Copy original text
-                original_text = subtitle['text']
+                if exact_match:
+                    # For exact matches, copy timings directly from example file
+                    aligned_subtitles[f'{index}']['start'] = parsed_example[f'{index}']['start']
+                    aligned_subtitles[f'{index}']['end'] = parsed_example[f'{index}']['end']
+                else:
+                    # For different slice sizes, calculate proportional timing
+                    time_format = '%H:%M:%S,%f'
 
-                # Parse original time into a datetime objects
-                original_start = datetime.strptime(subtitle['start'], time_format)
-                original_end = datetime.strptime(subtitle['end'], time_format)
+                    # Get source and example timing points
+                    source_start_time = datetime.strptime(parsed_source[source_slice[0]]['start'], time_format)
+                    source_end_time = datetime.strptime(parsed_source[source_slice[1]]['end'], time_format)
+                    example_start_time = datetime.strptime(parsed_example[example_slice[0]]['start'], time_format)
+                    example_end_time = datetime.strptime(parsed_example[example_slice[1]]['end'], time_format)
 
-                # Calculate and add delay in seconds using timedelta
-                delay_seconds = difference_ratio * source_length.total_seconds()
-                delay_start = original_start + timedelta(seconds=delay_seconds)
-                delay_end = original_end + timedelta(seconds=delay_seconds)
+                    # Calculate total durations
+                    source_duration = (source_end_time - source_start_time).total_seconds()
+                    example_duration = (example_end_time - example_start_time).total_seconds()
 
-                # Format new time back to string format and remove microseconds
-                new_start = delay_start.strftime(time_format)[:-3]
-                new_end = delay_end.strftime(time_format)[:-3]
+                    if source_duration == 0:
+                        raise ValueError("Source duration is zero, cannot calculate scaling factor.")
 
-                # Write aligned subtitles data in main dictionary
-                aligned_subtitles[f'{index}'] = {}
-                aligned_subtitles[f'{index}']['start'] = new_start
-                aligned_subtitles[f'{index}']['end'] = new_end
-                aligned_subtitles[f'{index}']['text'] = original_text
+                    # Get original timing
+                    original_start = datetime.strptime(subtitle['start'], time_format)
+                    original_end = datetime.strptime(subtitle['end'], time_format)
 
-            # Write shifted subtitles into a file:
-            self.create_file(self.aligned_file)
+                    # Calculate position within source duration (scaling factor 0 to 1)
+                    start_pos = (original_start - source_start_time).total_seconds() / source_duration
+                    end_pos = (original_end - source_start_time).total_seconds() / source_duration
 
+                    # Apply position to example duration
+                    new_start_seconds = example_start_time.timestamp() + (start_pos * example_duration)
+                    new_end_seconds = example_start_time.timestamp() + (end_pos * example_duration)
 
+                    # Convert to datetime and format
+                    new_start = datetime.fromtimestamp(new_start_seconds).strftime(time_format)[:-3]
+                    new_end = datetime.fromtimestamp(new_end_seconds).strftime(time_format)[:-3]
 
+                    aligned_subtitles[f'{index}']['start'] = new_start
+                    aligned_subtitles[f'{index}']['end'] = new_end
+            else:
+                # Keep original timing for subtitles outside the slice
+                aligned_subtitles[f'{index}']['start'] = subtitle['start']
+                aligned_subtitles[f'{index}']['end'] = subtitle['end']
+
+        # Write aligned subtitles to file
+        self.create_file(self.aligned_file)
 
     def clean_markup(
         self,
@@ -353,7 +358,7 @@ class SubEdit():
 if __name__ == '__main__':
 
     # source = ['generated_source.srt',] # Single file
-    source = ['generated_source.srt', 'generated_example.srt'] # Multiple files
+    source = ['The.Face.of.Another.1966.(Drama-Sci.Fi-Japan).720p.x264-Classics.srt', 'Teshigahara,Hiroshi - Tanin no kao (1966, aka The Face Of Another).srt'] # Multiple files
 
     test_exemplar = SubEdit(source)
 
@@ -364,7 +369,7 @@ if __name__ == '__main__':
 #    test_exemplar.clean_markup(all=True)
 
     # Align source subtitles timing by example
-    test_exemplar.align_timing()
+    test_exemplar.align_timing(['1','1026'],['1','1003'])
 
     # Show all collected data
 #    test_exemplar.show_data()
