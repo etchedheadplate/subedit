@@ -1,6 +1,7 @@
 import os
 import re
 import chardet
+import langdetect
 from datetime import datetime, timedelta
 from typing import TypedDict, List, Dict
 
@@ -33,20 +34,25 @@ class SubEdit:
         Returns:
             None
         """
+        self._internal_call = False
+
         self.subtitles_data: SubtitlesDataDict = {}
+
         self.source_file: str = file_list[0]
         self.example_file: str | None = file_list[1] if len(file_list) == 2 else None
 
         if len(file_list) <= 2:
             for file in file_list:
-                self.extract_metadata(file)
-                self.parse_subtitles(file)
+                self._detect_encoding(file)
+                self._parse_subtitles(file)
+                self._detect_language(file)
+            self._show_data()
         else:
             raise ValueError(f'File list must include 1 or 2 text strings ({len(file_list)} provided).')
 
-    def extract_metadata(self, file_name: str) -> None:
+    def _detect_encoding(self, file_name: str) -> None:
         """
-        Extracts metadata from file into a dictionary.
+        Detects encoding of subtitles file and saves it to 'metadata' subditctionary.
 
         Args:
             file_name: String with file name.
@@ -61,7 +67,7 @@ class SubEdit:
             extracted_metadata: SubtitleMetadata = {
                 'encoding': str(raw_metadata['encoding']),
                 'confidence': int(raw_metadata['confidence']),
-                'language': raw_metadata['language'] if raw_metadata['language'] else 'unknown'
+                'language': ''
             }
 
             self.subtitles_data[file_name] = {
@@ -69,7 +75,7 @@ class SubEdit:
                 'subtitles': {}
             }
 
-    def parse_subtitles(self, file_name: str) -> None:
+    def _parse_subtitles(self, file_name: str) -> None:
         """
         Parses subtitles from file into a dictionary.
 
@@ -112,7 +118,25 @@ class SubEdit:
 
             self.subtitles_data[file_name]['subtitles'] = parsed_subtitles
 
-    def show_data(self, data: SubtitlesDataDict | SubtitleData | Dict[str | int, any] | None = None, indent: int = 0) -> None:
+    def _detect_language(self, file_name: str) -> None:
+            """
+            Detects language of subtitles file and saves it to 'metadata' subditctionary.
+
+            Args:
+                file_name: String with file name.
+
+            Returns:
+                None
+            """
+            self._internal_call = True
+            subtitles_text = self.clean_markup(file_name)
+            self._internal_call = False
+            subtitles_language: str = langdetect.detect(subtitles_text)
+            self.subtitles_data[file_name]['metadata'].update({
+                'language': subtitles_language
+            })
+
+    def _show_data(self, data: SubtitlesDataDict | SubtitleData | Dict[str | int, any] | None = None, indent: int = 0) -> None:
         """
         Prints subtitles data to terminal.
 
@@ -129,11 +153,11 @@ class SubEdit:
         for key, value in data.items():
             if isinstance(value, dict):
                 print('  ' * indent + str(key) + ':')
-                self.show_data(value, indent + 1)
+                self._show_data(value, indent + 1)
             else:
                 print('  ' * indent + f"{key}: {value}")
 
-    def create_file(self, file_name: str) -> None:
+    def _create_file(self, file_name: str) -> None:
         """
         Writes subtitles into a file in UTF-8 encoding.
 
@@ -197,7 +221,7 @@ class SubEdit:
                 'text': subtitle['text']
             }
 
-        self.create_file(self.shifted_file)
+        self._create_file(self.shifted_file)
 
     def align_timing(self, source_slice: list[int] | None = None, example_slice: list[int] | None = None) -> None:
         """
@@ -226,10 +250,10 @@ class SubEdit:
         aligned_subtitles = self.subtitles_data[self.aligned_file]['subtitles']
 
         # Get sorted indices for default slices
-        if source_slice is None:
+        if source_slice is None or len(source_slice) == 0:
             source_indices = sorted(parsed_source.keys())
             source_slice = [source_indices[0], source_indices[-1]]
-        if example_slice is None:
+        if example_slice is None or len(example_slice) == 0:
             example_indices = sorted(parsed_example.keys())
             example_slice = [example_indices[0], example_indices[-1]]
 
@@ -295,23 +319,22 @@ class SubEdit:
                     'end': subtitle['end']
                 })
 
-        self.create_file(self.aligned_file)
+        self._create_file(self.aligned_file)
 
     def clean_markup(
         self,
-        all: bool = False,
+        file_name: str | None = None,
         bold: bool = False,
         italic: bool = False,
         underline: bool = False,
         strikethrough: bool = False,
         color: bool = False,
         font: bool = False
-    ) -> None:
+    ) -> str | None:
         """
         Removes user-defined markup tags from subtitles.
 
         Args:
-            all: Removes all tags.
             bold: Removes <b></b> tags.
             italic: Removes <i></i> tags.
             underline: Removes <u></u> tags.
@@ -320,18 +343,23 @@ class SubEdit:
             font: Removes <font face="font-family-name"></font> tags.
 
         Returns:
-            None
+            str: if internal call
+            None: if external call
         """
-        source_name, source_ext = os.path.splitext(self.source_file)
-        self.cleaned_file = f'{source_name}_cleaned{source_ext}'
+        if self._internal_call == True and file_name:
+            parsed_subtitles = self.subtitles_data[file_name]['subtitles']
+            unformatted_text: str = ''
+        else:
+            source_name, source_ext = os.path.splitext(self.source_file)
+            self.cleaned_file = f'{source_name}_cleaned{source_ext}'
 
-        self.subtitles_data[self.cleaned_file] = {
-            'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
-            'subtitles': {}
-        }
+            self.subtitles_data[self.cleaned_file] = {
+                'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
+                'subtitles': {}
+            }
 
-        parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
-        cleaned_subtitles = self.subtitles_data[self.cleaned_file]['subtitles']
+            parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
+            cleaned_subtitles = self.subtitles_data[self.cleaned_file]['subtitles']
 
         subtitle_indices = sorted(parsed_subtitles.keys())
 
@@ -339,44 +367,39 @@ class SubEdit:
             subtitle = parsed_subtitles[index]
             new_text = subtitle['text']
 
-            if bold:
-                new_text = re.sub(r'<b>|</b>', '', new_text)
-            if italic:
-                new_text = re.sub(r'<i>|</i>', '', new_text)
-            if underline:
-                new_text = re.sub(r'<u>|</u>', '', new_text)
-            if strikethrough:
-                new_text = re.sub(r'<s>|</s>', '', new_text)
-            if color and '<font color=' in new_text:
-                new_text = re.sub(r'<font\s+color=["\'].*?["\'].*?>|</font>', '', new_text)
-            if font and '<font face=' in new_text:
-                new_text = re.sub(r'<font\s+face=["\'].*?["\'].*?>|</font>', '', new_text)
-            if all:
+            if bold or italic or underline or strikethrough or color or font:
+                if bold:
+                    new_text = re.sub(r'<b>|</b>', '', new_text)
+                if italic:
+                    new_text = re.sub(r'<i>|</i>', '', new_text)
+                if underline:
+                    new_text = re.sub(r'<u>|</u>', '', new_text)
+                if strikethrough:
+                    new_text = re.sub(r'<s>|</s>', '', new_text)
+                if color and '<font color=' in new_text:
+                    new_text = re.sub(r'<font\s+color=["\'].*?["\'].*?>|</font>', '', new_text)
+                if font and '<font face=' in new_text:
+                    new_text = re.sub(r'<font\s+face=["\'].*?["\'].*?>|</font>', '', new_text)
+            else:
                 new_text = re.sub(r'<.*?>', '', new_text)
 
-            cleaned_subtitles[index] = {
-                'start': subtitle['start'],
-                'end': subtitle['end'],
-                'text': new_text
-            }
+            if self._internal_call == True and file_name:
+                unformatted_text += new_text + ' '
+            else:
+                cleaned_subtitles[index] = {
+                    'start': subtitle['start'],
+                    'end': subtitle['end'],
+                    'text': new_text
+                }
 
-        self.create_file(self.cleaned_file)
+        if self._internal_call == True and file_name:
+            return unformatted_text
+        else:
+            self._create_file(self.cleaned_file)
+
 
 if __name__ == '__main__':
-
-#    source = ['generated_source.srt',] # Single file
-    source = ['generated_source.srt', 'generated_example.srt'] # Multiple files
-
-    test_exemplar = SubEdit(source)
-
-    # Shift source subtitles timing
-    test_exemplar.shift_timing(delay=2468)
-
-    # Clean source subtitles markup
-    test_exemplar.clean_markup(all=True)
-
-    # Align source subtitles timing by example
-    test_exemplar.align_timing([3,16],[2,19])
-
-    # Show all collected data
-    test_exemplar.show_data()
+    # Basic tests:
+    SubEdit(['gen_src_en_timing.srt']).shift_timing(delay=2468)
+    SubEdit(['gen_src_es_markup.srt']).clean_markup(bold=True, color=True)
+    SubEdit(['gen_src_ru_timing.srt', 'gen_exm_ko_timing.srt']).align_timing([2,38],[3,39])
