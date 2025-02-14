@@ -1,7 +1,9 @@
 import os
 import re
+import json
 import chardet
 import langdetect # type: ignore
+from duckduckgo_search import DDGS
 from datetime import datetime, timedelta
 from typing import TypedDict, List, Dict
 
@@ -25,14 +27,10 @@ SubtitlesDataDict = Dict[str, SubtitleData]
 # Main class
 class SubEdit:
     def __init__(self, file_list: List[str]) -> None:
-        """
-        Constructor for dictionary with subtitles and files metadata
+        """Constructor for dictionary with subtitles and files metadata
 
         Args:
-            file_list: List with paths to 1 or 2 subtitle files.
-
-        Returns:
-            None
+            file_list (List[str]): List with paths to one or two subtitle files.
         """
         self._internal_call: bool = False
 
@@ -50,14 +48,10 @@ class SubEdit:
             raise ValueError(f'File list must include 1 or 2 text strings ({len(file_list)} provided).')
 
     def _detect_encoding(self, file_name: str) -> None:
-        """
-        Detects encoding of subtitles file and saves it to 'metadata' subditctionary.
+        """Detects encoding of subtitles file and saves it to 'metadata' subditctionary.
 
         Args:
-            file_name: String with file name.
-
-        Returns:
-            None
+            file_name (str): String with file name.
         """
         with open(file_name, 'rb') as file:
             raw_data = file.read()
@@ -75,14 +69,10 @@ class SubEdit:
             }
 
     def _parse_subtitles(self, file_name: str) -> None:
-        """
-        Parses subtitles from file into a dictionary.
+        """Parses subtitles from file into a dictionary.
 
         Args:
-            file_name: String with file name.
-
-        Returns:
-            None
+            file_name (str): String with file name.
         """
         file_metadata = self.subtitles_data[file_name]['metadata']
 
@@ -118,32 +108,27 @@ class SubEdit:
             self.subtitles_data[file_name]['subtitles'] = parsed_subtitles
 
     def _detect_language(self, file_name: str) -> None:
-            """
-            Detects language of subtitles file and saves it to 'metadata' subditctionary.
-
-            Args:
-                file_name: String with file name.
-
-            Returns:
-                None
-            """
-            self._internal_call = True
-            subtitles_text = self.clean_markup(file_name)
-            self._internal_call = False
-            subtitles_language: str = langdetect.detect(subtitles_text) # type: ignore
-            self.subtitles_data[file_name]['metadata'].update({
-                'language': subtitles_language
-            })
-
-    def _create_file(self, file_name: str) -> None:
-        """
-        Writes subtitles into a file in UTF-8 encoding.
+        """Detects language of subtitles file and saves it to 'metadata' subditctionary.
 
         Args:
-            file_name: String with file name.
+            file_name (str): String with file name.
+        """
+        self._internal_call = True
+        unformatted_text: list[str] = self.clean_markup(file_name)
+        self._internal_call = False
 
-        Returns:
-            None
+        original_text: str = ' '.join(unformatted_text)
+
+        subtitles_language: str = langdetect.detect(original_text) # type: ignore
+        self.subtitles_data[file_name]['metadata'].update({
+            'language': subtitles_language
+        })
+
+    def _create_file(self, file_name: str) -> None:
+        """Writes subtitles into .srt file in UTF-8 encoding.
+
+        Args:
+            file_name (str): String with file name.
         """
         subtitles_data = self.subtitles_data[file_name]['subtitles']
         subtitle_indices = sorted(subtitles_data.keys())  # Sort indices numerically
@@ -157,15 +142,11 @@ class SubEdit:
                 )
 
     def show_data(self, data: SubtitlesDataDict | SubtitleMetadata | SubtitleEntry | None = None, indent: int = 0) -> None:
-        """
-        Prints subtitles data to terminal.
+        """Prints subtitles data to terminal.
 
         Args:
-            data: Dictionary with subtitles data.
-            indent: Indent for subdictionaries.
-
-        Returns:
-            None
+            data (Dict): Dictionary with subtitles data.
+            indent (int): Indent for subdictionaries.
         """
         if data is None:
             data = self.subtitles_data
@@ -175,18 +156,14 @@ class SubEdit:
                 print('  ' * indent + str(key) + ':')
                 self.show_data(value, indent + 1) # type: ignore
             else:
-                print('  ' * indent + f"{key}: {value}")
+                print('  ' * indent + f'{key}: {value}')
 
     def shift_timing(self, delay: int, items: list[int] | None = None) -> None:
-        """
-        Shifts subtitles by user-defined milliseconds.
+        """Shifts subtitles by user-defined milliseconds.
 
         Args:
-            delay: Milliseconds to delay.
-            items: List of subtitles numbers to shift. If not provided, all subtitles are shifted.
-
-        Returns:
-            None
+            delay (int): Milliseconds to delay.
+            items (list[int]): List of subtitles numbers. Defaults to None (all subtitles are shifted).
         """
         source_name, source_ext = os.path.splitext(self.source_file)
         self.shifted_file = f'{source_name}_shifted{source_ext}'
@@ -223,18 +200,14 @@ class SubEdit:
         self._create_file(self.shifted_file)
 
     def align_timing(self, source_slice: list[int] | None = None, example_slice: list[int] | None = None) -> None:
-        """
-        Aligns source subtitles timing to match example subtitles timing for the specified slices.
+        """Aligns source subtitles timing to match example subtitles timing for the specified slices.
 
         Args:
-            source_slice: List containing start and end subtitle numbers for source file
-            example_slice: List containing start and end subtitle numbers for example file
-
-        Returns:
-            None
+            source_slice (list[int] or None): Indices of first and last subtitle to align. Defaults to None (all subtitles are aligned)
+            example_slice (list[int] or None): Indices of first and last subtitle to align. Defaults to None (all subtitles are aligned)
         """
         if self.example_file is None:
-            raise ValueError("Example file is required for alignment")
+            raise ValueError('Example file is required for alignment')
 
         source_name, source_ext = os.path.splitext(self.source_file)
         self.aligned_file = f'{source_name}_aligned{source_ext}'
@@ -290,7 +263,7 @@ class SubEdit:
                     example_duration = (example_end_time - example_start_time).total_seconds()
 
                     if source_duration == 0:
-                        raise ValueError("Source duration is zero, cannot calculate scaling factor.")
+                        raise ValueError('Source duration is zero, cannot calculate scaling factor.')
 
                     # Get original timing
                     original_start = datetime.strptime(subtitle['start'], time_format)
@@ -329,23 +302,22 @@ class SubEdit:
         strikethrough: bool = False,
         color: bool = False,
         font: bool = False
-    ) -> str | None:
-        """
-        Removes user-defined markup tags from subtitles.
+    ) -> list[str] | None:
+        """Removes user-defined markup tags from subtitles.
 
         Args:
-            bold: Removes <b></b> tags.
-            italic: Removes <i></i> tags.
-            underline: Removes <u></u> tags.
-            strikethrough: Removes <s></s> tags.
-            color: Removes <font color="color name or #hex"></font> tags.
-            font: Removes <font face="font-family-name"></font> tags.
+            file_name (str or None): String with file name. Defaults to None.
+            bold (bool): Removes <b></b> tags. Defaults to False.
+            italic (bool): Removes <i></i> tags. Defaults to False.
+            underline (bool): Removes <u></u> tags. Defaults to False.
+            strikethrough (bool): Removes <s></s> tags. Defaults to False.
+            color (bool): Removes <font color="color name or #hex"></font> tags. Defaults to False.
+            font (bool): Removes <font face="font-family-name"></font> tags. Defaults to False.
 
         Returns:
-            str: if internal call
-            None: if external call
+            unformatted_text (list[str]): Unformatted subtitles of whole file if called internally.
         """
-        unformatted_text: str = ""
+        unformatted_text: list[str] = []
         cleaned_subtitles: dict[int, SubtitleEntry] = {}
 
         if self._internal_call and file_name:
@@ -381,11 +353,11 @@ class SubEdit:
                     new_text = re.sub(r'<font\s+color=["\'].*?["\'].*?>|</font>', '', new_text)
                 if font and '<font face=' in new_text:
                     new_text = re.sub(r'<font\s+face=["\'].*?["\'].*?>|</font>', '', new_text)
-            else:
+            else: # Remove all markup
                 new_text = re.sub(r'<.*?>', '', new_text)
 
             if self._internal_call and file_name:
-                unformatted_text += new_text + ' '
+                unformatted_text.append(new_text)
             else:
                 cleaned_subtitles[index] = {
                     'start': subtitle['start'],
@@ -398,15 +370,53 @@ class SubEdit:
         else:
             self._create_file(self.cleaned_file)
 
+    def translate_subtitles(self, target_language: str, file_name: str | None = None, model: str = 'Mixtral') -> None:
+        """Translates subtitles using LLM provided by DuckDuckGo.
+
+        Args:
+            language (str): Target language.
+            file_name (str): String with file name.
+            model (str): Translator LLM. Defaults to Mixtral by Mistral AI.
+        """
+        if file_name is None:
+            file_name = self.source_file
+
+        self._internal_call = True
+        unformatted_text: list[str]  = self.clean_markup(file_name)
+        self._internal_call = False
+
+        original_language: str = self.subtitles_data[file_name]['metadata']['language']
+        original_text: str = '\n\n'.join(unformatted_text)
+        original_length: int = len(unformatted_text)
+
+        with open('translate.json', 'r') as file:
+            data: dict[str, str] = json.load(file)
+            translate_from: str = data['codes'][original_language]
+            translate_to: str = data['codes'][target_language]
+            translator_model: str = data['LLMs'][model]
+
+        task: str = f'''Below this paragraph are {original_length} text chunks in {translate_from} language \
+separated by empty lines. Your task is to translate them to {translate_to} language. You MUST keep text chunks \
+in the same order. Your response MUST consist only of {original_length} chunks with empty lines between them. \
+You CAN NOT add any comments.\n
+'''
+
+        prompt = task + original_text
+
+#        translated_text = DDGS().chat(prompt, translator_model)
+
+        print(prompt)
 
 if __name__ == '__main__':
     # Basic tests:
     shift = SubEdit(['gen_src_en_timing.srt'])
     clean = SubEdit(['gen_src_es_markup.srt'])
     align = SubEdit(['gen_src_ru_timing.srt', 'gen_exm_ko_timing.srt'])
+    translate = SubEdit(['gen_exm_en_translate.srt'])
 
-    shift.shift_timing(delay=2468)
-    clean.clean_markup(bold=True, color=True)
-    align.align_timing([2,38],[3,39])
+#    shift.shift_timing(delay=2468)
+#    clean.clean_markup(bold=True, color=True)
+#    align.align_timing([2,38],[3,39])
 
-    align.show_data()
+    translate.translate_subtitles('ru')
+#    align.show_data()
