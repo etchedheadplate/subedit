@@ -1,7 +1,7 @@
 import os
 import re
 import chardet
-import langdetect
+import langdetect # type: ignore
 from datetime import datetime, timedelta
 from typing import TypedDict, List, Dict
 
@@ -34,7 +34,7 @@ class SubEdit:
         Returns:
             None
         """
-        self._internal_call = False
+        self._internal_call: bool = False
 
         self.subtitles_data: SubtitlesDataDict = {}
 
@@ -46,7 +46,6 @@ class SubEdit:
                 self._detect_encoding(file)
                 self._parse_subtitles(file)
                 self._detect_language(file)
-            self._show_data()
         else:
             raise ValueError(f'File list must include 1 or 2 text strings ({len(file_list)} provided).')
 
@@ -131,31 +130,10 @@ class SubEdit:
             self._internal_call = True
             subtitles_text = self.clean_markup(file_name)
             self._internal_call = False
-            subtitles_language: str = langdetect.detect(subtitles_text)
+            subtitles_language: str = langdetect.detect(subtitles_text) # type: ignore
             self.subtitles_data[file_name]['metadata'].update({
                 'language': subtitles_language
             })
-
-    def _show_data(self, data: SubtitlesDataDict | SubtitleData | Dict[str | int, any] | None = None, indent: int = 0) -> None:
-        """
-        Prints subtitles data to terminal.
-
-        Args:
-            data: Dictionary with subtitles data.
-            indent: Indent for subdictionaries.
-
-        Returns:
-            None
-        """
-        if data is None:
-            data = self.subtitles_data
-
-        for key, value in data.items():
-            if isinstance(value, dict):
-                print('  ' * indent + str(key) + ':')
-                self._show_data(value, indent + 1)
-            else:
-                print('  ' * indent + f"{key}: {value}")
 
     def _create_file(self, file_name: str) -> None:
         """
@@ -177,6 +155,27 @@ class SubEdit:
                     f'{subtitles_data[index]["start"]} --> {subtitles_data[index]["end"]}\n'
                     f'{subtitles_data[index]["text"]}\n\n' # Add empty line at the end
                 )
+
+    def show_data(self, data: SubtitlesDataDict | SubtitleMetadata | SubtitleEntry | None = None, indent: int = 0) -> None:
+        """
+        Prints subtitles data to terminal.
+
+        Args:
+            data: Dictionary with subtitles data.
+            indent: Indent for subdictionaries.
+
+        Returns:
+            None
+        """
+        if data is None:
+            data = self.subtitles_data
+
+        for key, value in data.items():
+            if isinstance(value, dict):
+                print('  ' * indent + str(key) + ':')
+                self.show_data(value, indent + 1) # type: ignore
+            else:
+                print('  ' * indent + f"{key}: {value}")
 
     def shift_timing(self, delay: int, items: list[int] | None = None) -> None:
         """
@@ -271,7 +270,7 @@ class SubEdit:
 
         for index in subtitle_indices:
             subtitle = parsed_source[index]
-            aligned_subtitles[index] = {'text': subtitle['text']}
+            aligned_subtitles[index] = subtitle
 
             if source_slice[0] <= index <= source_slice[1]:
                 if exact_match:
@@ -346,9 +345,11 @@ class SubEdit:
             str: if internal call
             None: if external call
         """
-        if self._internal_call == True and file_name:
+        unformatted_text: str = ""
+        cleaned_subtitles: dict[int, SubtitleEntry] = {}
+
+        if self._internal_call and file_name:
             parsed_subtitles = self.subtitles_data[file_name]['subtitles']
-            unformatted_text: str = ''
         else:
             source_name, source_ext = os.path.splitext(self.source_file)
             self.cleaned_file = f'{source_name}_cleaned{source_ext}'
@@ -383,7 +384,7 @@ class SubEdit:
             else:
                 new_text = re.sub(r'<.*?>', '', new_text)
 
-            if self._internal_call == True and file_name:
+            if self._internal_call and file_name:
                 unformatted_text += new_text + ' '
             else:
                 cleaned_subtitles[index] = {
@@ -392,7 +393,7 @@ class SubEdit:
                     'text': new_text
                 }
 
-        if self._internal_call == True and file_name:
+        if self._internal_call and file_name:
             return unformatted_text
         else:
             self._create_file(self.cleaned_file)
@@ -400,6 +401,12 @@ class SubEdit:
 
 if __name__ == '__main__':
     # Basic tests:
-    SubEdit(['gen_src_en_timing.srt']).shift_timing(delay=2468)
-    SubEdit(['gen_src_es_markup.srt']).clean_markup(bold=True, color=True)
-    SubEdit(['gen_src_ru_timing.srt', 'gen_exm_ko_timing.srt']).align_timing([2,38],[3,39])
+    shift = SubEdit(['gen_src_en_timing.srt'])
+    clean = SubEdit(['gen_src_es_markup.srt'])
+    align = SubEdit(['gen_src_ru_timing.srt', 'gen_exm_ko_timing.srt'])
+
+    shift.shift_timing(delay=2468)
+    clean.clean_markup(bold=True, color=True)
+    align.align_timing([2,38],[3,39])
+
+    align.show_data()
