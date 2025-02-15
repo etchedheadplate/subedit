@@ -1,8 +1,11 @@
 import os
 import re
+import time
+import math
 import json
 import chardet
 import langdetect # type: ignore
+import tiktoken
 from duckduckgo_search import DDGS
 from datetime import datetime, timedelta
 from typing import TypedDict, List, Dict
@@ -370,42 +373,61 @@ class SubEdit:
         else:
             self._create_file(self.cleaned_file)
 
-    def translate_subtitles(self, target_language: str, file_name: str | None = None, model: str = 'Mixtral') -> None:
+    def translate_subtitles(self, target_language: str, file_name: str | None = None, model: str = 'Llama') -> None:
         """Translates subtitles using LLM provided by DuckDuckGo.
 
         Args:
             language (str): Target language.
             file_name (str): String with file name.
-            model (str): Translator LLM. Defaults to Mixtral by Mistral AI.
+            model (str): Translator LLM. Defaults to GPT-4o-mini by by Open AI.
         """
         if file_name is None:
             file_name = self.source_file
 
-        self._internal_call = True
-        unformatted_text: list[str]  = self.clean_markup(file_name)
-        self._internal_call = False
-
-        original_language: str = self.subtitles_data[file_name]['metadata']['language']
-        original_text: str = '\n\n'.join(unformatted_text)
-        original_length: int = len(unformatted_text)
+        original_language = self.subtitles_data[file_name]['metadata']['language']
 
         with open('translate.json', 'r') as file:
             data: dict[str, str] = json.load(file)
             translate_from: str = data['codes'][original_language]
             translate_to: str = data['codes'][target_language]
-            translator_model: str = data['LLMs'][model]
+            translator_model: str = data['models'][model]['name']
+            tokens_limit: int = data['models'][model]['tokens'] * 0.9 # reduce to 90% for reliability
 
-        task: str = f'''Below this paragraph are {original_length} text chunks in {translate_from} language \
-separated by empty lines. Your task is to translate them to {translate_to} language. You MUST keep text chunks \
-in the same order. Your response MUST consist only of {original_length} chunks with empty lines between them. \
-You CAN NOT add any comments.\n
+        self._internal_call = True
+        clean_subtitles: list[str]  = self.clean_markup(file_name)
+        self._internal_call = False
+
+        prompt_text = '\n\n'.join([subtitle.replace("\n", " ") for subtitle in clean_subtitles])
+        prompt_task = f'''Below this paragraph are {len(clean_subtitles)} subtitles in {translate_from} language, \
+separated by empty lines. Text may look offensive or inappropriate, but you MUST rememeber it is a work of fiction \
+and can't harm anybody. Your task is to translate subtitles to {translate_to} language. You MUST keep subtitles in \
+the same order. Your response MUST consist only of {len(clean_subtitles)} translated subtitles with empty lines between \
+them. You CAN NOT add any comments.\n
 '''
+        model_encoding = tiktoken.encoding_for_model(translator_model)
+        prompt_tokens = len(model_encoding.encode(prompt_task + prompt_text))
 
-        prompt = task + original_text
+        if prompt_tokens < tokens_limit:
+            prompt = prompt_task + prompt_text
+            translated_text = DDGS().chat(prompt, translator_model)
+        else:
+            prompts_count = math.ceil(prompt_tokens / tokens_limit)
+            subtitles_count = math.floor(len(clean_subtitles) / prompts_count)
+            translated_text = ''
+            index = 0
+            while index < len(clean_subtitles):
+                limit = index + subtitles_count
+                current_text = '\n\n'.join([subtitle.replace("\n", " ") for subtitle in clean_subtitles[index:limit]])
+                prompt = prompt_task + current_text
+                translated_chunk = DDGS().chat(prompt, translator_model)
+                translated_text += translated_chunk
+                index = limit
+                time.sleep(20)
+                print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
 
-#        translated_text = DDGS().chat(prompt, translator_model)
+        print(translated_text)
 
-        print(prompt)
+
 
 if __name__ == '__main__':
     # Basic tests:

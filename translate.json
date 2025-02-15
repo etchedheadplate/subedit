@@ -56,11 +56,26 @@
         "zh-cn": "Chinese Simplified",
         "zh-tw": "Chinese Traditional"
     },
-    "LLMs": {
-        "GPT-4o": "gpt-4o-mini",
-        "o3": "o3-mini",
-        "Llama": "llama-3.3-70b",
-        "Claude": "claude-3-haiku",
-        "Mixtral": "mixtral-8x7b"
+    "models": {
+        "GPT-4o": {
+            "name": "gpt-4o-mini",
+            "tokens": 2048
+        },
+        "o3": {
+            "name": "o3-mini",
+            "tokens": 2048
+        },
+        "Llama": {
+            "name": "llama-3.3-70b",
+            "tokens": 2048
+        },
+        "Claude": {
+            "name": "claude-3-haiku",
+            "tokens": 2048
+        },
+        "Mixtral": {
+            "name": "mixtral-8x7b",
+            "tokens": 256
+        }
     }
 }
