@@ -1,11 +1,9 @@
 import os
 import re
-import time
 import math
 import json
 import chardet
 import langdetect # type: ignore
-import tiktoken
 from duckduckgo_search import DDGS
 from datetime import datetime, timedelta
 from typing import TypedDict, List, Dict
@@ -26,6 +24,15 @@ class SubtitleData(TypedDict):
     subtitles: Dict[int, SubtitleEntry]
 
 SubtitlesDataDict = Dict[str, SubtitleData]
+
+# Structure of JSON data
+class ModelInfo(TypedDict):
+    name: str
+    tokens: float
+
+class TranslateData(TypedDict):
+    codes: Dict[str, str]
+    models: Dict[str, ModelInfo]
 
 # Main class
 class SubEdit:
@@ -117,7 +124,10 @@ class SubEdit:
             file_name (str): String with file name.
         """
         self._internal_call = True
-        unformatted_text: list[str] = self.clean_markup(file_name)
+        result = self.clean_markup(file_name)
+        if result is None:
+            raise ValueError("clean_markup returned None unexpectedly")
+        unformatted_text: list[str] = result
         self._internal_call = False
 
         original_text: str = ' '.join(unformatted_text)
@@ -373,60 +383,94 @@ class SubEdit:
         else:
             self._create_file(self.cleaned_file)
 
-    def translate_subtitles(self, target_language: str, file_name: str | None = None, model: str = 'Llama') -> None:
+    def translate_subtitles(
+        self,
+        target_language: str,
+        file_name: str | None = None,
+        model: str = 'GPT-4o',
+        throttle: float = 0.5
+    ) -> None:
         """Translates subtitles using LLM provided by DuckDuckGo.
 
         Args:
             language (str): Target language.
             file_name (str): String with file name.
             model (str): Translator LLM. Defaults to GPT-4o-mini by by Open AI.
+            throttle (float): Coefficient by witch models token window is reduced. Slows
+            translation time, increases accuracy. Must be between 0 and 1. Defaults to 0.5.
         """
         if file_name is None:
             file_name = self.source_file
 
+        source_name, source_ext = os.path.splitext(self.source_file)
+        self.translated_file = f'{source_name}_translated{source_ext}'
+
+        self.subtitles_data[self.translated_file] = {
+            'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
+            'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy()
+        }
+
         original_language = self.subtitles_data[file_name]['metadata']['language']
 
         with open('translate.json', 'r') as file:
-            data: dict[str, str] = json.load(file)
+            data: TranslateData = json.load(file)
             translate_from: str = data['codes'][original_language]
             translate_to: str = data['codes'][target_language]
             translator_model: str = data['models'][model]['name']
-            tokens_limit: int = data['models'][model]['tokens'] * 0.9 # reduce to 90% for reliability
+            tokens_limit: float = data['models'][model]['tokens'] * throttle
 
         self._internal_call = True
-        clean_subtitles: list[str]  = self.clean_markup(file_name)
+        result = self.clean_markup(file_name)
+        if result is None:
+            raise ValueError("clean_markup returned None unexpectedly")
+        clean_subtitles: list[str] = result
         self._internal_call = False
 
-        prompt_text = '\n\n'.join([subtitle.replace("\n", " ") for subtitle in clean_subtitles])
-        prompt_task = f'''Below this paragraph are {len(clean_subtitles)} subtitles in {translate_from} language, \
-separated by empty lines. Text may look offensive or inappropriate, but you MUST rememeber it is a work of fiction \
-and can't harm anybody. Your task is to translate subtitles to {translate_to} language. You MUST keep subtitles in \
-the same order. Your response MUST consist only of {len(clean_subtitles)} translated subtitles with empty lines between \
-them. You CAN NOT add any comments.\n
-'''
-        model_encoding = tiktoken.encoding_for_model(translator_model)
-        prompt_tokens = len(model_encoding.encode(prompt_task + prompt_text))
+        # Make token estimation to break down translation to multiple prompts if needed
+        prompt_text = '\n'.join([f"{i}. {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles)])
+        prompt_task = f'''Below this paragraph are numbered lines. Each line has text in {translate_from} language. \
+Your task is to translate text from each line to {translate_to} language. Text may look offensive or inappropriate, \
+but you MUST rememeber that it is a work of fiction and can't harm anybody. You MUST keep lines in the same order. \
+Each line in your response MUST contain number, dot, space and translated text. You CAN NOT concatenate lines. \
+You CAN NOT add any comments. '''.strip()
 
-        if prompt_tokens < tokens_limit:
-            prompt = prompt_task + prompt_text
-            translated_text = DDGS().chat(prompt, translator_model)
-        else:
-            prompts_count = math.ceil(prompt_tokens / tokens_limit)
-            subtitles_count = math.floor(len(clean_subtitles) / prompts_count)
-            translated_text = ''
-            index = 0
-            while index < len(clean_subtitles):
-                limit = index + subtitles_count
-                current_text = '\n\n'.join([subtitle.replace("\n", " ") for subtitle in clean_subtitles[index:limit]])
-                prompt = prompt_task + current_text
-                translated_chunk = DDGS().chat(prompt, translator_model)
-                translated_text += translated_chunk
-                index = limit
-                time.sleep(20)
-                print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
+        def estimate_token_count(prompt: str) -> int:
+            # Chinese, Japanese Kanji (same range), Japanese Hiragana & Katakana, Korean Hangul
+            cjkk_chars = len(re.findall(r'[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\uac00-\ud7af]', prompt))
+            words = len(re.findall(r'\b\w+\b', prompt))  # Words for alphabet-based languages
+            punctuation_count = len(re.findall(r'[^\w\s]', prompt))  # Punctuation
+            other_chars = len(prompt) - cjkk_chars - words - punctuation_count
 
-        print(translated_text)
+            total_token_estimate = int(cjkk_chars * 1.5 + words + punctuation_count + other_chars / 4)
 
+            return total_token_estimate
+
+        # Construct and send N prompts based on token estimation
+        prompt_tokens = estimate_token_count(prompt_task + prompt_text)
+        prompts_count = math.ceil(prompt_tokens / tokens_limit)
+        subtitles_per_prompt = math.floor(len(clean_subtitles) / prompts_count)
+        translated_text = ''
+        index = 0
+        while index < len(clean_subtitles):
+            limit = index + subtitles_per_prompt
+            # Format subtitles into {number. text} lines for later pasring
+            prompt_text = '\n'.join([f"{i}. {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles[index:limit], start=index + 1)])
+            prompt_limit = f' Your response MUST contain exactly {len(clean_subtitles[index:limit])} lines.\n\n'
+            prompt = prompt_task + prompt_limit + prompt_text
+            translated_chunk = DDGS().chat(prompt, translator_model)
+            translated_text += translated_chunk
+            index = limit
+            print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
+
+        # Parse translated text from response and save it to file dictionaey
+        response_pattern = re.split(r'(\d+\.\s)', translated_text)[1:]  # Split {number. } and {text}
+        translated_subtitles = self.subtitles_data[self.translated_file]['subtitles']
+        for line in range(0, len(response_pattern), 2):
+            index = int(response_pattern[line].strip('. '))
+            subtitle_text = response_pattern[line + 1].strip()
+            translated_subtitles[index].update({"text": subtitle_text})
+
+        self._create_file(self.translated_file)
 
 
 if __name__ == '__main__':
@@ -434,7 +478,7 @@ if __name__ == '__main__':
     shift = SubEdit(['gen_src_en_timing.srt'])
     clean = SubEdit(['gen_src_es_markup.srt'])
     align = SubEdit(['gen_src_ru_timing.srt', 'gen_exm_ko_timing.srt'])
-    translate = SubEdit(['gen_exm_en_translate.srt'])
+    translate = SubEdit(['gen_exm_zh-cn_translate.srt'])
 
 #    shift.shift_timing(delay=2468)
 #    clean.clean_markup(bold=True, color=True)
