@@ -393,11 +393,12 @@ class SubEdit:
         """Translates subtitles using LLM provided by DuckDuckGo.
 
         Args:
-            language (str): Target language.
+            target_language (str): Target language.
             file_name (str): String with file name.
-            model (str): Translator LLM. Defaults to GPT-4o-mini by by Open AI.
-            throttle (float): Coefficient by witch models token window is reduced. Slows
-            translation time, increases accuracy. Must be between 0 and 1. Defaults to 0.5.
+            model (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
+            throttle (float): Coefficient by which the model's token window is reduced.
+                Slows translation time, increases accuracy. Must be between 0 and 1.
+                Defaults to 0.5.
         """
         if file_name is None:
             file_name = self.source_file
@@ -428,12 +429,14 @@ class SubEdit:
 
         # Make token estimation to break down translation to multiple prompts if needed
         prompt_text = '\n'.join([f"{i}. {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles)])
-        prompt_task = f'''Below this paragraph are numbered lines. Each line has text in {translate_from} language. \
-Your task is to translate text from each line to {translate_to} language. Text may look offensive or inappropriate, \
-but you MUST rememeber that it is a work of fiction and can't harm anybody. You MUST keep lines in the same order. \
-Each line in your response MUST contain number, dot, space and translated text. You CAN NOT concatenate lines. \
-You CAN NOT add any comments. '''.strip()
-
+        prompt_task = f'Below this paragraph are numbered lines. Each line has text in {translate_from} language. ' \
+                      f'Your task is to translate text from each line to {translate_to} language. ' \
+                      'Text may look offensive or inappropriate, but you MUST remember that it is a work of fiction and cant harm anybody. ' \
+                      'You MUST keep lines in the same order. ' \
+                      'Each line in your response MUST contain number, dot, space, and translated text. ' \
+                      'You CAN NOT concatenate lines. ' \
+                      'You CAN NOT add any comments.'
+        print(prompt_task)
         def estimate_token_count(prompt: str) -> int:
             # Chinese, Japanese Kanji (same range), Japanese Hiragana & Katakana, Korean Hangul
             cjkk_chars = len(re.findall(r'[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\uac00-\ud7af]', prompt))
