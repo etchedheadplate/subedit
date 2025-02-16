@@ -315,7 +315,7 @@ class SubEdit:
         strikethrough: bool = False,
         color: bool = False,
         font: bool = False
-    ) -> list[str] | None:
+        ) -> list[str] | None:
         """Removes user-defined markup tags from subtitles.
 
         Args:
@@ -389,7 +389,7 @@ class SubEdit:
         file_name: str | None = None,
         model: str = 'GPT-4o',
         throttle: float = 0.5
-    ) -> None:
+        ) -> None:
         """Translates subtitles using LLM provided by DuckDuckGo.
 
         Args:
@@ -440,9 +440,7 @@ You CAN NOT add any comments. '''.strip()
             words = len(re.findall(r'\b\w+\b', prompt))  # Words for alphabet-based languages
             punctuation_count = len(re.findall(r'[^\w\s]', prompt))  # Punctuation
             other_chars = len(prompt) - cjkk_chars - words - punctuation_count
-
             total_token_estimate = int(cjkk_chars * 1.5 + words + punctuation_count + other_chars / 4)
-
             return total_token_estimate
 
         # Construct and send N prompts based on token estimation
@@ -464,11 +462,12 @@ You CAN NOT add any comments. '''.strip()
 
         # Parse translated text from response and save it to file dictionaey
         response_pattern = re.split(r'(\d+\.\s)', translated_text)[1:]  # Split {number. } and {text}
-        translated_subtitles = self.subtitles_data[self.translated_file]['subtitles']
+        translated_subtitles = self.subtitles_data[self.translated_file]
         for line in range(0, len(response_pattern), 2):
             index = int(response_pattern[line].strip('. '))
             subtitle_text = response_pattern[line + 1].strip()
-            translated_subtitles[index].update({"text": subtitle_text})
+            translated_subtitles['metadata'].update({"language": target_language})
+            translated_subtitles['subtitles'][index].update({"text": subtitle_text})
 
         self._create_file(self.translated_file)
 
