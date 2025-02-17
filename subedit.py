@@ -390,8 +390,8 @@ class SubEdit:
         self,
         target_language: str,
         file_path: str | None = None,
-        model: str = 'GPT-4o',
-        throttle: float = 0.5,
+        model_name: str = 'GPT-4o',
+        model_throttle: float = 0.5,
         request_timeout: int = 5,
         response_timeout: int = 60
         ) -> None:
@@ -400,16 +400,18 @@ class SubEdit:
         Args:
             target_language (str): Target language.
             file_path (str): String with relative path to file.
-            model (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
-            throttle (float): Coefficient by which the model's token window is reduced.
+            model_name (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
+            model_throttle (float): Coefficient by which the model's token window is reduced.
                 Slows translation time, increases accuracy. Must be between 0 and 1.
                 Defaults to 0.5.
+            request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 5.
+            response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 60.
         """
         if file_path is None:
             file_path = self.source_file
 
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.translated_file = f'{source_name}_translated_to_{target_language}_with_{model}{source_ext}'
+        self.translated_file = f'{source_name}_translated_to_{target_language}_with_{model_name}{source_ext}'
 
         self.subtitles_data[self.translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
@@ -422,8 +424,8 @@ class SubEdit:
             data: TranslateData = json.load(file)
             translate_from: str = data['codes'][original_language]
             translate_to: str = data['codes'][target_language]
-            translator_model: str = data['models'][model]['name']
-            tokens_limit: float = data['models'][model]['tokens'] * throttle
+            translator_model: str = data['models'][model_name]['name']
+            tokens_limit: float = data['models'][model_name]['tokens'] * model_throttle
 
         self._internal_call = True
         result = self.clean_markup(file_path)
