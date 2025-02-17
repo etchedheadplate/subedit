@@ -51,42 +51,41 @@ class SubEdit:
 
         if len(file_list) <= 2:
             for file in file_list:
-                self._detect_encoding(file)
                 self._parse_subtitles(file)
-                self._detect_language(file)
         else:
             raise ValueError(f'File list must include 1 or 2 text strings ({len(file_list)} provided).')
 
-    def _detect_encoding(self, file_name: str) -> None:
-        """Detects encoding of subtitles file and saves it to 'metadata' subditctionary.
-
-        Args:
-            file_name (str): String with file name.
-        """
-        with open(file_name, 'rb') as file:
-            raw_data = file.read()
-            raw_metadata = chardet.detect(raw_data)
-
-            extracted_metadata: SubtitleMetadata = {
-                'encoding': str(raw_metadata['encoding']),
-                'confidence': int(raw_metadata['confidence']),
-                'language': ''
-            }
-
-            self.subtitles_data[file_name] = {
-                'metadata': extracted_metadata,
-                'subtitles': {}
-            }
-
-    def _parse_subtitles(self, file_name: str) -> None:
+    def _parse_subtitles(self, file_path: str) -> None:
         """Parses subtitles from file into a dictionary.
 
         Args:
-            file_name (str): String with file name.
+            file_path (str): String with relative path to file.
         """
-        file_metadata = self.subtitles_data[file_name]['metadata']
+        def detect_encoding(file_path: str) -> None:
+            """Detects encoding of subtitles file and saves it to 'metadata' subditctionary.
 
-        with open(file_name, 'r', encoding=file_metadata['encoding']) as file:
+            Args:
+                file_path (str): String with relative path to file.
+            """
+            with open(file_path, 'rb') as file:
+                raw_data = file.read()
+                raw_metadata = chardet.detect(raw_data)
+
+                extracted_metadata: SubtitleMetadata = {
+                    'encoding': str(raw_metadata['encoding']),
+                    'confidence': int(raw_metadata['confidence']),
+                    'language': ''
+                }
+
+                self.subtitles_data[file_path] = {
+                    'metadata': extracted_metadata,
+                    'subtitles': {}
+                }
+
+        detect_encoding(file_path)
+        file_metadata = self.subtitles_data[file_path]['metadata']
+
+        with open(file_path, 'r', encoding=file_metadata['encoding']) as file:
             raw_subtitles = file.readlines()
             parsed_subtitles: Dict[int, SubtitleEntry] = {}
 
@@ -115,38 +114,41 @@ class SubEdit:
                     'text': '\n'.join(text_lines)
                 }
 
-            self.subtitles_data[file_name]['subtitles'] = parsed_subtitles
+            self.subtitles_data[file_path]['subtitles'] = parsed_subtitles
 
-    def _detect_language(self, file_name: str) -> None:
-        """Detects language of subtitles file and saves it to 'metadata' subditctionary.
+            def detect_language(file_path: str) -> None:
+                    """Detects language of subtitles file and saves it to 'metadata' subditctionary.
 
-        Args:
-            file_name (str): String with file name.
-        """
-        self._internal_call = True
-        result = self.clean_markup(file_name)
-        if result is None:
-            raise ValueError("clean_markup returned None unexpectedly")
-        unformatted_text: list[str] = result
-        self._internal_call = False
+                    Args:
+                        file_path (str): String with relative path to file.
+                    """
+                    self._internal_call = True
+                    result = self.clean_markup(file_path)
+                    if result is None:
+                        raise ValueError("clean_markup returned None unexpectedly")
+                    unformatted_text: list[str] = result
+                    self._internal_call = False
 
-        original_text: str = ' '.join(unformatted_text)
+                    original_text: str = ' '.join(unformatted_text)
 
-        subtitles_language: str = langdetect.detect(original_text) # type: ignore
-        self.subtitles_data[file_name]['metadata'].update({
-            'language': subtitles_language
-        })
+                    subtitles_language: str = langdetect.detect(original_text) # type: ignore
+                    self.subtitles_data[file_path]['metadata'].update({
+                        'language': subtitles_language
+                    })
 
-    def _create_file(self, file_name: str) -> None:
+            detect_language(file_path)
+
+
+    def _create_file(self, file_path: str) -> None:
         """Writes subtitles into .srt file in UTF-8 encoding.
 
         Args:
-            file_name (str): String with file name.
+            file_path (str): String with relative path to file.
         """
-        subtitles_data = self.subtitles_data[file_name]['subtitles']
+        subtitles_data = self.subtitles_data[file_path]['subtitles']
         subtitle_indices = sorted(subtitles_data.keys())  # Sort indices numerically
 
-        with open(file_name, 'w', encoding='utf-8') as file:
+        with open(file_path, 'w', encoding='utf-8') as file:
             for index in subtitle_indices:
                 file.write(
                     f'{index}\n'
@@ -308,7 +310,7 @@ class SubEdit:
 
     def clean_markup(
         self,
-        file_name: str | None = None,
+        file_path: str | None = None,
         bold: bool = False,
         italic: bool = False,
         underline: bool = False,
@@ -319,7 +321,7 @@ class SubEdit:
         """Removes user-defined markup tags from subtitles.
 
         Args:
-            file_name (str or None): String with file name. Defaults to None.
+            file_path (str or None): String with file name. Defaults to None.
             bold (bool): Removes <b></b> tags. Defaults to False.
             italic (bool): Removes <i></i> tags. Defaults to False.
             underline (bool): Removes <u></u> tags. Defaults to False.
@@ -333,8 +335,8 @@ class SubEdit:
         unformatted_text: list[str] = []
         cleaned_subtitles: dict[int, SubtitleEntry] = {}
 
-        if self._internal_call and file_name:
-            parsed_subtitles = self.subtitles_data[file_name]['subtitles']
+        if self._internal_call and file_path:
+            parsed_subtitles = self.subtitles_data[file_path]['subtitles']
         else:
             source_name, source_ext = os.path.splitext(self.source_file)
             self.cleaned_file = f'{source_name}_cleaned{source_ext}'
@@ -369,7 +371,7 @@ class SubEdit:
             else: # Remove all markup
                 new_text = re.sub(r'<.*?>', '', new_text)
 
-            if self._internal_call and file_name:
+            if self._internal_call and file_path:
                 unformatted_text.append(new_text)
             else:
                 cleaned_subtitles[index] = {
@@ -378,7 +380,7 @@ class SubEdit:
                     'text': new_text
                 }
 
-        if self._internal_call and file_name:
+        if self._internal_call and file_path:
             return unformatted_text
         else:
             self._create_file(self.cleaned_file)
@@ -386,7 +388,7 @@ class SubEdit:
     def translate_subtitles(
         self,
         target_language: str,
-        file_name: str | None = None,
+        file_path: str | None = None,
         model: str = 'GPT-4o',
         throttle: float = 0.5
         ) -> None:
@@ -394,24 +396,24 @@ class SubEdit:
 
         Args:
             target_language (str): Target language.
-            file_name (str): String with file name.
+            file_path (str): String with relative path to file.
             model (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
             throttle (float): Coefficient by which the model's token window is reduced.
                 Slows translation time, increases accuracy. Must be between 0 and 1.
                 Defaults to 0.5.
         """
-        if file_name is None:
-            file_name = self.source_file
+        if file_path is None:
+            file_path = self.source_file
 
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.translated_file = f'{source_name}_translated{source_ext}'
+        self.translated_file = f'{source_name}_translated_{target_language}{source_ext}'
 
         self.subtitles_data[self.translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy()
         }
 
-        original_language = self.subtitles_data[file_name]['metadata']['language']
+        original_language = self.subtitles_data[file_path]['metadata']['language']
 
         with open('translate.json', 'r') as file:
             data: TranslateData = json.load(file)
@@ -421,7 +423,7 @@ class SubEdit:
             tokens_limit: float = data['models'][model]['tokens'] * throttle
 
         self._internal_call = True
-        result = self.clean_markup(file_name)
+        result = self.clean_markup(file_path)
         if result is None:
             raise ValueError("clean_markup returned None unexpectedly")
         clean_subtitles: list[str] = result
@@ -477,14 +479,15 @@ class SubEdit:
 
 if __name__ == '__main__':
     # Basic tests:
-    shift = SubEdit(['gen_src_en_timing.srt'])
-    clean = SubEdit(['gen_src_es_markup.srt'])
-    align = SubEdit(['gen_src_ru_timing.srt', 'gen_exm_ko_timing.srt'])
-    translate = SubEdit(['gen_exm_zh-cn_translate.srt'])
+    base = 'test/'
+    shift = SubEdit([base + 'timing_en.srt'])
+    clean = SubEdit([base + 'markup_es.srt'])
+    align = SubEdit([base + 'timing_ru.srt', base + 'timing_ko.srt'])
+    translate = SubEdit([base + 'translate_zh-tw.srt'])
 
-#    shift.shift_timing(delay=2468)
-#    clean.clean_markup(bold=True, color=True)
-#    align.align_timing([2,38],[3,39])
+    shift.shift_timing(delay=2468)
+    clean.clean_markup(bold=True, color=True)
+    align.align_timing([2,38],[3,39])
 
-    translate.translate_subtitles('ru')
-#    align.show_data()
+#    translate.translate_subtitles('ru')
+    align.show_data()

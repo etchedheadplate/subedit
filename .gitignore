@@ -4,13 +4,17 @@
 /.zed
 .env
 
-# Junk files
-/testing
+# Testing
+/test
 test.py
+*.srt
+*.log
+
+# Temporary
 /temp
 /tmp
+
+# Junk
 **/__pycache__
 *.pyc
 *.DS_Store
-*.log
-*.srt
