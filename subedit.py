@@ -468,7 +468,7 @@ class SubEdit:
             prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles[index:limit], start=index + 1)])
             prompt_limit = f' Your response MUST contain exactly {len(clean_subtitles[index:limit])} lines.\n\n'
             prompt = prompt_task + prompt_limit + prompt_text
-            translated_chunk = DDGS().chat(prompt, translator_model)
+            translated_chunk = DDGS().chat(prompt, translator_model, timeout=60)
             translated_text += translated_chunk
             index = limit
             print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
@@ -495,11 +495,11 @@ if __name__ == '__main__':
     shift = SubEdit([base + 'timing_en.srt'])
     clean = SubEdit([base + 'markup_es.srt'])
     align = SubEdit([base + 'timing_ru.srt', base + 'timing_ko.srt'])
-    translate = SubEdit([base + 'translate_ja.srt'])
+    translate = SubEdit([base + 'translate_zh-tw.srt'])
 
     shift.shift_timing(delay=2468)
     clean.clean_markup(bold=True, color=True)
     align.align_timing([2,38],[3,39])
 
-    translate.translate_subtitles('ru')
+    translate.translate_subtitles('ja')
     align.show_data()
