@@ -1,6 +1,7 @@
 import os
 import re
 import math
+import time
 import json
 import chardet
 import langdetect # type: ignore
@@ -181,7 +182,7 @@ class SubEdit:
             items (list[int]): List of subtitles numbers. Defaults to None (all subtitles are shifted).
         """
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.shifted_file = f'{source_name}_shifted{source_ext}'
+        self.shifted_file = f'{source_name}_shifted_by_{delay}_ms{source_ext}'
 
         self.subtitles_data[self.shifted_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
@@ -390,7 +391,9 @@ class SubEdit:
         target_language: str,
         file_path: str | None = None,
         model: str = 'GPT-4o',
-        throttle: float = 0.5
+        throttle: float = 0.5,
+        request_timeout: int = 5,
+        response_timeout: int = 60
         ) -> None:
         """Translates subtitles using LLM provided by DuckDuckGo.
 
@@ -406,7 +409,7 @@ class SubEdit:
             file_path = self.source_file
 
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.translated_file = f'{source_name}_translated_{target_language}{source_ext}'
+        self.translated_file = f'{source_name}_translated_to_{target_language}_with_{model}{source_ext}'
 
         self.subtitles_data[self.translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
@@ -468,10 +471,11 @@ class SubEdit:
             prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles[index:limit], start=index + 1)])
             prompt_limit = f' Your response MUST contain exactly {len(clean_subtitles[index:limit])} lines.\n\n'
             prompt = prompt_task + prompt_limit + prompt_text
-            translated_chunk = DDGS().chat(prompt, translator_model, timeout=60)
+            translated_chunk = DDGS().chat(prompt, translator_model, timeout=response_timeout)
             translated_text += translated_chunk
             index = limit
             print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
+            time.sleep(request_timeout) # Reduce abuse of Duck.ai API
 
         # Parse translated text from response and save it to file dictionaey
         response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
