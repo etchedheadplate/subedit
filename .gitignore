@@ -13,6 +13,7 @@ test.py
 # Temporary
 /temp
 /tmp
+*.md
 
 # Junk
 **/__pycache__
