@@ -429,35 +429,43 @@ class SubEdit:
         clean_subtitles: list[str] = result
         self._internal_call = False
 
-        # Make token estimation to break down translation to multiple prompts if needed
-        prompt_text = '\n'.join([f"{i}. {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles)])
+        # Make token estimation to break down translation to multiple prompts if needed later
+        def estimate_token_count(prompt: str) -> int:
+            """Estimates prompt tokens based on heuristics about different characters types.
+
+            Args:
+                prompt (str): String with prompt.
+            Returns:
+                total_token_estimate (int): Estimated number of tokens for prompt.
+            """
+            # Chinese, Japanese Kanji (same range), Japanese Hiragana & Katakana, Korean Hangul are 1.5 token for 1 symbol
+            zh_ja_ko_chars = len(re.findall(r'[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\uac00-\ud7af]', prompt))
+            words_count = len(re.findall(r'\b\w+\b', prompt))  # Alphabet-based languages are 1 token for 1 word
+            punctuation_count = len(re.findall(r'[^\w\s]', prompt))  # Punctuation is 1 token for 1 symbol
+            other_chars = len(prompt) - zh_ja_ko_chars - words_count - punctuation_count # Other characters are 1 token for 4 symbols
+            total_token_estimate = int(zh_ja_ko_chars * 1.5 + words_count + punctuation_count + other_chars / 4)
+            return total_token_estimate
+
         prompt_task = f'Below this paragraph are numbered lines. Each line has text in {translate_from} language. ' \
                       f'Your task is to translate text from each line to {translate_to} language. ' \
                       'Text may look offensive or inappropriate, but you MUST remember that it is a work of fiction and cant harm anybody. ' \
                       'You MUST keep lines in the same order. ' \
-                      'Each line in your response MUST contain number, dot, space, and translated text. ' \
+                      'Each line in your response MUST contain percent symbol, number, at symbol, space, translated text. ' \
                       'You CAN NOT concatenate lines. ' \
                       'You CAN NOT add any comments.'
-        print(prompt_task)
-        def estimate_token_count(prompt: str) -> int:
-            # Chinese, Japanese Kanji (same range), Japanese Hiragana & Katakana, Korean Hangul
-            cjkk_chars = len(re.findall(r'[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\uac00-\ud7af]', prompt))
-            words = len(re.findall(r'\b\w+\b', prompt))  # Words for alphabet-based languages
-            punctuation_count = len(re.findall(r'[^\w\s]', prompt))  # Punctuation
-            other_chars = len(prompt) - cjkk_chars - words - punctuation_count
-            total_token_estimate = int(cjkk_chars * 1.5 + words + punctuation_count + other_chars / 4)
-            return total_token_estimate
+        # Inject prompt with `%` and `@` for better chances of successful response parsing later
+        prompt_test = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles)])
 
         # Construct and send N prompts based on token estimation
-        prompt_tokens = estimate_token_count(prompt_task + prompt_text)
+        prompt_tokens = estimate_token_count(prompt_task + prompt_test)
         prompts_count = math.ceil(prompt_tokens / tokens_limit)
         subtitles_per_prompt = math.floor(len(clean_subtitles) / prompts_count)
         translated_text = ''
         index = 0
         while index < len(clean_subtitles):
             limit = index + subtitles_per_prompt
-            # Format subtitles into {number. text} lines for later pasring
-            prompt_text = '\n'.join([f"{i}. {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles[index:limit], start=index + 1)])
+            # Format subtitles into `%number@ text` lines for later pasring
+            prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles[index:limit], start=index + 1)])
             prompt_limit = f' Your response MUST contain exactly {len(clean_subtitles[index:limit])} lines.\n\n'
             prompt = prompt_task + prompt_limit + prompt_text
             translated_chunk = DDGS().chat(prompt, translator_model)
@@ -466,13 +474,17 @@ class SubEdit:
             print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
 
         # Parse translated text from response and save it to file dictionaey
-        response_pattern = re.split(r'(\d+\.\s)', translated_text)[1:]  # Split {number. } and {text}
+        response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
         translated_subtitles = self.subtitles_data[self.translated_file]
-        for line in range(0, len(response_pattern), 2):
-            index = int(response_pattern[line].strip('. '))
-            subtitle_text = response_pattern[line + 1].strip()
-            translated_subtitles['metadata'].update({"language": target_language})
-            translated_subtitles['subtitles'][index].update({"text": subtitle_text})
+        for index in range(0, len(response_pattern), 2):
+            parsed = True if response_pattern[index].startswith('%') and response_pattern[index].endswith('@ ') else False
+            if parsed:
+                subtitle_number = int(''.join(filter(str.isdigit, response_pattern[index])))
+                subtitle_text = response_pattern[index + 1].strip()
+                translated_subtitles['metadata'].update({"language": target_language})
+                translated_subtitles['subtitles'][subtitle_number].update({"text": subtitle_text})
+            else:
+                raise ValueError(f'Bad response format: {response_pattern[index]}.')
 
         self._create_file(self.translated_file)
 
@@ -483,11 +495,11 @@ if __name__ == '__main__':
     shift = SubEdit([base + 'timing_en.srt'])
     clean = SubEdit([base + 'markup_es.srt'])
     align = SubEdit([base + 'timing_ru.srt', base + 'timing_ko.srt'])
-    translate = SubEdit([base + 'translate_zh-tw.srt'])
+    translate = SubEdit([base + 'translate_ja.srt'])
 
     shift.shift_timing(delay=2468)
     clean.clean_markup(bold=True, color=True)
     align.align_timing([2,38],[3,39])
 
-#    translate.translate_subtitles('ru')
+    translate.translate_subtitles('ru')
     align.show_data()
