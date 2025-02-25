@@ -26,7 +26,7 @@ class SubtitleData(TypedDict):
 
 SubtitlesDataDict = Dict[str, SubtitleData]
 
-# Structure of JSON data
+# Structure of external JSON data
 class ModelInfo(TypedDict):
     name: str
     tokens: float
@@ -386,7 +386,7 @@ class SubEdit:
         else:
             self._create_file(self.cleaned_file)
 
-    def translate_subtitles(
+    def translate_text(
         self,
         target_language: str,
         file_path: str | None = None,
@@ -507,5 +507,5 @@ if __name__ == '__main__':
     clean.clean_markup(bold=True, color=True)
     align.align_timing([2,38],[3,39])
 
-    translate.translate_subtitles('ja')
+    translate.translate_text('ja')
     align.show_data()
