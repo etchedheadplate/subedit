@@ -12,7 +12,7 @@ test.py
 *.log
 
 # Temporary
-/uploads
+backend/uploads
 backend/temp
 *.md
 
