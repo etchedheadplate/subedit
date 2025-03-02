@@ -3,6 +3,7 @@ import time
 import shutil
 import uuid
 import threading
+from typing import Dict, Any
 from fastapi import FastAPI, UploadFile, File, Form
 from contextlib import asynccontextmanager
 
@@ -41,12 +42,12 @@ async def get_session():
 async def upload_file(
     session_id: str = Form(...),  # Get session ID from frontend
     file: UploadFile = File(...)
-):
+) -> Dict[str, Any]:
     """Upload file to the user's session directory."""
     session_path = os.path.join(UPLOAD_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)  # Ensure session directory exists
 
-    file_location = os.path.join(session_path, file.filename)
+    file_location = os.path.join(session_path, str(file.filename))
     with open(file_location, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
