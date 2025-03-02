@@ -1,22 +1,5 @@
-# Enviroment
-/.ropeproject
-/.zed
+.ropeproject
+.zed
 venv
-.env
-.python-version
-
-# Testing
-backend/test
-test.py
-*.srt
-*.log
-
-# Temporary
-backend/uploads
-backend/temp
 *.md
-
-# Junk
-**/__pycache__
-*.pyc
 *.DS_Store
