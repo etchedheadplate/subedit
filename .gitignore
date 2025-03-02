@@ -1,18 +1,19 @@
 # Enviroment
-/venv
 /.ropeproject
 /.zed
+venv
 .env
+.python-version
 
 # Testing
-/test
+backend/test
 test.py
 *.srt
 *.log
 
 # Temporary
-/temp
-/tmp
+/uploads
+backend/temp
 *.md
 
 # Junk

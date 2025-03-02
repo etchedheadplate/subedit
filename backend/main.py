@@ -1,11 +1,32 @@
-from fastapi import FastAPI, UploadFile, File, Form, BackgroundTasks
 import os
+import time
 import shutil
 import uuid
+import threading
+from fastapi import FastAPI, UploadFile, File, Form
+from contextlib import asynccontextmanager
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for FastAPI (startup/shutdown)."""
+    # Start cleanup thread
+    cleanup_thread = threading.Thread(target=run_cleanup, daemon=True)
+    cleanup_thread.start()
+
+    yield  # Allow FastAPI to continue running
+
+    # No explicit cleanup is needed, as the thread is daemonized
+
+app = FastAPI(lifespan=lifespan)
+
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to SubEdit API"}
 
 UPLOAD_DIR = "uploads"
+
+if not os.path.exists(UPLOAD_DIR):
+    os.makedirs(UPLOAD_DIR)
 
 @app.post("/get-session/")
 async def get_session():
@@ -36,7 +57,7 @@ async def upload_file(
         "message": "File uploaded successfully"
     }
 
-SESSION_LIFETIME = 3600  # 1 hour (in seconds)
+SESSION_LIFETIME = 3600  # 1 hour in seconds
 
 def cleanup_old_sessions():
     """Delete session folders older than SESSION_LIFETIME seconds."""
@@ -54,13 +75,8 @@ def cleanup_old_sessions():
                 shutil.rmtree(session_path)
                 print(f"Deleted old session: {session_id}")
 
-@app.on_event("startup")
-async def schedule_cleanup():
+def run_cleanup():
     """Runs cleanup function every hour in the background."""
-    import threading
-    def run_cleanup():
-        while True:
-            cleanup_old_sessions()
-            time.sleep(3600)  # Run cleanup every hour
-
-    threading.Thread(target=run_cleanup, daemon=True).start()
+    while True:
+        cleanup_old_sessions()
+        time.sleep(3600)  # Run cleanup every hour
