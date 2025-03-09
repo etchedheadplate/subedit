@@ -4,8 +4,8 @@ import shutil
 import uuid
 import threading
 import re
-from typing import Dict, Any
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, APIRouter
+from typing import Dict, Any, Optional
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -29,9 +29,26 @@ async def lifespan(app: FastAPI):
     cleanup_thread.start()
     yield
 
+def cleanup_old_sessions():
+    """Delete session folders older than SESSION_LIFETIME."""
+    now = time.time()
+    for session_id in os.listdir(USER_FILES_DIR):
+        session_path = os.path.join(USER_FILES_DIR, session_id)
+        if os.path.isdir(session_path):
+            last_modified = os.path.getmtime(session_path)
+            if now - last_modified > SESSION_LIFETIME:
+                shutil.rmtree(session_path)
+                print(f"Deleted old session: {session_id}")
+
+def run_cleanup():
+    """Run cleanup function every hour."""
+    while True:
+        cleanup_old_sessions()
+        time.sleep(3600)
+
 app = FastAPI(lifespan=lifespan)
 
-# CORS Setup
+# Cross-Origin Resource Sharing
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],  # Frontend URL
@@ -40,6 +57,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Service endpoints
 @app.post("/get-session/")
 async def get_session():
     """Generate a new session ID."""
@@ -78,6 +96,8 @@ async def upload_file(
     with open(file_location, "wb") as buffer:
         buffer.write(contents)
 
+    print("Received file:", file.filename)  # Debugging
+
     return {
         "session_id": session_id,
         "filename": safe_filename,
@@ -93,34 +113,14 @@ async def download_file(session_id: str, filename: str):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
 
-def cleanup_old_sessions():
-    """Delete session folders older than SESSION_LIFETIME."""
-    now = time.time()
-    for session_id in os.listdir(USER_FILES_DIR):
-        session_path = os.path.join(USER_FILES_DIR, session_id)
-        if os.path.isdir(session_path):
-            last_modified = os.path.getmtime(session_path)
-            if now - last_modified > SESSION_LIFETIME:
-                shutil.rmtree(session_path)
-                print(f"Deleted old session: {session_id}")
-
-def run_cleanup():
-    """Run cleanup function every hour."""
-    while True:
-        cleanup_old_sessions()
-        time.sleep(3600)
-
-router = APIRouter()
-
-# Define request model
+# Request models and endpoints
 class ShiftRequest(BaseModel):
     session_id: str
     filename: str
     delay: int  # Milliseconds to shift
     items: list[int] | None = None  # List of subtitle indices (optional)
 
-# Shift endpoint
-@router.post("/shift/")
+@app.post("/shift/")
 async def shift_subtitles(request: ShiftRequest):
     try:
         # Load the session and file
@@ -128,7 +128,8 @@ async def shift_subtitles(request: ShiftRequest):
         shift_delay, shift_items = request.delay, request.items
 
         # Initialize SubEdit object
-        subedit = SubEdit(session_id=session_id, file_list=[filename])
+        file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+        subedit = SubEdit([file_path])
 
         # Apply shifting
         subedit.shift_timing(delay=shift_delay, items=shift_items)
@@ -138,7 +139,127 @@ async def shift_subtitles(request: ShiftRequest):
             "session_id": session_id,
             "filename": filename,
             "message": "Subtitles shifted successfully",
-            "preview": subedit.get_preview()
+            "preview": subedit.subtitles_data[subedit.shifted_file]['subtitles']
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class AlignRequest(BaseModel):
+    session_id: str
+    filename: str
+    example_filename: Optional[str] = None
+    source_slice: Optional[list[int]] = None
+    example_slice: Optional[list[int]] = None
+
+@app.post("/align/")
+async def align_subtitles(request: AlignRequest):
+    try:
+        # Load the session and file
+        session_id, filename = request.session_id, request.filename
+        source_slice, example_slice = request.source_slice, request.example_slice
+
+        # Check if example file is provided
+        if request.example_filename:
+            file_list = [
+                os.path.join(USER_FILES_DIR, session_id, filename),
+                os.path.join(USER_FILES_DIR, session_id, request.example_filename)
+            ]
+        else:
+            raise HTTPException(status_code=400, detail="Example file is required for alignment")
+
+        # Initialize SubEdit object
+        subedit = SubEdit(file_list)
+
+        # Apply alignment
+        subedit.align_timing(source_slice=source_slice, example_slice=example_slice)
+
+        # Return response with preview
+        return {
+            "session_id": session_id,
+            "filename": filename,
+            "message": "Subtitles aligned successfully",
+            "preview": subedit.subtitles_data[subedit.aligned_file]['subtitles']
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class CleanRequest(BaseModel):
+    session_id: str
+    filename: str
+    bold: bool = False
+    italic: bool = False
+    underline: bool = False
+    strikethrough: bool = False
+    color: bool = False
+    font: bool = False
+
+@app.post("/clean/")
+async def clean_subtitles(request: CleanRequest):
+    try:
+        # Load the session and file
+        session_id, filename = request.session_id, request.filename
+        file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+
+        # Initialize SubEdit object
+        subedit = SubEdit([file_path])
+
+        # Apply markup cleaning
+        subedit.clean_markup(
+            bold=request.bold,
+            italic=request.italic,
+            underline=request.underline,
+            strikethrough=request.strikethrough,
+            color=request.color,
+            font=request.font
+        )
+
+        # Return response with preview
+        return {
+            "session_id": session_id,
+            "filename": filename,
+            "message": "Markup cleaned successfully",
+            "preview": subedit.subtitles_data[subedit.cleaned_file]['subtitles']
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+class TranslateRequest(BaseModel):
+    session_id: str
+    filename: str
+    target_language: str
+    model_name: str = 'GPT-4o'
+    model_throttle: float = 0.5
+    request_timeout: int = 5
+    response_timeout: int = 60
+
+@app.post("/translate/")
+async def translate_subtitles(request: TranslateRequest):
+    try:
+        # Load the session and file
+        session_id, filename = request.session_id, request.filename
+        file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+
+        # Initialize SubEdit object
+        subedit = SubEdit([file_path])
+
+        # Apply translation
+        subedit.translate_text(
+            target_language=request.target_language,
+            model_name=request.model_name,
+            model_throttle=request.model_throttle,
+            request_timeout=request.request_timeout,
+            response_timeout=request.response_timeout
+        )
+
+        # Return response with preview
+        return {
+            "session_id": session_id,
+            "filename": filename,
+            "message": f"Subtitles translated to {request.target_language} successfully",
+            "preview": subedit.subtitles_data[subedit.translated_file]['subtitles']
         }
 
     except Exception as e:
