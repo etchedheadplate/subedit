@@ -9,7 +9,7 @@ test.py
 *.log
 
 # Temporary
-uploads
+user_files
 temp
 
 # Junk
