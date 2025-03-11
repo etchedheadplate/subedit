@@ -201,7 +201,7 @@ function App() {
     const handleDownload = () => {
         if (!processedFile || !sessionId) return;
 
-        window.location.href = `/download/?session_id=${sessionId}&filename=${processedFile}`;
+        window.location.href = `http://localhost:8000/download/?session_id=${sessionId}&filename=${processedFile}`;
     };
 
     // Render subtitle preview
@@ -227,7 +227,7 @@ function App() {
     };
 
     return (
-        <div style={{ padding: "20px", fontFamily: "Arial, sans-serif" }}>
+        <div style={{ padding: "20px" }}>
             <h1>Subtitle Editor</h1>
 
             {errorMessage && (
