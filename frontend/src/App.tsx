@@ -228,7 +228,22 @@ function App() {
 
     return (
         <div style={{ padding: "20px" }}>
-            <h1>Subtitle Editor</h1>
+            <h1>[ s u b e d i t ]</h1>
+
+            {!uploadedFile && (
+                <div style={{ marginTop: "10px" }}>
+                    <p>Upload .srt subtitles, fren!</p>
+                </div>
+            )}
+
+            {uploadedFile && (
+                <div style={{ marginTop: "10px" }}>
+                    <p>
+                        What do you want to do with{" "}
+                        <b>{uploadedFile.filename}</b>?
+                    </p>
+                </div>
+            )}
 
             {errorMessage && (
                 <div
@@ -259,21 +274,16 @@ function App() {
                         htmlFor="file-upload"
                         style={{
                             padding: "10px 15px",
-                            backgroundColor: "#4CAF50",
-                            color: "white",
-                            borderRadius: "5px",
+                            color: "#dee2e6",
+                            border: "0.1em transparent",
+                            borderRadius: "2px",
+                            backgroundColor: "#008000",
                             cursor: "pointer",
                             display: "inline-block",
                         }}
                     >
-                        {isLoading ? "Uploading..." : "Upload Subtitles"}
+                        Upload
                     </label>
-
-                    {uploadedFile && (
-                        <div style={{ marginTop: "10px" }}>
-                            <p>Uploaded: {uploadedFile.filename}</p>
-                        </div>
-                    )}
                 </div>
 
                 {/* Editor options */}
@@ -283,22 +293,21 @@ function App() {
                         disabled={!uploadedFile || isLoading}
                         style={{
                             padding: "10px 15px",
-                            backgroundColor:
-                                activeOption === "shift"
-                                    ? "#2196F3"
-                                    : "#e0e0e0",
                             color:
                                 activeOption === "shift"
-                                    ? "white"
+                                    ? "#dee2e6" // light grey text when upload and chosen
                                     : !uploadedFile
-                                      ? "#a0a0a0"
-                                      : "black",
-                            border: "none",
-                            borderRadius: "5px",
+                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
+                                      : "#dee2e6", // light grey text when upload and NOT chosen
+                            border:
+                                activeOption === "shift"
+                                    ? "0.1em dashed"
+                                    : "0.1em transparent",
+                            borderRadius: "0px",
                             cursor: uploadedFile ? "pointer" : "not-allowed",
                         }}
                     >
-                        Shift Timing
+                        Shift
                     </button>
 
                     <button
@@ -306,22 +315,21 @@ function App() {
                         disabled={!uploadedFile || isLoading}
                         style={{
                             padding: "10px 15px",
-                            backgroundColor:
-                                activeOption === "align"
-                                    ? "#2196F3"
-                                    : "#e0e0e0",
                             color:
                                 activeOption === "align"
-                                    ? "white"
+                                    ? "#dee2e6" // orange text when upload and chosen
                                     : !uploadedFile
-                                      ? "#a0a0a0"
-                                      : "black",
-                            border: "none",
-                            borderRadius: "5px",
+                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
+                                      : "#dee2e6", // light grey text when upload and NOT chosen
+                            border:
+                                activeOption === "align"
+                                    ? "0.1em dashed"
+                                    : "0.1em transparent",
+                            borderRadius: "0px",
                             cursor: uploadedFile ? "pointer" : "not-allowed",
                         }}
                     >
-                        Align by Example
+                        Align
                     </button>
 
                     <button
@@ -329,22 +337,21 @@ function App() {
                         disabled={!uploadedFile || isLoading}
                         style={{
                             padding: "10px 15px",
-                            backgroundColor:
-                                activeOption === "clean"
-                                    ? "#2196F3"
-                                    : "#e0e0e0",
                             color:
                                 activeOption === "clean"
-                                    ? "white"
+                                    ? "#dee2e6" // orange text when upload and chosen
                                     : !uploadedFile
-                                      ? "#a0a0a0"
-                                      : "black",
-                            border: "none",
-                            borderRadius: "5px",
+                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
+                                      : "#dee2e6", // light grey text when upload and NOT chosen
+                            border:
+                                activeOption === "clean"
+                                    ? "0.1em dashed"
+                                    : "0.1em transparent",
+                            borderRadius: "0px",
                             cursor: uploadedFile ? "pointer" : "not-allowed",
                         }}
                     >
-                        Clean Markup
+                        Clean
                     </button>
 
                     <button
@@ -352,29 +359,34 @@ function App() {
                         disabled={!uploadedFile || isLoading}
                         style={{
                             padding: "10px 15px",
-                            backgroundColor:
-                                activeOption === "translate"
-                                    ? "#2196F3"
-                                    : "#e0e0e0",
                             color:
                                 activeOption === "translate"
-                                    ? "white"
+                                    ? "#dee2e6" // orange text when upload and chosen
                                     : !uploadedFile
-                                      ? "#a0a0a0"
-                                      : "black",
-                            border: "none",
-                            borderRadius: "5px",
+                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
+                                      : "#dee2e6", // light grey text when upload and NOT chosen
+                            border:
+                                activeOption === "translate"
+                                    ? "0.1em dashed"
+                                    : "0.1em transparent",
+                            borderRadius: "0px",
                             cursor: uploadedFile ? "pointer" : "not-allowed",
                         }}
                     >
-                        Translate Subtitles
+                        Translate
                     </button>
                 </div>
             </div>
 
             {/* Active option content */}
             {activeOption === "shift" && uploadedFile && (
-                <div style={{ marginBottom: "20px" }}>
+                <div style={{ marginTop: "40px", marginBottom: "20px" }}>
+                    <div>
+                        <p>
+                            Enter positive or negative number of milliseconds (1
+                            second = 1000 milliseconds) to shift timing.
+                        </p>
+                    </div>
                     <div
                         style={{
                             display: "flex",
@@ -388,7 +400,21 @@ function App() {
                                 alignItems: "center",
                             }}
                         >
-                            <label htmlFor="delay-input">Milliseconds:</label>
+                            <button
+                                onClick={handleShift}
+                                disabled={isLoading}
+                                style={{
+                                    padding: "8px 15px",
+                                    backgroundColor: "#dc2f02",
+                                    color: "#dee2e6",
+                                    border: "none",
+                                    borderRadius: "2px",
+                                    cursor: "pointer",
+                                }}
+                            >
+                                Shift
+                            </button>
+                            <label htmlFor="delay-input">by</label>
                             <input
                                 id="delay-input"
                                 type="number"
@@ -399,24 +425,11 @@ function App() {
                                 style={{
                                     padding: "8px",
                                     width: "100px",
-                                    borderRadius: "5px",
+                                    borderRadius: "2px",
                                     border: "1px solid #ccc",
                                 }}
                             />
-                            <button
-                                onClick={handleShift}
-                                disabled={isLoading}
-                                style={{
-                                    padding: "8px 15px",
-                                    backgroundColor: "#FF9800",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "5px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                {isLoading ? "Processing..." : "Shift"}
-                            </button>
+                            <label htmlFor="delay-input">ms</label>
                         </div>
 
                         {processedFile && (
@@ -424,10 +437,10 @@ function App() {
                                 onClick={handleDownload}
                                 style={{
                                     padding: "8px 15px",
-                                    backgroundColor: "#673AB7",
-                                    color: "white",
+                                    backgroundColor: "#5a189a",
+                                    color: "#dee2e6",
                                     border: "none",
-                                    borderRadius: "5px",
+                                    borderRadius: "2px",
                                     cursor: "pointer",
                                 }}
                             >
