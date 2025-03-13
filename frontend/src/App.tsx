@@ -1,229 +1,65 @@
-import { useState, useEffect } from "react";
-
-interface SubtitleFile {
-    filename: string;
-    session_id: string;
-}
-
-interface SubtitlePreview {
-    [key: number]: {
-        start: string;
-        end: string;
-        text: string;
-    };
-}
-
-interface SubtitleMetadata {
-    encoding: string;
-    confidence: number;
-    language: string;
-}
+import React, { useState, useEffect } from "react";
+import { useSession } from "./hooks/useSession";
+import { useFileUpload } from "./hooks/useFileUpload";
+import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
+import SubtitlePreview from "./components/subtitles/SubtitlePreview";
+import ShiftOperation from "./components/operations/ShiftOperation";
+import { OperationType } from "./types";
 
 function App() {
-    // State management
-    const [sessionId, setSessionId] = useState<string | null>(null);
-    const [uploadedFile, setUploadedFile] = useState<SubtitleFile | null>(null);
-    const [processedFile, setProcessedFile] = useState<string | null>(null);
-    const [delay, setDelay] = useState<number>(0);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
-    const [activeOption, setActiveOption] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [sourcePreview, setSourcePreview] = useState<SubtitlePreview | null>(
+    // Custom hooks
+    const { sessionId, error: sessionError } = useSession();
+    const {
+        uploadedFile,
+        isLoading: isUploading,
+        error: uploadError,
+        uploadFile,
+    } = useFileUpload(sessionId);
+
+    const {
+        sourcePreview,
+        sourceMeta,
+        resultPreview,
+        processedFile,
+        isLoading: isProcessing,
+        error: processingError,
+        fetchSourcePreview,
+        shiftSubtitles,
+        getDownloadLink,
+        resetResults,
+    } = useSubtitleOperations(sessionId, uploadedFile);
+
+    // Local state
+    const [activeOption, setActiveOption] = useState<OperationType | null>(
         null,
     );
-    const [sourceMeta, setSourceMeta] = useState<SubtitleMetadata | null>(null);
-    const [resultPreview, setResultPreview] = useState<SubtitlePreview | null>(
-        null,
-    );
 
-    // Fetch session ID when app loads
-    useEffect(() => {
-        const getSession = async () => {
-            try {
-                const response = await fetch(
-                    "http://localhost:8000/get-session/",
-                    {
-                        method: "POST",
-                    },
-                );
+    // Combine errors for display
+    const errorMessage = sessionError || uploadError || processingError;
+    const isLoading = isUploading || isProcessing;
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                setSessionId(data.session_id);
-            } catch (error) {
-                console.error("Error fetching session ID:", error);
-                setErrorMessage(
-                    "Failed to initialize application. Please reload the page.",
-                );
-            }
-        };
-
-        getSession();
-    }, []);
-
-    // Handle file upload
+    // Handle file upload via input element
     const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!event.target.files || !sessionId) return;
-
-        const file = event.target.files[0];
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("session_id", sessionId);
-
-        setIsLoading(true);
-        setErrorMessage(null);
-
-        try {
-            const response = await fetch("http://localhost:8000/upload/", {
-                method: "POST",
-                body: formData,
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.detail || "Upload failed");
-            }
-
-            setUploadedFile({
-                filename: data.filename,
-                session_id: data.session_id,
-            });
-
-            // Reset any previous processing
-            setActiveOption(null);
-            setResultPreview(null);
-            setProcessedFile(null);
-        } catch (error: any) {
-            setErrorMessage(error.message);
-            setUploadedFile(null);
-        } finally {
-            setIsLoading(false);
-        }
+        if (!event.target.files) return;
+        await uploadFile(event.target.files[0]);
     };
 
     // Handle option selection
-    const handleOptionSelect = (option: string) => {
+    const handleOptionSelect = (option: OperationType) => {
         setActiveOption(option);
-        setResultPreview(null);
-        setProcessedFile(null);
+        resetResults();
 
         // If we have an uploaded file, fetch its preview
         if (uploadedFile && sessionId) {
-            fetchSubtitlePreview();
+            fetchSourcePreview();
         }
     };
 
-    // Fetch subtitle preview for the source file
-    const fetchSubtitlePreview = async () => {
-        if (!uploadedFile || !sessionId) return;
-
-        setIsLoading(true);
-
-        try {
-            // For now, let's use the shift endpoint with delay=0 just to get the preview
-            const response = await fetch("http://localhost:8000/shift/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    session_id: sessionId,
-                    filename: uploadedFile.filename,
-                    delay: 0,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.detail || "Failed to load subtitle preview",
-                );
-            }
-
-            // Extract metadata from the first subtitle item (could be improved)
-            if (data.preview) {
-                setSourcePreview(data.preview);
-
-                // In a real implementation, you would get this from a dedicated endpoint
-                // This is a placeholder for demonstration
-                setSourceMeta({
-                    encoding: "UTF-8",
-                    confidence: 100,
-                    language: "en",
-                });
-            }
-        } catch (error: any) {
-            setErrorMessage(error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Handle shift operation
-    const handleShift = async () => {
-        if (!uploadedFile || !sessionId) return;
-
-        setIsLoading(true);
-        setErrorMessage(null);
-
-        try {
-            const response = await fetch("http://localhost:8000/shift/", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    session_id: sessionId,
-                    filename: uploadedFile.filename,
-                    delay: delay,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(data.detail || "Shift operation failed");
-            }
-
-            setResultPreview(data.preview);
-            setProcessedFile(
-                `${uploadedFile.filename.split(".")[0]}_shifted_by_${delay}_ms.srt`,
-            );
-        } catch (error: any) {
-            setErrorMessage(error.message);
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Handle file download
+    // Handle download
     const handleDownload = () => {
-        if (!processedFile || !sessionId) return;
-
-        window.location.href = `http://localhost:8000/download/?session_id=${sessionId}&filename=${processedFile}`;
-    };
-
-    // Render subtitle preview
-    const renderSubtitlePreview = (preview: SubtitlePreview | null) => {
-        if (!preview) return <p>No preview available</p>;
-
-        return (
-            <div className="subtitle-preview">
-                <pre>
-                    {Object.entries(preview).map(([index, subtitle]) => (
-                        <div key={index} className="subtitle-entry">
-                            <div>{index}</div>
-                            <div>
-                                {subtitle.start} -- {subtitle.end}
-                            </div>
-                            <div>{subtitle.text}</div>
-                            <br />
-                        </div>
-                    ))}
-                </pre>
-            </div>
-        );
+        if (processedFile && sessionId) {
+            window.location.href = getDownloadLink();
+        }
     };
 
     return (
@@ -240,7 +76,7 @@ function App() {
                 <div style={{ marginTop: "10px" }}>
                     <p>
                         What do you want to do with{" "}
-                        <b>{uploadedFile.filename}</b>?
+                        <strong>{uploadedFile.filename}</strong>?
                     </p>
                 </div>
             )}
@@ -288,167 +124,48 @@ function App() {
 
                 {/* Editor options */}
                 <div style={{ display: "flex", gap: "10px" }}>
-                    <button
-                        onClick={() => handleOptionSelect("shift")}
-                        disabled={!uploadedFile || isLoading}
-                        style={{
-                            padding: "10px 15px",
-                            color:
-                                activeOption === "shift"
-                                    ? "#dee2e6" // light grey text when upload and chosen
-                                    : !uploadedFile
-                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
-                                      : "#dee2e6", // light grey text when upload and NOT chosen
-                            border:
-                                activeOption === "shift"
-                                    ? "0.1em dashed"
-                                    : "0.1em transparent",
-                            borderRadius: "0px",
-                            cursor: uploadedFile ? "pointer" : "not-allowed",
-                        }}
-                    >
-                        Shift
-                    </button>
-
-                    <button
-                        onClick={() => handleOptionSelect("align")}
-                        disabled={!uploadedFile || isLoading}
-                        style={{
-                            padding: "10px 15px",
-                            color:
-                                activeOption === "align"
-                                    ? "#dee2e6" // orange text when upload and chosen
-                                    : !uploadedFile
-                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
-                                      : "#dee2e6", // light grey text when upload and NOT chosen
-                            border:
-                                activeOption === "align"
-                                    ? "0.1em dashed"
-                                    : "0.1em transparent",
-                            borderRadius: "0px",
-                            cursor: uploadedFile ? "pointer" : "not-allowed",
-                        }}
-                    >
-                        Align
-                    </button>
-
-                    <button
-                        onClick={() => handleOptionSelect("clean")}
-                        disabled={!uploadedFile || isLoading}
-                        style={{
-                            padding: "10px 15px",
-                            color:
-                                activeOption === "clean"
-                                    ? "#dee2e6" // orange text when upload and chosen
-                                    : !uploadedFile
-                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
-                                      : "#dee2e6", // light grey text when upload and NOT chosen
-                            border:
-                                activeOption === "clean"
-                                    ? "0.1em dashed"
-                                    : "0.1em transparent",
-                            borderRadius: "0px",
-                            cursor: uploadedFile ? "pointer" : "not-allowed",
-                        }}
-                    >
-                        Clean
-                    </button>
-
-                    <button
-                        onClick={() => handleOptionSelect("translate")}
-                        disabled={!uploadedFile || isLoading}
-                        style={{
-                            padding: "10px 15px",
-                            color:
-                                activeOption === "translate"
-                                    ? "#dee2e6" // orange text when upload and chosen
-                                    : !uploadedFile
-                                      ? "#6c757d" // dark grey text when NO upload and NOT chosen
-                                      : "#dee2e6", // light grey text when upload and NOT chosen
-                            border:
-                                activeOption === "translate"
-                                    ? "0.1em dashed"
-                                    : "0.1em transparent",
-                            borderRadius: "0px",
-                            cursor: uploadedFile ? "pointer" : "not-allowed",
-                        }}
-                    >
-                        Translate
-                    </button>
+                    {["shift", "align", "clean", "translate"].map((option) => (
+                        <button
+                            key={option}
+                            onClick={() =>
+                                handleOptionSelect(option as OperationType)
+                            }
+                            disabled={!uploadedFile || isLoading}
+                            style={{
+                                padding: "10px 15px",
+                                color:
+                                    activeOption === option
+                                        ? "#dee2e6"
+                                        : !uploadedFile
+                                          ? "#6c757d"
+                                          : "#dee2e6",
+                                border:
+                                    activeOption === option
+                                        ? "0.1em dashed"
+                                        : "0.1em transparent",
+                                borderRadius: "0px",
+                                cursor: uploadedFile
+                                    ? "pointer"
+                                    : "not-allowed",
+                            }}
+                        >
+                            <strong>
+                                {option.charAt(0).toUpperCase() +
+                                    option.slice(1)}
+                            </strong>
+                        </button>
+                    ))}
                 </div>
             </div>
 
             {/* Active option content */}
             {activeOption === "shift" && uploadedFile && (
-                <div style={{ marginTop: "40px", marginBottom: "20px" }}>
-                    <div>
-                        <p>
-                            Enter positive or negative number of milliseconds (1
-                            second = 1000 milliseconds) to shift timing.
-                        </p>
-                    </div>
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                        }}
-                    >
-                        <div
-                            style={{
-                                display: "flex",
-                                gap: "10px",
-                                alignItems: "center",
-                            }}
-                        >
-                            <button
-                                onClick={handleShift}
-                                disabled={isLoading}
-                                style={{
-                                    padding: "8px 15px",
-                                    backgroundColor: "#dc2f02",
-                                    color: "#dee2e6",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                Shift
-                            </button>
-                            <label htmlFor="delay-input">by</label>
-                            <input
-                                id="delay-input"
-                                type="number"
-                                value={delay}
-                                onChange={(e) =>
-                                    setDelay(Number(e.target.value))
-                                }
-                                style={{
-                                    padding: "8px",
-                                    width: "100px",
-                                    borderRadius: "2px",
-                                    border: "1px solid #ccc",
-                                }}
-                            />
-                            <label htmlFor="delay-input">ms</label>
-                        </div>
-
-                        {processedFile && (
-                            <button
-                                onClick={handleDownload}
-                                style={{
-                                    padding: "8px 15px",
-                                    backgroundColor: "#5a189a",
-                                    color: "#dee2e6",
-                                    border: "none",
-                                    borderRadius: "2px",
-                                    cursor: "pointer",
-                                }}
-                            >
-                                Download
-                            </button>
-                        )}
-                    </div>
-                </div>
+                <ShiftOperation
+                    onShift={shiftSubtitles}
+                    onDownload={handleDownload}
+                    hasProcessedFile={!!processedFile}
+                    isLoading={isLoading}
+                />
             )}
 
             {/* Result display */}
@@ -480,7 +197,7 @@ function App() {
                                 </p>
                             </div>
                         )}
-                        {renderSubtitlePreview(sourcePreview)}
+                        <SubtitlePreview preview={sourcePreview} />
                     </div>
 
                     {/* Result file preview */}
@@ -518,7 +235,7 @@ function App() {
                                     </p>
                                 </div>
                             )}
-                            {renderSubtitlePreview(resultPreview)}
+                            <SubtitlePreview preview={resultPreview} />
                         </div>
                     )}
                 </div>
