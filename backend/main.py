@@ -13,7 +13,8 @@ from pydantic import BaseModel
 from subedit import SubEdit
 
 # Constants
-USER_FILES_DIR = "user_files"
+PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
+USER_FILES_DIR = os.path.join(PARENT_DIR, "..", "user_files")
 SESSION_LIFETIME = 3600  # 1 hour in seconds
 MAX_FILE_SIZE = 1 * 1024 * 1024  # 1 MB in bytes
 ALLOWED_EXTENSIONS = {".srt"}  # Allowed file extensions

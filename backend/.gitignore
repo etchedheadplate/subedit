@@ -8,11 +8,8 @@ test.py
 *.srt
 *.log
 
-# Temporary
-user_files
-temp
-
 # Junk
+temp
 **/__pycache__
 *.pyc
 *.DS_Store

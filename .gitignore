@@ -1,5 +1,6 @@
 .ropeproject
 .zed
 venv
+user_files
 *.md
 *.DS_Store
