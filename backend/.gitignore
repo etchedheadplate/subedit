@@ -3,9 +3,7 @@
 .python-version
 
 # Testing
-test
 test.py
-*.srt
 *.log
 
 # Junk

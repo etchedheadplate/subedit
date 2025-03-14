@@ -1,6 +1,12 @@
+# Enviroment
 .ropeproject
 .zed
 venv
+
+# Testing
+test_files
 user_files
+
+# Junk
 *.md
 *.DS_Store
