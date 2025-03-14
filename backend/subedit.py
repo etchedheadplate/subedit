@@ -181,20 +181,28 @@ class SubEdit:
             delay (int): Milliseconds to delay.
             items (list[int]): List of subtitles numbers. Defaults to None (all subtitles are shifted).
         """
+        parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
+
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.shifted_file = f'{source_name}_shifted_by_{delay}_ms{source_ext}'
+        if items is None:
+            self.shifted_file = f'{source_name}_shifted_by_{delay}_ms{source_ext}'
+            subtitle_indices = sorted(parsed_subtitles.keys())
+        elif type(items) is list and len(items) == 2:
+            self.shifted_file = f'{source_name}_shifted_by_{delay}_ms_from_{items[0]}_to_{items[1]}{source_ext}'
+            subtitle_indices = sorted(parsed_subtitles.keys())[items[0]-1:items[1]-1] # convert subtitle items to range of list indices
+        else:
+            raise ValueError(f'items parameter must be a list with 2 items ({len(items) if type(items) is list else type(items)} provided).')
 
         self.subtitles_data[self.shifted_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {}
         }
 
-        parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
-        shifted_subtitles = self.subtitles_data[self.shifted_file]['subtitles']
-
-        subtitle_indices = items if items else sorted(parsed_subtitles.keys())
         time_format = '%H:%M:%S,%f'
 
+        # Original subtitles copied and updated
+        shifted_subtitles = self.subtitles_data[self.shifted_file]['subtitles']
+        shifted_subtitles.update(parsed_subtitles)
         for index in subtitle_indices:
             subtitle = parsed_subtitles[index]
 
@@ -207,11 +215,11 @@ class SubEdit:
             new_start = delay_start.strftime(time_format)[:-3]
             new_end = delay_end.strftime(time_format)[:-3]
 
-            shifted_subtitles[index] = {
+            shifted_subtitles[index].update({
                 'start': new_start,
                 'end': new_end,
                 'text': subtitle['text']
-            }
+            })
 
         self._create_file(self.shifted_file)
 
@@ -493,19 +501,3 @@ class SubEdit:
                 raise ValueError(f'Bad response format: {response_pattern[index]}.')
 
         self._create_file(self.translated_file)
-
-
-if __name__ == '__main__':
-    # Basic tests:
-    base = 'test/'
-    shift = SubEdit([base + 'timing_en.srt'])
-    clean = SubEdit([base + 'markup_es.srt'])
-    align = SubEdit([base + 'timing_ru.srt', base + 'timing_ko.srt'])
-    translate = SubEdit([base + 'translate_zh-tw.srt'])
-
-    shift.shift_timing(delay=2468)
-    clean.clean_markup(bold=True, color=True)
-    align.align_timing([2,38],[3,39])
-
-    translate.translate_text('ja')
-    align.show_data()
