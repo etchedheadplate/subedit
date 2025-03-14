@@ -1,45 +1,58 @@
-#root {
-    font-optical-sizing: auto;
-    font-weight: <weight>;
-    font-style: normal;
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 2rem;
-    text-align: center;
+/* App.css */
+
+.app-container {
+    padding: 20px;
 }
 
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-}
-.logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-    filter: drop-shadow(0 0 2em #61dafbaa);
+.operations-container {
+    margin-top: 10px;
 }
 
-@keyframes logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+.error-message {
+    background-color: #ffcccc;
+    color: #cc0000;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    a:nth-of-type(2) .logo {
-        animation: logo-spin infinite 20s linear;
-    }
+.button-group {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
-.card {
-    padding: 2em;
+.hidden {
+    display: none;
 }
 
-.read-the-docs {
-    color: #888;
+.upload-button {
+    padding: 10px 15px;
+    color: #dee2e6;
+    border: 0.1em transparent;
+    border-radius: 2px;
+    background-color: #008000;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.option-group {
+    display: flex;
+    gap: 10px;
+}
+
+.option-button {
+    padding: 10px 15px;
+    border: 0.1em transparent;
+    border-radius: 0px;
+}
+
+.option-button.active {
+    color: #dee2e6;
+    border: 0.1em dashed;
+}
+
+.option-button.disabled {
+    color: #6c757d;
+    cursor: not-allowed;
 }
