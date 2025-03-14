@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
+import ShiftOperation from "./components/operations/ShiftOperation";
+import DualSubtitlePreview from "./components/subtitles/DualSubtitlePreview";
+import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
-import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
-import SubtitlePreview from "./components/subtitles/SubtitlePreview";
-import ShiftOperation from "./components/operations/ShiftOperation";
 import { OperationType } from "./types";
+import "./SubtitlePreview.css";
 
 function App() {
     // Custom hooks
@@ -20,9 +21,11 @@ function App() {
         sourcePreview,
         sourceMeta,
         resultPreview,
+        resultMeta,
         processedFile,
         isLoading: isProcessing,
         error: processingError,
+        subtitleCount,
         fetchSourcePreview,
         shiftSubtitles,
         getDownloadLink,
@@ -60,6 +63,58 @@ function App() {
         if (processedFile && sessionId) {
             window.location.href = getDownloadLink();
         }
+    };
+
+    // Rendering the metadata separately
+    const renderMetadataSection = () => {
+        if (!uploadedFile || !sourcePreview) return null;
+
+        return (
+            <div className="metadata-sections">
+                {/* Source file metadata */}
+                <div className="metadata-container">
+                    {sourceMeta && (
+                        <div className="metadata-content">
+                            <p>
+                                <strong>Filename:</strong>{" "}
+                                {uploadedFile?.filename}
+                            </p>
+                            <p>
+                                <strong>Language:</strong>{" "}
+                                {sourceMeta.language || "Unknown"}
+                            </p>
+                            <p>
+                                <strong>Encoding:</strong>{" "}
+                                {sourceMeta.encoding || "Unknown"}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                {/* Result file metadata, only shown if there's a result */}
+                {resultPreview && resultMeta && (
+                    <div className="metadata-container">
+                        <h3>
+                            {activeOption &&
+                                `${activeOption.charAt(0).toUpperCase() + activeOption.slice(1)}ed File Metadata`}
+                        </h3>
+                        <div className="metadata-content">
+                            <p>
+                                <strong>Filename:</strong> {processedFile}
+                            </p>
+                            <p>
+                                <strong>Language:</strong>{" "}
+                                {resultMeta.language || "Unknown"}
+                            </p>
+                            <p>
+                                <strong>Encoding:</strong>{" "}
+                                {resultMeta.encoding || "Unknown"}
+                            </p>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
     };
 
     return (
@@ -165,80 +220,30 @@ function App() {
                     onDownload={handleDownload}
                     hasProcessedFile={!!processedFile}
                     isLoading={isLoading}
+                    subtitleCount={subtitleCount}
                 />
             )}
 
-            {/* Result display */}
-            {activeOption && sourcePreview && (
-                <div style={{ display: "flex", gap: "20px" }}>
-                    {/* Source file preview */}
-                    <div
-                        style={{
-                            flex: 1,
-                            border: "1px solid #ddd",
-                            borderRadius: "5px",
-                            padding: "15px",
-                        }}
-                    >
-                        <h3>Original File</h3>
-                        {sourceMeta && (
-                            <div style={{ marginBottom: "10px" }}>
-                                <p>
-                                    <strong>Filename:</strong>{" "}
-                                    {uploadedFile?.filename}
-                                </p>
-                                <p>
-                                    <strong>Language:</strong>{" "}
-                                    {sourceMeta.language}
-                                </p>
-                                <p>
-                                    <strong>Encoding:</strong>{" "}
-                                    {sourceMeta.encoding}
-                                </p>
-                            </div>
-                        )}
-                        <SubtitlePreview preview={sourcePreview} />
-                    </div>
+            {/* Metadata section */}
+            {activeOption && sourcePreview && renderMetadataSection()}
 
-                    {/* Result file preview */}
-                    {resultPreview && (
-                        <div
-                            style={{
-                                flex: 1,
-                                border: "1px solid #ddd",
-                                borderRadius: "5px",
-                                padding: "15px",
-                            }}
-                        >
-                            <h3>
-                                {activeOption === "shift"
-                                    ? "Shifted File"
-                                    : activeOption === "align"
-                                      ? "Aligned File"
-                                      : activeOption === "clean"
-                                        ? "Cleaned File"
-                                        : "Translated File"}
-                            </h3>
-                            {sourceMeta && (
-                                <div style={{ marginBottom: "10px" }}>
-                                    <p>
-                                        <strong>Filename:</strong>{" "}
-                                        {processedFile}
-                                    </p>
-                                    <p>
-                                        <strong>Language:</strong>{" "}
-                                        {sourceMeta.language}
-                                    </p>
-                                    <p>
-                                        <strong>Encoding:</strong>{" "}
-                                        {sourceMeta.encoding}
-                                    </p>
-                                </div>
-                            )}
-                            <SubtitlePreview preview={resultPreview} />
-                        </div>
-                    )}
-                </div>
+            {/* Subtitle preview section */}
+            {activeOption && sourcePreview && (
+                <DualSubtitlePreview
+                    sourcePreview={sourcePreview}
+                    sourceMeta={sourceMeta}
+                    resultPreview={resultPreview}
+                    resultMeta={resultMeta}
+                    sourceTitle="Original Subtitles"
+                    resultTitle={
+                        resultPreview
+                            ? `${
+                                  activeOption.charAt(0).toUpperCase() +
+                                  activeOption.slice(1)
+                              }ed Subtitles`
+                            : ""
+                    }
+                />
             )}
         </div>
     );
