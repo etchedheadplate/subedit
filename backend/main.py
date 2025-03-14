@@ -65,6 +65,7 @@ async def get_session():
     session_id = str(uuid.uuid4())
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
+    print("Received new session:", session_id)
     return {"session_id": session_id}
 
 @app.post("/upload/")
@@ -127,6 +128,7 @@ async def shift_subtitles(request: ShiftRequest):
         # Load the session and file
         session_id, filename = request.session_id, request.filename
         shift_delay, shift_items = request.delay, request.items
+        print(f"Received shift request: session_id={session_id}, filename={filename}, delay={shift_delay}, items={shift_items}")
 
         # Initialize SubEdit object
         file_path = os.path.join(USER_FILES_DIR, session_id, filename)
@@ -135,12 +137,16 @@ async def shift_subtitles(request: ShiftRequest):
         # Apply shifting
         subedit.shift_timing(delay=shift_delay, items=shift_items)
 
-        # Return response with preview
+        # Return response with preview and metadata
+        subtitles_data = subedit.subtitles_data[subedit.shifted_file]
+
         return {
             "session_id": session_id,
             "filename": filename,
             "message": "Subtitles shifted successfully",
-            "preview": subedit.subtitles_data[subedit.shifted_file]['subtitles']
+            "preview": subtitles_data['subtitles'],
+            "language": subtitles_data['metadata']['language'],
+            "encoding": subtitles_data['metadata']['encoding']
         }
 
     except Exception as e:
@@ -175,12 +181,17 @@ async def align_subtitles(request: AlignRequest):
         # Apply alignment
         subedit.align_timing(source_slice=source_slice, example_slice=example_slice)
 
-        # Return response with preview
+        # Get the aligned file data with metadata
+        subtitles_data = subedit.subtitles_data[subedit.aligned_file]
+
+        # Return response with preview and metadata
         return {
             "session_id": session_id,
             "filename": filename,
             "message": "Subtitles aligned successfully",
-            "preview": subedit.subtitles_data[subedit.aligned_file]['subtitles']
+            "preview": subtitles_data['subtitles'],
+            "language": subtitles_data['metadata']['language'],
+            "encoding": subtitles_data['metadata']['encoding']
         }
 
     except Exception as e:
@@ -216,12 +227,17 @@ async def clean_subtitles(request: CleanRequest):
             font=request.font
         )
 
-        # Return response with preview
+        # Get the cleaned file data with metadata
+        subtitles_data = subedit.subtitles_data[subedit.cleaned_file]
+
+        # Return response with preview and metadata
         return {
             "session_id": session_id,
             "filename": filename,
             "message": "Markup cleaned successfully",
-            "preview": subedit.subtitles_data[subedit.cleaned_file]['subtitles']
+            "preview": subtitles_data['subtitles'],
+            "language": subtitles_data['metadata']['language'],
+            "encoding": subtitles_data['metadata']['encoding']
         }
 
     except Exception as e:
@@ -255,12 +271,17 @@ async def translate_subtitles(request: TranslateRequest):
             response_timeout=request.response_timeout
         )
 
-        # Return response with preview
+        # Get the translated file data with metadata
+        subtitles_data = subedit.subtitles_data[subedit.translated_file]
+
+        # Return response with preview and metadata
         return {
             "session_id": session_id,
             "filename": filename,
             "message": f"Subtitles translated to {request.target_language} successfully",
-            "preview": subedit.subtitles_data[subedit.translated_file]['subtitles']
+            "preview": subtitles_data['subtitles'],
+            "language": request.target_language,  # Use target language as the new language
+            "encoding": subtitles_data['metadata']['encoding']
         }
 
     except Exception as e:
