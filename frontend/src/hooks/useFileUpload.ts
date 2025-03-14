@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { apiService } from "../services/api";
+import { apiService } from "../services/apiService";
 import { SubtitleFile } from "../types";
 
 export const useFileUpload = (sessionId: string | null) => {
