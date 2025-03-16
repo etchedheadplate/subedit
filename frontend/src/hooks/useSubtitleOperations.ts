@@ -13,10 +13,24 @@ export const useSubtitleOperations = (
     const [resultPreview, setResultPreview] = useState<SubtitlePreview | null>(
         null,
     );
+    const [resultMeta, setResultMeta] = useState<SubtitleMetadata | null>(null);
     const [processedFile, setProcessedFile] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [subtitleCount, setSubtitleCount] = useState<number>(0);
+
+    // For align mode
+    const [examplePreview, setExamplePreview] =
+        useState<SubtitlePreview | null>(null);
+    const [exampleMeta, setExampleMeta] = useState<SubtitleMetadata | null>(
+        null,
+    );
+    const [exampleSubtitleCount, setExampleSubtitleCount] = useState<number>(0);
+
+    // For clean mode
+    const [previewHtml, setPreviewHtml] = useState<SubtitlePreview | null>(
+        null,
+    );
 
     // Fetch preview of source file
     const fetchSourcePreview = async () => {
@@ -34,7 +48,6 @@ export const useSubtitleOperations = (
             );
 
             setSourcePreview(result.preview);
-            console.log(result.preview);
 
             // Calculate the number of subtitles in the file
             if (result.preview) {
@@ -42,8 +55,47 @@ export const useSubtitleOperations = (
                 setSubtitleCount(count);
             }
 
-            // In a real implementation, get this from a dedicated endpoint
+            // Set source metadata
             setSourceMeta({
+                encoding: result.encoding,
+                confidence: 100,
+                language: result.language,
+            });
+
+            return result.preview;
+        } catch (err: any) {
+            setError(err.message);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Fetch preview of example file for align mode
+    const fetchExamplePreview = async (exampleFilename: string) => {
+        if (!sessionId) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const result = await apiService.shiftSubtitles(
+                sessionId,
+                exampleFilename,
+                0,
+                [], // Empty items array for preview
+            );
+
+            setExamplePreview(result.preview);
+
+            // Calculate the number of subtitles in the file
+            if (result.preview) {
+                const count = Object.keys(result.preview).length;
+                setExampleSubtitleCount(count);
+            }
+
+            // Set example metadata
+            setExampleMeta({
                 encoding: result.encoding,
                 confidence: 100,
                 language: result.language,
@@ -100,6 +152,13 @@ export const useSubtitleOperations = (
 
             setResultPreview(result.preview);
 
+            // Set result metadata
+            setResultMeta({
+                encoding: result.encoding,
+                confidence: 100,
+                language: result.language,
+            });
+
             // Construct filename based on range if specified
             let filenameModifier = `shifted_by_${delay}_ms`;
             if (items.length === 2) {
@@ -108,6 +167,135 @@ export const useSubtitleOperations = (
 
             setProcessedFile(
                 `${uploadedFile.filename.split(".")[0]}_${filenameModifier}.srt`,
+            );
+
+            return result.preview;
+        } catch (err: any) {
+            setError(err.message);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Align operation
+    const alignSubtitles = async (
+        exampleFilename: string,
+        sourceRange?: [number, number],
+        exampleRange?: [number, number],
+    ) => {
+        if (!uploadedFile || !sessionId) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const result = await apiService.alignSubtitles(
+                sessionId,
+                uploadedFile.filename,
+                exampleFilename,
+                sourceRange,
+                exampleRange,
+            );
+
+            setResultPreview(result.preview);
+
+            // Set result metadata
+            setResultMeta({
+                encoding: result.encoding,
+                confidence: 100,
+                language: result.language,
+            });
+
+            // Construct filename
+            let filenameModifier = `aligned_with_${exampleFilename.split(".")[0]}`;
+            if (sourceRange && exampleRange) {
+                filenameModifier += `_source_${sourceRange[0]}_to_${sourceRange[1]}_example_${exampleRange[0]}_to_${exampleRange[1]}`;
+            }
+
+            setProcessedFile(
+                `${uploadedFile.filename.split(".")[0]}_${filenameModifier}.srt`,
+            );
+
+            return result.preview;
+        } catch (err: any) {
+            setError(err.message);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Clean operation
+    const cleanSubtitles = async (options: {
+        bold: boolean;
+        italic: boolean;
+        underline: boolean;
+        strikethrough: boolean;
+        color: boolean;
+        font: boolean;
+    }) => {
+        if (!uploadedFile || !sessionId) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const result = await apiService.cleanSubtitles(
+                sessionId,
+                uploadedFile.filename,
+                options,
+            );
+
+            setResultPreview(result.preview);
+
+            // Set result metadata
+            setResultMeta({
+                encoding: result.encoding,
+                confidence: 100,
+                language: result.language,
+            });
+
+            // Generate HTML preview version
+            // This is a simplistic approach, in a real implementation you'd want
+            // to properly parse the subtitle markup and convert to HTML
+            const htmlPreview = { ...result.preview };
+            if (options.bold) {
+                // Convert <b> tags to actual HTML tags for preview
+                Object.keys(htmlPreview).forEach((key) => {
+                    const num = Number(key);
+                    htmlPreview[num] = {
+                        ...htmlPreview[num],
+                        text: htmlPreview[num].text
+                            .replace(/<b>/g, "<strong>")
+                            .replace(/<\/b>/g, "</strong>"),
+                    };
+                });
+            }
+
+            if (options.italic) {
+                // Convert <i> tags to actual HTML tags for preview
+                Object.keys(htmlPreview).forEach((key) => {
+                    const num = Number(key);
+                    htmlPreview[num] = {
+                        ...htmlPreview[num],
+                        text: htmlPreview[num].text
+                            .replace(/<i>/g, "<em>")
+                            .replace(/<\/i>/g, "</em>"),
+                    };
+                });
+            }
+
+            setPreviewHtml(htmlPreview);
+
+            // Create filename based on options
+            const optionNames = Object.entries(options)
+                .filter(([_, value]) => value)
+                .map(([key]) => key)
+                .join("_");
+
+            setProcessedFile(
+                `${uploadedFile.filename.split(".")[0]}_cleaned_${optionNames}.srt`,
             );
 
             return result.preview;
@@ -128,19 +316,32 @@ export const useSubtitleOperations = (
     // Reset operation results
     const resetResults = () => {
         setResultPreview(null);
+        setResultMeta(null);
         setProcessedFile(null);
+        setExamplePreview(null);
+        setExampleMeta(null);
+        setExampleSubtitleCount(0);
+        setPreviewHtml(null);
     };
 
     return {
         sourcePreview,
         sourceMeta,
         resultPreview,
+        resultMeta,
+        examplePreview,
+        exampleMeta,
+        exampleSubtitleCount,
+        previewHtml,
         processedFile,
         isLoading,
         error,
         subtitleCount,
         fetchSourcePreview,
+        fetchExamplePreview,
         shiftSubtitles,
+        alignSubtitles,
+        cleanSubtitles,
         getDownloadLink,
         resetResults,
     };

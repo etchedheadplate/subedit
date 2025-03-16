@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import ShiftOperation from "./components/operations/ShiftOperation";
+import AlignOperation from "./components/operations/AlignOperation";
 import DualSubtitlePreview from "./components/subtitles/DualSubtitlePreview";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
@@ -22,12 +23,17 @@ function App() {
         sourceMeta,
         resultPreview,
         resultMeta,
+        examplePreview,
+        exampleMeta,
+        exampleSubtitleCount,
         processedFile,
         isLoading: isProcessing,
         error: processingError,
         subtitleCount,
         fetchSourcePreview,
+        fetchExamplePreview,
         shiftSubtitles,
+        alignSubtitles,
         getDownloadLink,
         resetResults,
     } = useSubtitleOperations(sessionId, uploadedFile);
@@ -70,9 +76,13 @@ function App() {
         if (!uploadedFile || !sourcePreview) return null;
 
         return (
-            <div className="metadata-sections">
+            <div
+                className="metadata-sections"
+                style={{ display: "flex", gap: "20px" }}
+            >
                 {/* Source file metadata */}
                 <div className="metadata-container">
+                    <h3>Original File Metadata</h3>
                     {sourceMeta && (
                         <div className="metadata-content">
                             <p>
@@ -90,6 +100,23 @@ function App() {
                         </div>
                     )}
                 </div>
+
+                {/* Example file metadata (for Align mode) */}
+                {activeOption === "align" && examplePreview && exampleMeta && (
+                    <div className="metadata-container">
+                        <h3>Example File Metadata</h3>
+                        <div className="metadata-content">
+                            <p>
+                                <strong>Language:</strong>{" "}
+                                {exampleMeta.language || "Unknown"}
+                            </p>
+                            <p>
+                                <strong>Encoding:</strong>{" "}
+                                {exampleMeta.encoding || "Unknown"}
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {/* Result file metadata, only shown if there's a result */}
                 {resultPreview && resultMeta && (
@@ -114,6 +141,69 @@ function App() {
                     </div>
                 )}
             </div>
+        );
+    };
+
+    // Render subtitle previews based on active operation
+    const renderSubtitlePreviews = () => {
+        if (!activeOption || !sourcePreview) return null;
+
+        // For Align mode with example file uploaded
+        if (activeOption === "align" && examplePreview) {
+            return (
+                <>
+                    {/* Original and Example subtitles */}
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: "20px",
+                            marginBottom: "20px",
+                        }}
+                    >
+                        <div style={{ flex: 1 }}>
+                            <DualSubtitlePreview
+                                sourcePreview={sourcePreview}
+                                sourceMeta={sourceMeta}
+                                resultPreview={null}
+                                resultMeta={null}
+                                sourceTitle="Original Subtitles"
+                                resultTitle=""
+                            />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                            <DualSubtitlePreview
+                                sourcePreview={examplePreview}
+                                sourceMeta={exampleMeta}
+                                resultPreview={resultPreview}
+                                resultMeta={resultMeta}
+                                sourceTitle="Example Subtitles"
+                                resultTitle={
+                                    resultPreview ? "Aligned Subtitles" : ""
+                                }
+                            />
+                        </div>
+                    </div>
+                </>
+            );
+        }
+
+        // For Shift and other modes
+        return (
+            <DualSubtitlePreview
+                sourcePreview={sourcePreview}
+                sourceMeta={sourceMeta}
+                resultPreview={resultPreview}
+                resultMeta={resultMeta}
+                sourceTitle="Original Subtitles"
+                resultTitle={
+                    resultPreview
+                        ? `${
+                              activeOption.charAt(0).toUpperCase() +
+                              activeOption.slice(1)
+                          }ed Subtitles`
+                        : ""
+                }
+            />
         );
     };
 
@@ -224,27 +314,24 @@ function App() {
                 />
             )}
 
+            {activeOption === "align" && uploadedFile && (
+                <AlignOperation
+                    onAlign={alignSubtitles}
+                    onDownload={handleDownload}
+                    hasProcessedFile={!!processedFile}
+                    isLoading={isLoading}
+                    subtitleCount={subtitleCount}
+                    exampleSubtitleCount={exampleSubtitleCount}
+                    sessionId={sessionId}
+                    fetchExamplePreview={fetchExamplePreview}
+                />
+            )}
+
             {/* Metadata section */}
             {activeOption && sourcePreview && renderMetadataSection()}
 
             {/* Subtitle preview section */}
-            {activeOption && sourcePreview && (
-                <DualSubtitlePreview
-                    sourcePreview={sourcePreview}
-                    sourceMeta={sourceMeta}
-                    resultPreview={resultPreview}
-                    resultMeta={resultMeta}
-                    sourceTitle="Original Subtitles"
-                    resultTitle={
-                        resultPreview
-                            ? `${
-                                  activeOption.charAt(0).toUpperCase() +
-                                  activeOption.slice(1)
-                              }ed Subtitles`
-                            : ""
-                    }
-                />
-            )}
+            {activeOption && sourcePreview && renderSubtitlePreviews()}
         </div>
     );
 }
