@@ -8,18 +8,14 @@ export const useFileUpload = (sessionId: string | null) => {
     const [error, setError] = useState<string | null>(null);
 
     const uploadFile = async (file: File) => {
-        if (!sessionId) return;
-
         setIsLoading(true);
         setError(null);
-
         try {
-            const result = await apiService.uploadFile(file, sessionId);
+            const result = await apiService.uploadFile(file, sessionId || "");
             setUploadedFile(result);
-            return result;
+            return result; // Return the uploaded file info
         } catch (err: any) {
             setError(err.message);
-            setUploadedFile(null);
             return null;
         } finally {
             setIsLoading(false);
