@@ -18,9 +18,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     const [delay, setDelay] = useState<number>(0);
     const [useRange, setUseRange] = useState<boolean>(false);
     const [rangeStart, setRangeStart] = useState<number>(1);
-    const [rangeEnd, setRangeEnd] = useState<number>(
-        subtitleCount > 1 ? subtitleCount : 2,
-    );
+    const [rangeEnd, setRangeEnd] = useState<number>(subtitleCount > 1 ? subtitleCount : 2,);
     const [rangeError, setRangeError] = useState<string | null>(null);
 
     // Update range end when subtitle count changes
@@ -59,31 +57,35 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     };
 
     return (
-        <div style={{ marginTop: "40px", marginBottom: "20px" }}>
-            <div>
+        <div className="shift-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
+
+            {/* Description of Shift Operation */}
+            <div className="shift-description">
                 <p>
-                    Enter number of milliseconds (1 second = 1000 milliseconds)
-                    to shift timing. Number can be positive or negative.
+                    Enter number of milliseconds (1 second = 1000 milliseconds) to shift timing. Number can be positive or negative.
                 </p>
             </div>
 
-            <div
+            {/* Bottom gap below shift button and delay input window */}
+            <div className="shift-controls-section"
                 style={{
                     display: "flex",
                     justifyContent: "space-between",
                     marginBottom: "20px",
                 }}
             >
-                <div
+                {/* Gaps between shift button and delay input form */}
+                <div className="shift-controls-container"
                     style={{
                         display: "flex",
                         gap: "10px",
                         alignItems: "center",
                     }}
                 >
-                    <button
+                    {/* Shift button is disabled if file not loaded, delay set to 0 or items range set incorrectly */}
+                    <button className="shift-subtitles-button"
                         onClick={handleShift}
-                        disabled={isLoading || (useRange && !!rangeError)}
+                        disabled={isLoading || delay == 0 || (useRange && !!rangeError)}
                         style={{
                             padding: "8px 15px",
                             backgroundColor: "#dc2f02",
@@ -102,12 +104,16 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     >
                         Shift
                     </button>
+
                     <label htmlFor="delay-input">by</label>
-                    <input
+
+                    {/* Delay input form, accepts only whole numbers */}
+                    <input className="delay-input-form"
                         id="delay-input"
                         type="number"
+                        step="1"
                         value={delay}
-                        onChange={(e) => setDelay(Number(e.target.value))}
+                        onChange={(e) => setDelay(Math.floor(Number(e.target.value)))}
                         style={{
                             padding: "8px",
                             width: "100px",
@@ -118,8 +124,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     <label htmlFor="delay-input">ms</label>
                 </div>
 
+                {/* Download button is active only if Shift Operation was performed on a file */}
                 {hasProcessedFile && (
-                    <button
+                    <button className="download-shifted-file-button"
                         onClick={onDownload}
                         style={{
                             padding: "8px 15px",
@@ -136,8 +143,10 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
             </div>
 
             {/* Subtitle range selector */}
-            <div style={{ marginBottom: "20px" }}>
-                <div
+            <div className="range-controls-section" style={{ marginBottom: "20px" }}>
+
+                {/* Gap between range checkbox and range description */}
+                <div className="range-controls-container"
                     style={{
                         display: "flex",
                         alignItems: "center",
@@ -145,7 +154,8 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                         marginBottom: "10px",
                     }}
                 >
-                    <input
+                    {/* Checkbox to toggle range selector */}
+                    <input className="shift-range-checkbox"
                         type="checkbox"
                         id="use-range"
                         checked={useRange}
@@ -156,6 +166,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     </label>
                 </div>
 
+                {/* If range checkbox toggled */}
                 {useRange && (
                     <div
                         style={{
@@ -164,7 +175,8 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                             gap: "10px",
                         }}
                     >
-                        <div
+                        {/* Gap between from range and to range forms */}
+                        <div className="range-setting-container"
                             style={{
                                 display: "flex",
                                 gap: "10px",
@@ -172,14 +184,16 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                             }}
                         >
                             <label htmlFor="range-start">From subtitle:</label>
-                            <input
+
+                            {/* Range start form, accepts only whole numbers */}
+                            <input className="range-start-form"
                                 id="range-start"
                                 type="number"
                                 min={1}
                                 max={subtitleCount - 1}
                                 value={rangeStart}
                                 onChange={(e) =>
-                                    setRangeStart(Number(e.target.value))
+                                    setRangeStart(Number(Math.floor(Number(e.target.value))))
                                 }
                                 style={{
                                     padding: "8px",
@@ -190,14 +204,16 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                             />
 
                             <label htmlFor="range-end">To subtitle:</label>
-                            <input
+
+                            {/* Range end form, accepts only whole numbers */}
+                            <input className="range-end-form"
                                 id="range-end"
                                 type="number"
                                 min={rangeStart + 1}
                                 max={subtitleCount}
                                 value={rangeEnd}
                                 onChange={(e) =>
-                                    setRangeEnd(Number(e.target.value))
+                                    setRangeEnd(Number(Math.floor(Number(e.target.value))))
                                 }
                                 style={{
                                     padding: "8px",
@@ -207,6 +223,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                 }}
                             />
 
+                            {/* Total subtitles count reminder */}
                             <span
                                 style={{ fontSize: "0.8em", color: "#6c757d" }}
                             >
@@ -214,8 +231,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                             </span>
                         </div>
 
+                        {/* Show error message if ranges out of bounds */}
                         {rangeError && (
-                            <div
+                            <div className="range-error-container"
                                 style={{ color: "#cc0000", fontSize: "0.9em" }}
                             >
                                 {rangeError}
