@@ -93,11 +93,11 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                             border: "none",
                             borderRadius: "2px",
                             cursor:
-                                isLoading || (useRange && !!rangeError)
+                                isLoading || (useRange && !!rangeError) || delay == 0
                                     ? "not-allowed"
                                     : "pointer",
                             opacity:
-                                isLoading || (useRange && !!rangeError)
+                                isLoading || (useRange && !!rangeError) || delay == 0
                                     ? 0.7
                                     : 1,
                         }}
