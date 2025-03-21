@@ -286,3 +286,6 @@ async def translate_subtitles(request: TranslateRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+if __name__ == '__main__':
+    run_cleanup()
