@@ -17,6 +17,7 @@ export interface SubtitleMetadata {
     encoding: string;
     confidence: number;
     language: string;
+    filename?: string;
 }
 
 export interface ProcessingOptions {
