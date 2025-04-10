@@ -1,17 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import ShiftOperation from "./components/operations/ShiftOperation";
 import AlignOperation from "./components/operations/AlignOperation";
-import DualSubtitlePreview from "./components/subtitles/DualSubtitlePreview";
+import CleanOperation from "./components/operations/CleanOperation";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { OperationType } from "./types";
-import { UniversalSubtitlePreview } from "./componentssubtitles/SubtitlePreview";
-import "./SubtitlePreview.css";
+// import "./SubtitlePreview.css";
 
 function App() {
-    // Custom hooks
+    // Session hook
     const { sessionId, error: sessionError } = useSession();
+
+    // File upload hook
     const {
         uploadedFile,
         isLoading: isUploading,
@@ -19,13 +20,9 @@ function App() {
         uploadFile,
     } = useFileUpload(sessionId);
 
+    // Subtitle operations hook
     const {
         sourcePreview,
-        sourceMeta,
-        resultPreview,
-        resultMeta,
-        examplePreview,
-        exampleMeta,
         exampleSubtitleCount,
         processedFile,
         isLoading: isProcessing,
@@ -35,6 +32,7 @@ function App() {
         fetchExamplePreview,
         shiftSubtitles,
         alignSubtitles,
+        cleanSubtitles,
         getDownloadLink,
         resetResults,
     } = useSubtitleOperations(sessionId, uploadedFile);
@@ -43,21 +41,90 @@ function App() {
     const [activeOption, setActiveOption] = useState<OperationType | null>(
         null,
     );
+    const [dragActive, setDragActive] = useState<boolean>(false);
+    // const [exampleDragActive, setExampleDragActive] = useState<boolean>(false);
+
+    // Example file upload state (for Align operation)
+    const [uploadedExampleFile, setUploadedExampleFile] = useState<{
+        filename: string;
+    } | null>(null);
+    const [isUploadingExample, setIsUploadingExample] =
+        useState<boolean>(false);
+    const [exampleUploadError, setExampleUploadError] = useState<string | null>(
+        null,
+    );
+
+    // References to the file inputs
+    const sourceFileInputRef = React.useRef<HTMLInputElement>(null);
+    // const exampleFileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Combine errors for display
-    const errorMessage = sessionError || uploadError || processingError;
-    const isLoading = isUploading || isProcessing;
+    const errorMessage =
+        sessionError || uploadError || processingError || exampleUploadError;
+    const isLoading = isUploading || isProcessing || isUploadingExample;
+
+    // Handle return to initial state when new file uploaded
+    const handleFileUpload = async (file) => {
+        await uploadFile(file);
+
+        // After upload completes, reset the active option
+        setActiveOption(null);
+    };
 
     // Handle file upload via input element
-    const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (!event.target.files) return;
-        await uploadFile(event.target.files[0]);
+    const handleUpload = async (inputRef) => {
+        if (!inputRef.target.files) return;
+        await handleFileUpload(inputRef.target.files[0]);
     };
+
+    // Handle click on the drag-and-drop area
+    const handleClick = (inputRef) => {
+        if (!isLoading && inputRef.current) {
+            inputRef.current.click();
+        }
+    };
+
+    // Handle drag on the drag-and-drop area
+    const handleDrag = useCallback((e: React.DragEvent, setDragActiveState: React.Dispatch<React.SetStateAction<boolean>>) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (e.type === "dragenter" || e.type === "dragover") {
+            setDragActiveState(true);
+        } else if (e.type === "dragleave") {
+            setDragActiveState(false);
+        }
+    }, []);
+
+    // Handle drop on the drag-and-drop area
+    const handleDrop = useCallback(
+        async (e: React.DragEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragActive(false);
+
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                const file = e.dataTransfer.files[0];
+                if (file.name.endsWith(".srt")) {
+                    await handleFileUpload(file);
+                } else {
+                    // Show error for non-srt files
+                    console.error("Only .srt files are allowed");
+                }
+            }
+        },
+        [uploadFile],
+    );
 
     // Handle option selection
     const handleOptionSelect = (option: OperationType) => {
         setActiveOption(option);
         resetResults();
+
+        // Reset example file if changing operation type
+        if (option !== "align") {
+            setUploadedExampleFile(null);
+        }
 
         // If we have an uploaded file, fetch its preview
         if (uploadedFile && sessionId) {
@@ -72,160 +139,111 @@ function App() {
         }
     };
 
-    // Rendering the metadata separately
-    const renderMetadataSection = () => {
-        if (!uploadedFile || !sourcePreview) return null;
+    // Handle file upload of the source and example files
+    const handleSourceFileUpload = (e) => handleUpload(e);
+    // const handleExampleFileUpload = (e) => handleUpload(e);
 
+    // Handle click on the source and example drag-and-drop areas
+    const handleSourceAreaClick = () => handleClick(sourceFileInputRef);
+    // const handleExampleAreaClick = () => handleClick(exampleFileInputRef);
+
+    // Handle drag on the source and example drag-and-drop areas
+    const handleSourceAreaDrag = (e: React.DragEvent) => handleDrag(e, setDragActive);
+    // const handleExampleAreaDrag = (e: React.DragEvent) => handleDrag(e, setExampleDragActive);
+
+    // Handle drop on the source and example drag-and-drop areas
+    const handleSourceAreaDrop = (e: React.DragEvent) => handleDrop(e);
+    // const handleExampleAreaDrop = (e: React.DragEvent) => handleDrop(e);
+
+    // Function to render file metadata and subtitles
+    /* const renderFilePreviews = () => {
         return (
-            <div
-                className="metadata-sections"
-                style={{ display: "flex", gap: "20px" }}
-            >
-                {/* Source file metadata */}
-                <div className="metadata-container">
-                    <h3>Original File Metadata</h3>
-                    {sourceMeta && (
-                        <div className="metadata-content">
-                            <p>
-                                <strong>Filename:</strong>{" "}
-                                {uploadedFile?.filename}
-                            </p>
-                            <p>
-                                <strong>Language:</strong>{" "}
-                                {sourceMeta.language || "Unknown"}
-                            </p>
-                            <p>
-                                <strong>Encoding:</strong>{" "}
-                                {sourceMeta.encoding || "Unknown"}
-                            </p>
-                        </div>
-                    )}
+            <div className="preview-section" style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
+                <div className="source-preview">
+                    <UniversalSubtitlePreview
+                        sessionId={sessionId}
+                        subtitleFile={uploadedFile}
+                        isDownloadable={false}
+                    />
                 </div>
-
-                {/* Example file metadata (for Align mode) */}
-                {activeOption === "align" && examplePreview && exampleMeta && (
-                    <div className="metadata-container">
-                        <h3>Example File Metadata</h3>
-                        <div className="metadata-content">
-                            <p>
-                                <strong>Language:</strong>{" "}
-                                {exampleMeta.language || "Unknown"}
-                            </p>
-                            <p>
-                                <strong>Encoding:</strong>{" "}
-                                {exampleMeta.encoding || "Unknown"}
-                            </p>
-                        </div>
-                    </div>
-                )}
-
-                {/* Result file metadata, only shown if there's a result */}
-                {resultPreview && resultMeta && (
-                    <div className="metadata-container">
-                        <h3>
-                            {activeOption &&
-                                `${activeOption.charAt(0).toUpperCase() + activeOption.slice(1)}ed File Metadata`}
-                        </h3>
-                        <div className="metadata-content">
-                            <p>
-                                <strong>Filename:</strong> {processedFile}
-                            </p>
-                            <p>
-                                <strong>Language:</strong>{" "}
-                                {resultMeta.language || "Unknown"}
-                            </p>
-                            <p>
-                                <strong>Encoding:</strong>{" "}
-                                {resultMeta.encoding || "Unknown"}
-                            </p>
-                        </div>
+                {processedFile && (
+                    <div className="processed-preview">
+                        <UniversalSubtitlePreview
+                            sessionId={sessionId}
+                            subtitleFile={processedFile}
+                            isDownloadable={true}
+                        />
                     </div>
                 )}
             </div>
         );
-    };
-
-    // Render subtitle previews based on active operation
-    const renderSubtitlePreviews = () => {
-        if (!activeOption || !sourcePreview) return null;
-
-        // For Align mode with example file uploaded
-        if (activeOption === "align" && examplePreview) {
-            return (
-                <>
-                    {/* Original and Example subtitles */}
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "20px",
-                            marginBottom: "20px",
-                        }}
-                    >
-                        <div style={{ flex: 1 }}>
-                            <DualSubtitlePreview
-                                sourcePreview={sourcePreview}
-                                sourceMeta={sourceMeta}
-                                resultPreview={null}
-                                resultMeta={null}
-                                sourceTitle="Original Subtitles"
-                                resultTitle=""
-                            />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <DualSubtitlePreview
-                                sourcePreview={examplePreview}
-                                sourceMeta={exampleMeta}
-                                resultPreview={resultPreview}
-                                resultMeta={resultMeta}
-                                sourceTitle="Example Subtitles"
-                                resultTitle={
-                                    resultPreview ? "Aligned Subtitles" : ""
-                                }
-                            />
-                        </div>
-                    </div>
-                </>
-            );
-        }
-
-        // For Shift and other modes
-        return (
-            <DualSubtitlePreview
-                sourcePreview={sourcePreview}
-                sourceMeta={sourceMeta}
-                resultPreview={resultPreview}
-                resultMeta={resultMeta}
-                sourceTitle="Original Subtitles"
-                resultTitle={
-                    resultPreview
-                        ? `${
-                              activeOption.charAt(0).toUpperCase() +
-                              activeOption.slice(1)
-                          }ed Subtitles`
-                        : ""
-                }
-            />
-        );
-    };
+    };*/
 
     return (
         <div style={{ padding: "20px" }}>
-            <h1>[ s u b e d i t ]</h1>
+            {/* Centered Header */}
+            <div style={{ textAlign: "center", marginBottom: "30px" }}>
+                <h1>[ s u b e d i t ]</h1>
 
-            {!uploadedFile && (
-                <div style={{ marginTop: "10px" }}>
-                    <p>Upload .srt subtitles, fren!</p>
-                </div>
-            )}
+                {/* Hidden file input */}
+                <input
+                    type="file"
+                    accept=".srt"
+                    onChange={handleSourceFileUpload}
+                    disabled={isLoading}
+                    style={{ display: "none" }}
+                    id="file-upload"
+                    ref={sourceFileInputRef}
+                />
 
-            {uploadedFile && (
-                <div style={{ marginTop: "10px" }}>
-                    <p>
-                        What do you want to do with{" "}
-                        <strong>{uploadedFile.filename}</strong>?
-                    </p>
+                {/* Drag and Drop Zone - Entire area is clickable */}
+                <div
+                    onClick={handleSourceAreaClick}
+                    onDragEnter={handleSourceAreaDrag}
+                    onDragLeave={handleSourceAreaDrag}
+                    onDragOver={handleSourceAreaDrag}
+                    onDrop={handleSourceAreaDrop}
+                    style={{
+                        width: "50%",
+                        margin: "0 auto",
+                        height: "120px",
+                        border: dragActive
+                            ? "2px dashed #646cff"
+                            : "2px dashed #dee2e6",
+                        borderRadius: "0px",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: dragActive
+                            ? "rgba(100, 108, 255, 0.08)"
+                            : "transparent",
+                        transition: "all 0.3s ease",
+                        marginBottom: "20px",
+                        cursor: isLoading ? "wait" : "pointer",
+                    }}
+                >
+                    {!uploadedFile ? (
+                        <>
+                            <p>Upload subtitles, fren!</p>
+                            <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
+                                Drag & drop .srt file or click anywhere in this
+                                area
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <p>
+                                What do you want to do with{" "}
+                                <strong>{uploadedFile.filename}</strong>?
+                            </p>
+                            <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
+                                Select option below or upload new file
+                            </p>
+                        </>
+                    )}
                 </div>
-            )}
+            </div>
 
             {errorMessage && (
                 <div
@@ -235,39 +253,22 @@ function App() {
                         padding: "10px",
                         borderRadius: "5px",
                         marginBottom: "20px",
+                        textAlign: "center",
                     }}
                 >
                     {errorMessage}
                 </div>
             )}
 
-            <div style={{ display: "flex", gap: "20px", marginBottom: "20px" }}>
-                {/* File upload section */}
-                <div>
-                    <input
-                        type="file"
-                        accept=".srt"
-                        onChange={handleUpload}
-                        disabled={isLoading}
-                        style={{ display: "none" }}
-                        id="file-upload"
-                    />
-                    <label
-                        htmlFor="file-upload"
-                        style={{
-                            padding: "10px 15px",
-                            color: "#dee2e6",
-                            border: "0.1em transparent",
-                            borderRadius: "2px",
-                            backgroundColor: "#008000",
-                            cursor: "pointer",
-                            display: "inline-block",
-                        }}
-                    >
-                        Upload
-                    </label>
-                </div>
-
+            {/* Centered Option Buttons */}
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    gap: "20px",
+                    marginBottom: "20px",
+                }}
+            >
                 {/* Editor options */}
                 <div style={{ display: "flex", gap: "10px" }}>
                     {["shift", "align", "clean", "translate"].map((option) => (
@@ -283,8 +284,8 @@ function App() {
                                     activeOption === option
                                         ? "#dee2e6"
                                         : !uploadedFile
-                                          ? "#6c757d"
-                                          : "#dee2e6",
+                                            ? "#6c757d"
+                                            : "#dee2e6",
                                 border:
                                     activeOption === option
                                         ? "0.1em dashed"
@@ -308,8 +309,11 @@ function App() {
             {activeOption === "shift" && uploadedFile && (
                 <ShiftOperation
                     onShift={shiftSubtitles}
+                    sessionId={sessionId}
                     onDownload={handleDownload}
+                    sourceFile={uploadedFile}
                     hasProcessedFile={!!processedFile}
+                    processedFile={processedFile}
                     isLoading={isLoading}
                     subtitleCount={subtitleCount}
                 />
@@ -318,21 +322,28 @@ function App() {
             {activeOption === "align" && uploadedFile && (
                 <AlignOperation
                     onAlign={alignSubtitles}
+                    sessionId={sessionId}
                     onDownload={handleDownload}
                     hasProcessedFile={!!processedFile}
+                    processedFile={processedFile}
                     isLoading={isLoading}
                     subtitleCount={subtitleCount}
                     exampleSubtitleCount={exampleSubtitleCount}
-                    sessionId={sessionId}
                     fetchExamplePreview={fetchExamplePreview}
+                    hasExampleFile={!!uploadedExampleFile}
                 />
             )}
 
-            {/* Metadata section */}
-            {activeOption && sourcePreview && renderMetadataSection()}
-
-            {/* Subtitle preview section */}
-            {activeOption && sourcePreview && renderSubtitlePreviews()}
+            {activeOption === "clean" && uploadedFile && (
+                <CleanOperation
+                    onClean={cleanSubtitles}
+                    sessionId={sessionId}
+                    onDownload={handleDownload}
+                    hasProcessedFile={!!processedFile}
+                    processedFile={processedFile}
+                    isLoading={isLoading}
+                />
+            )}
         </div>
     );
 }
