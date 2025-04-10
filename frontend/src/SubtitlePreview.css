@@ -1,11 +1,28 @@
+.shift-preview-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.source-file-preview-container,
+.shifted-file-preview-container {
+    max-width: 600px; /* Both previews will have the same max width */
+    width: 100%;
+}
+
+.metadata-and-subtitle-preview-section {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
 .metadata-content {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     padding: 10px;
     background-color: transparent;
-    width: 100vw;
-    max-width: 30%;
     margin-bottom: 10px;
+    width: 100%;
 }
 
 .subtitle-content {
@@ -13,8 +30,7 @@
     border-radius: 4px;
     padding: 10px;
     background-color: transparent;
-    width: 100vw;
-    max-width: 30%;
+    width: 100%;
 }
 
 .subtitle-entry {
@@ -39,10 +55,4 @@
     color: #6c757d;
     font-family: monospace;
     margin: 4px 0;
-}
-
-.dual-subtitle-preview {
-    display: flex;
-    gap: 20px;
-    margin-top: 20px;
 }

@@ -6,7 +6,7 @@ import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { OperationType } from "./types";
-// import "./SubtitlePreview.css";
+import "./SubtitlePreview.css";
 
 function App() {
     // Session hook
