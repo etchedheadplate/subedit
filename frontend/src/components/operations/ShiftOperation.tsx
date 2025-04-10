@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from "react";
+import { UniversalSubtitlePreview } from "../subtitles/SubtitlePreview";
+import { SubtitleFile } from "../../types";
 
 interface ShiftOperationProps {
     onShift: (delay: number, items: number[]) => Promise<any>;
     onDownload: () => void;
     hasProcessedFile: boolean;
+    processedFile: SubtitleFile | null;
     isLoading: boolean;
     subtitleCount: number;
+    sessionId: string | null;
+    sourceFile: SubtitleFile | null;
 }
 
 const ShiftOperation: React.FC<ShiftOperationProps> = ({
     onShift,
     onDownload,
     hasProcessedFile,
+    processedFile,
     isLoading,
     subtitleCount,
+    sessionId,
+    sourceFile,
 }) => {
+    // State for the shifted file
+    const [shiftedFile, setShiftedFile] = useState(null);
+
+    // State for setting up delay
     const [delay, setDelay] = useState<number>(0);
+
+    // State for using specific ranges
     const [useRange, setUseRange] = useState<boolean>(false);
     const [rangeStart, setRangeStart] = useState<number>(1);
     const [rangeEnd, setRangeEnd] = useState<number>(subtitleCount > 1 ? subtitleCount : 2,);
@@ -51,10 +65,31 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
         }
     }, [rangeStart, rangeEnd, useRange, subtitleCount]);
 
-    const handleShift = () => {
+    // Handler to store sfifting results
+    const handleShift = async () => {
         const items = useRange ? [rangeStart, rangeEnd] : [];
-        onShift(delay, items);
+        const result = await onShift(delay, items);
+        console.log("Shift result:", result);
+        setShiftedFile(result); // Store the result
     };
+
+    // Preview of the source file
+    const sourceFilePreview = (
+        <UniversalSubtitlePreview
+            sessionId={sessionId}
+            subtitleFile={sourceFile}
+            isDownloadable={false}
+        />
+    );
+
+    // Preview of the shifted file
+    const shiftedFilePreview = processedFile ? (
+        <UniversalSubtitlePreview
+            sessionId={sessionId}
+            subtitleFile={processedFile}
+            isDownloadable={true}
+        />
+    ) : null;
 
     return (
         <div className="shift-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
@@ -239,6 +274,24 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                 {rangeError}
                             </div>
                         )}
+                    </div>
+                )}
+            </div>
+            {/* File preview section */}
+            <div className="shift-preview-section" style={{
+                display: "flex",
+                gap: "20px",
+                marginTop: "20px"  // Add some spacing
+            }}>
+                {/* Source file preview section */}
+                <div className="source-file-preview-container" style={{ flex: 1 }}>
+                    {sourceFilePreview}
+                </div>
+
+                {/* Shifted file preview section - Only show if available */}
+                {processedFile && (
+                    <div className="shifted-file-preview-container" style={{ flex: 1 }}>
+                        {shiftedFilePreview}
                     </div>
                 )}
             </div>
