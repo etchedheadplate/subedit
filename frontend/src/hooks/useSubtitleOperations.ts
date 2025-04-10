@@ -174,13 +174,13 @@ export const useSubtitleOperations = (
             });
 
             // Construct filename based on range if specified
-            let filenameModifier = `shifted_by_${delay}_ms`;
+            let filenameModifier = `shifted-by-${delay}-ms`;
             if (items.length === 2) {
-                filenameModifier += `_from_${items[0]}_to_${items[1]}`;
+                filenameModifier += `-from-${items[0]}-to-${items[1]}`;
             }
 
             setProcessedFile({
-                filename: `${uploadedFile.filename.split(".")[0]}_${filenameModifier}.srt`,
+                filename: `${uploadedFile.filename.split(".srt")[0]}-${filenameModifier}.srt`,
                 session_id: sessionId || "",
                 file_path: uploadedFile.file_path, // Same path as a source file
             });
@@ -234,11 +234,11 @@ export const useSubtitleOperations = (
             // Construct filename
             let filenameModifier = "aligned";
             if (sourceRange && exampleRange) {
-                filenameModifier += `_src_${sourceRange[0]}_to_${sourceRange[1]}_ex_${exampleRange[0]}_to_${exampleRange[1]}`;
+                filenameModifier += `-src-${sourceRange[0]}-to-${sourceRange[1]}-ex-${exampleRange[0]}-to-${exampleRange[1]}`;
             }
 
             setProcessedFile(
-                `${uploadedFile.filename.split(".")[0]}_${filenameModifier}.srt`,
+                `${uploadedFile.filename.split(".srt")[0]}-${filenameModifier}.srt`,
             );
 
             return subtitles;

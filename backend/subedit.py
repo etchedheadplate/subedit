@@ -185,10 +185,10 @@ class SubEdit:
 
         source_name, source_ext = os.path.splitext(self.source_file)
         if items is None:
-            self.shifted_file = f'{source_name}_shifted_by_{delay}_ms{source_ext}'
+            self.shifted_file = f'{source_name}-shifted-by-{delay}-ms{source_ext}'
             subtitle_indices = sorted(parsed_subtitles.keys())
         elif type(items) is list and len(items) == 2:
-            self.shifted_file = f'{source_name}_shifted_by_{delay}_ms_from_{items[0]}_to_{items[1]}{source_ext}'
+            self.shifted_file = f'{source_name}-shifted-by-{delay}-ms-from-{items[0]}-to-{items[1]}{source_ext}'
             subtitle_indices = sorted(parsed_subtitles.keys())[items[0]-1:items[1]-1] # convert subtitle items to range of list indices
         else:
             raise ValueError(f'items parameter must be a list with 2 items ({len(items) if type(items) is list else type(items)} provided).')
@@ -234,7 +234,7 @@ class SubEdit:
             raise ValueError('Example file is required for alignment')
 
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.aligned_file = f'{source_name}_aligned{source_ext}'
+        self.aligned_file = f'{source_name}-aligned{source_ext}'
 
         self.subtitles_data[self.aligned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
@@ -348,7 +348,7 @@ class SubEdit:
             parsed_subtitles = self.subtitles_data[file_path]['subtitles']
         else:
             source_name, source_ext = os.path.splitext(self.source_file)
-            self.cleaned_file = f'{source_name}_cleaned{source_ext}'
+            self.cleaned_file = f'{source_name}-cleaned{source_ext}'
 
             self.subtitles_data[self.cleaned_file] = {
                 'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
@@ -419,7 +419,7 @@ class SubEdit:
             file_path = self.source_file
 
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.translated_file = f'{source_name}_translated_to_{target_language}_with_{model_name}{source_ext}'
+        self.translated_file = f'{source_name}-translated-to-{target_language}-with-{model_name}{source_ext}'
 
         self.subtitles_data[self.translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
