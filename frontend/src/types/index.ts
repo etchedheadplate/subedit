@@ -1,6 +1,14 @@
 export interface SubtitleFile {
     filename: string;
     session_id: string;
+    file_path: string;
+}
+
+export interface SubtitleMetadata {
+    encoding: string;
+    confidence: number;
+    language: string;
+    filename?: string;
 }
 
 export interface SubtitleEntry {
@@ -11,13 +19,6 @@ export interface SubtitleEntry {
 
 export interface SubtitlePreview {
     [key: number]: SubtitleEntry;
-}
-
-export interface SubtitleMetadata {
-    encoding: string;
-    confidence: number;
-    language: string;
-    filename?: string;
 }
 
 export interface ProcessingOptions {
