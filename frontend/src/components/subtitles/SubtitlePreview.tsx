@@ -88,22 +88,14 @@ export const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                         {/* Metadata content rendered only if file uploaded and metadata fetched */}
                         {subtitleFile && subtitleMeta && (
                             <div className="metadata-content">
-                                <p>
-                                    <strong>Filename:</strong>{" "}
-                                    {subtitleMeta.filename || "Source"}
-                                </p>
-                                <p>
-                                    <strong>Language:</strong>{" "}
-                                    {subtitleMeta.language || "Unknown"}
-                                </p>
-                                <p>
-                                    <strong>Encoding:</strong>{" "}
-                                    {subtitleMeta.encoding || "Unknown"}
-                                </p>
-                                <p>
-                                    <strong>Subtitles:</strong>{" "}
-                                    {subtitleCount || "Unknown"}
-                                </p>
+                                <center>
+                                    <p>
+                                        {subtitleMeta.filename || "Unknown Filename"}
+                                    </p>
+                                    <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
+                                        {subtitleMeta.language || "Unknown Language"} | {subtitleMeta.encoding || "Unknown Encoding"} | {subtitleCount || "Unknown number of"} subtitles
+                                    </p>
+                                </center>
                             </div>
                         )}
                     </div>
