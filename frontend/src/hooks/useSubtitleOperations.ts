@@ -14,23 +14,18 @@ export const useSubtitleOperations = (
         null,
     );
     const [resultMeta, setResultMeta] = useState<SubtitleMetadata | null>(null);
-    const [processedFile, setProcessedFile] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-    const [error, setError] = useState<string | null>(null);
-    const [subtitleCount, setSubtitleCount] = useState<number>(0);
-
-    // For align mode
     const [examplePreview, setExamplePreview] =
         useState<SubtitlePreview | null>(null);
     const [exampleMeta, setExampleMeta] = useState<SubtitleMetadata | null>(
         null,
     );
-    const [exampleSubtitleCount, setExampleSubtitleCount] = useState<number>(0);
-
-    // For clean mode
-    const [previewHtml, setPreviewHtml] = useState<SubtitlePreview | null>(
+    const [processedFile, setProcessedFile] = useState<SubtitleFile | null>(
         null,
     );
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
+    const [subtitleCount, setSubtitleCount] = useState<number>(0);
+    const [exampleSubtitleCount, setExampleSubtitleCount] = useState<number>(0);
 
     // Fetch preview of source file
     const fetchSourcePreview = async () => {
@@ -47,22 +42,28 @@ export const useSubtitleOperations = (
                 [], // Empty items array for preview
             );
 
-            setSourcePreview(result.preview);
-
-            // Calculate the number of subtitles in the file
-            if (result.preview) {
-                const count = Object.keys(result.preview).length;
-                setSubtitleCount(count);
+            // Extract actual subtitle entries (excluding metadata)
+            const subtitles: SubtitlePreview = {};
+            for (const [key, value] of Object.entries(result.preview)) {
+                if (!isNaN(Number(key))) {
+                    subtitles[Number(key)] = value;
+                }
             }
 
-            // Set source metadata
+            setSourcePreview(subtitles);
+
+            // Calculate the number of subtitles in the file
+            const count = Object.keys(subtitles).length;
+            setSubtitleCount(count);
+
+            // Set metadata separately
             setSourceMeta({
-                encoding: result.encoding,
+                encoding: result.encoding || "Unknown",
                 confidence: 100,
-                language: result.language,
+                language: result.language || "Unknown",
             });
 
-            return result.preview;
+            return subtitles;
         } catch (err: any) {
             setError(err.message);
             return null;
@@ -71,37 +72,42 @@ export const useSubtitleOperations = (
         }
     };
 
-    // Fetch preview of example file for align mode
-    const fetchExamplePreview = async (exampleFilename: string) => {
+    // Fetch preview of example file
+    const fetchExamplePreview = async (filename: string) => {
         if (!sessionId) return;
 
         setIsLoading(true);
         setError(null);
 
         try {
-            const result = await apiService.shiftSubtitles(
+            const result = await apiService.getSubtitlePreview(
                 sessionId,
-                exampleFilename,
-                0,
-                [], // Empty items array for preview
+                filename,
             );
 
-            setExamplePreview(result.preview);
-
-            // Calculate the number of subtitles in the file
-            if (result.preview) {
-                const count = Object.keys(result.preview).length;
-                setExampleSubtitleCount(count);
+            // Extract actual subtitle entries (excluding metadata)
+            const subtitles: SubtitlePreview = {};
+            for (const [key, value] of Object.entries(result.preview)) {
+                if (!isNaN(Number(key))) {
+                    subtitles[Number(key)] = value;
+                }
             }
 
-            // Set example metadata
+            setExamplePreview(subtitles);
+
+            // Calculate the number of subtitles in the file
+            const count = Object.keys(subtitles).length;
+            setExampleSubtitleCount(count);
+
+            // Set metadata separately
             setExampleMeta({
-                encoding: result.encoding,
+                encoding: result.encoding || "Unknown",
                 confidence: 100,
-                language: result.language,
+                language: result.language || "Unknown",
+                filename: filename,
             });
 
-            return result.preview;
+            return subtitles;
         } catch (err: any) {
             setError(err.message);
             return null;
@@ -150,13 +156,21 @@ export const useSubtitleOperations = (
                 items,
             );
 
-            setResultPreview(result.preview);
+            // Extract actual subtitle entries (excluding metadata)
+            const subtitles: SubtitlePreview = {};
+            for (const [key, value] of Object.entries(result.preview)) {
+                if (!isNaN(Number(key))) {
+                    subtitles[Number(key)] = value;
+                }
+            }
 
-            // Set result metadata
+            setResultPreview(subtitles);
+
+            // Set metadata for result
             setResultMeta({
-                encoding: result.encoding,
+                encoding: result.encoding || "Unknown",
                 confidence: 100,
-                language: result.language,
+                language: result.language || "Unknown",
             });
 
             // Construct filename based on range if specified
@@ -165,11 +179,13 @@ export const useSubtitleOperations = (
                 filenameModifier += `_from_${items[0]}_to_${items[1]}`;
             }
 
-            setProcessedFile(
-                `${uploadedFile.filename.split(".")[0]}_${filenameModifier}.srt`,
-            );
+            setProcessedFile({
+                filename: `${uploadedFile.filename.split(".")[0]}_${filenameModifier}.srt`,
+                session_id: sessionId || "",
+                file_path: uploadedFile.file_path, // Same path as a source file
+            });
 
-            return result.preview;
+            return subtitles;
         } catch (err: any) {
             setError(err.message);
             return null;
@@ -198,26 +214,34 @@ export const useSubtitleOperations = (
                 exampleRange,
             );
 
-            setResultPreview(result.preview);
+            // Extract actual subtitle entries (excluding metadata)
+            const subtitles: SubtitlePreview = {};
+            for (const [key, value] of Object.entries(result.preview)) {
+                if (!isNaN(Number(key))) {
+                    subtitles[Number(key)] = value;
+                }
+            }
 
-            // Set result metadata
+            setResultPreview(subtitles);
+
+            // Set metadata for result
             setResultMeta({
-                encoding: result.encoding,
+                encoding: result.encoding || "Unknown",
                 confidence: 100,
-                language: result.language,
+                language: result.language || "Unknown",
             });
 
             // Construct filename
-            let filenameModifier = `aligned_with_${exampleFilename.split(".")[0]}`;
+            let filenameModifier = "aligned";
             if (sourceRange && exampleRange) {
-                filenameModifier += `_source_${sourceRange[0]}_to_${sourceRange[1]}_example_${exampleRange[0]}_to_${exampleRange[1]}`;
+                filenameModifier += `_src_${sourceRange[0]}_to_${sourceRange[1]}_ex_${exampleRange[0]}_to_${exampleRange[1]}`;
             }
 
             setProcessedFile(
                 `${uploadedFile.filename.split(".")[0]}_${filenameModifier}.srt`,
             );
 
-            return result.preview;
+            return subtitles;
         } catch (err: any) {
             setError(err.message);
             return null;
@@ -227,14 +251,7 @@ export const useSubtitleOperations = (
     };
 
     // Clean operation
-    const cleanSubtitles = async (options: {
-        bold: boolean;
-        italic: boolean;
-        underline: boolean;
-        strikethrough: boolean;
-        color: boolean;
-        font: boolean;
-    }) => {
+    const cleanSubtitles = async () => {
         if (!uploadedFile || !sessionId) return;
 
         setIsLoading(true);
@@ -244,61 +261,29 @@ export const useSubtitleOperations = (
             const result = await apiService.cleanSubtitles(
                 sessionId,
                 uploadedFile.filename,
-                options,
             );
 
-            setResultPreview(result.preview);
+            // Extract actual subtitle entries (excluding metadata)
+            const subtitles: SubtitlePreview = {};
+            for (const [key, value] of Object.entries(result.preview)) {
+                if (!isNaN(Number(key))) {
+                    subtitles[Number(key)] = value;
+                }
+            }
 
-            // Set result metadata
+            setResultPreview(subtitles);
+
+            // Set metadata for result
             setResultMeta({
-                encoding: result.encoding,
+                encoding: result.encoding || "Unknown",
                 confidence: 100,
-                language: result.language,
+                language: result.language || "Unknown",
             });
 
-            // Generate HTML preview version
-            // This is a simplistic approach, in a real implementation you'd want
-            // to properly parse the subtitle markup and convert to HTML
-            const htmlPreview = { ...result.preview };
-            if (options.bold) {
-                // Convert <b> tags to actual HTML tags for preview
-                Object.keys(htmlPreview).forEach((key) => {
-                    const num = Number(key);
-                    htmlPreview[num] = {
-                        ...htmlPreview[num],
-                        text: htmlPreview[num].text
-                            .replace(/<b>/g, "<strong>")
-                            .replace(/<\/b>/g, "</strong>"),
-                    };
-                });
-            }
+            // Set processed file name
+            setProcessedFile(result.filename);
 
-            if (options.italic) {
-                // Convert <i> tags to actual HTML tags for preview
-                Object.keys(htmlPreview).forEach((key) => {
-                    const num = Number(key);
-                    htmlPreview[num] = {
-                        ...htmlPreview[num],
-                        text: htmlPreview[num].text
-                            .replace(/<i>/g, "<em>")
-                            .replace(/<\/i>/g, "</em>"),
-                    };
-                });
-            }
-
-            setPreviewHtml(htmlPreview);
-
-            // Create filename based on options
-            const optionNames = Object.entries(options)
-                .filter(([_, value]) => value)
-                .map(([key]) => key)
-                .join("_");
-
-            setProcessedFile(
-                `${uploadedFile.filename.split(".")[0]}_cleaned_${optionNames}.srt`,
-            );
-
-            return result.preview;
+            return subtitles;
         } catch (err: any) {
             setError(err.message);
             return null;
@@ -310,7 +295,7 @@ export const useSubtitleOperations = (
     // For downloading processed file
     const getDownloadLink = () => {
         if (!processedFile || !sessionId) return "";
-        return apiService.downloadFile(sessionId, processedFile);
+        return apiService.downloadFile(sessionId, processedFile.filename);
     };
 
     // Reset operation results
@@ -318,10 +303,6 @@ export const useSubtitleOperations = (
         setResultPreview(null);
         setResultMeta(null);
         setProcessedFile(null);
-        setExamplePreview(null);
-        setExampleMeta(null);
-        setExampleSubtitleCount(0);
-        setPreviewHtml(null);
     };
 
     return {
@@ -332,7 +313,6 @@ export const useSubtitleOperations = (
         examplePreview,
         exampleMeta,
         exampleSubtitleCount,
-        previewHtml,
         processedFile,
         isLoading,
         error,
@@ -341,7 +321,6 @@ export const useSubtitleOperations = (
         fetchExamplePreview,
         shiftSubtitles,
         alignSubtitles,
-        cleanSubtitles,
         getDownloadLink,
         resetResults,
     };
