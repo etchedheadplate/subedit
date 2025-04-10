@@ -40,6 +40,7 @@ export const apiService = {
         return {
             filename: data.filename,
             session_id: data.session_id,
+            file_path: data.file_path,
         };
     },
 
@@ -54,6 +55,7 @@ export const apiService = {
         delay: number,
         items: number[],
     ): Promise<{
+        filename: string;
         preview: SubtitlePreview;
         language: string;
         encoding: string;
@@ -76,6 +78,7 @@ export const apiService = {
         }
 
         return {
+            filename: data.filename,
             preview: data.preview,
             language: data.language || "Unknown",
             encoding: data.encoding || "Unknown",
@@ -90,6 +93,7 @@ export const apiService = {
         sourceSlice?: number[],
         exampleSlice?: number[],
     ): Promise<{
+        filename: string;
         preview: SubtitlePreview;
         language: string;
         encoding: string;
@@ -113,6 +117,7 @@ export const apiService = {
         }
 
         return {
+            filename: data.filename,
             preview: data.preview,
             language: data.language || "Unknown",
             encoding: data.encoding || "Unknown",
@@ -131,6 +136,7 @@ export const apiService = {
             font?: boolean;
         },
     ): Promise<{
+        filename: string;
         preview: SubtitlePreview;
         language: string;
         encoding: string;
@@ -152,6 +158,7 @@ export const apiService = {
         }
 
         return {
+            filename: data.filename,
             preview: data.preview,
             language: data.language || "Unknown",
             encoding: data.encoding || "Unknown",
@@ -165,6 +172,7 @@ export const apiService = {
         modelName: string = "GPT-4o",
         modelThrottle: number = 0.5,
     ): Promise<{
+        filename: string;
         preview: SubtitlePreview;
         language: string;
         encoding: string;
@@ -188,6 +196,7 @@ export const apiService = {
         }
 
         return {
+            filename: data.filename,
             preview: data.preview,
             language: targetLanguage,
             encoding: data.encoding || "Unknown",
