@@ -1,18 +1,19 @@
-.metadata-container {
+.metadata-content {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     padding: 10px;
     background-color: transparent;
-    width: 300vw;
+    width: 100vw;
     max-width: 30%;
+    margin-bottom: 10px;
 }
 
-.subtitle-preview-container {
+.subtitle-content {
     border: 1px solid #dee2e6;
     border-radius: 4px;
     padding: 10px;
     background-color: transparent;
-    width: 30vw;
+    width: 100vw;
     max-width: 30%;
 }
 
