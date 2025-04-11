@@ -1,11 +1,11 @@
-.shift-preview-section {
+.file-preview-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
 }
 
 .source-file-preview-container,
-.shifted-file-preview-container {
+.modified-file-preview-container {
     max-width: 600px;
     width: 100%;
 }
