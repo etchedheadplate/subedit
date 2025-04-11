@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { UniversalSubtitlePreview } from "../subtitles/SubtitlePreview";
+import { SubtitleFile } from "../../types";
 
 interface CleanOperationProps {
     onClean: (options: {
@@ -8,19 +10,30 @@ interface CleanOperationProps {
         strikethrough: boolean;
         color: boolean;
         font: boolean;
-    }) => Promise<void>;
+    }) => Promise<any>;
     onDownload: () => void;
     hasProcessedFile: boolean;
+    processedFile: SubtitleFile | null;
     isLoading: boolean;
+    subtitleCount: number;
+    sessionId: string | null;
+    sourceFile: SubtitleFile | null;
 }
 
 const CleanOperation: React.FC<CleanOperationProps> = ({
     onClean,
     onDownload,
     hasProcessedFile,
+    processedFile,
     isLoading,
+    subtitleCount,
+    sessionId,
+    sourceFile,
 }) => {
-    // Markup removal options
+    // State for the cleaned file
+    const [cleanedFile, setCleanedFile] = useState(null);
+
+    // State for choosing options
     const [options, setOptions] = useState({
         bold: true,
         italic: true,
@@ -30,7 +43,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
         font: true,
     });
 
-    // Handle option change
+    // Handle options change
     const handleOptionChange = (option: keyof typeof options) => {
         setOptions({
             ...options,
@@ -40,14 +53,48 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
 
     // Handle clean operation
     const handleClean = async () => {
-        await onClean(options);
+        const result = await onClean(options);
+        setCleanedFile(result); // Store the result
     };
 
+    // Preview of the source file
+    const sourceFilePreview = (
+        <UniversalSubtitlePreview
+            sessionId={sessionId}
+            subtitleFile={sourceFile}
+            isDownloadable={false}
+        />
+    );
+
+    // Preview of the shifted file
+    const cleanedFilePreview = processedFile ? (
+        <UniversalSubtitlePreview
+            sessionId={sessionId}
+            subtitleFile={processedFile}
+            isDownloadable={true}
+        />
+    ) : null;
+
     return (
-        <div style={{ marginBottom: "20px" }}>
-            <div style={{ marginBottom: "20px" }}>
-                <h3>Select Markup to Remove</h3>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
+        <div className="clean-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
+
+            {/* Description of Clean Operation */}
+            <div className="clean-description">
+                <p>
+                    Select markups to remove
+                </p>
+            </div>
+
+            {/* Bottom gap below clean button and option checkboxes */}
+            <div className="clean-options-container"
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: "20px",
+                }}
+            >
+                {/* Option names mapping */}
+                <div className="clean-options-titles" style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
                     {Object.entries(options).map(([key, value]) => (
                         <label
                             key={key}
@@ -58,7 +105,8 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                                 minWidth: "120px",
                             }}
                         >
-                            <input
+                            {/* Checkboxes for option names */}
+                            <input className="options-checkboxes"
                                 type="checkbox"
                                 checked={value}
                                 onChange={() =>
@@ -74,7 +122,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                 </div>
             </div>
 
-            <div style={{ display: "flex", gap: "10px" }}>
+            <div className="clean-subtitles-button" style={{ display: "flex", gap: "10px" }}>
                 <button
                     onClick={handleClean}
                     disabled={
@@ -89,16 +137,22 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                         borderRadius: "2px",
                         cursor:
                             !isLoading &&
-                            Object.values(options).some((option) => option)
+                                Object.values(options).some((option) => option)
                                 ? "pointer"
                                 : "not-allowed",
+                        opacity:
+                            !isLoading &&
+                                Object.values(options).some((option) => option)
+                                ? 1
+                                : 0.7,
                     }}
                 >
                     {isLoading ? "Processing..." : "Clean"}
                 </button>
 
+                {/* Download button is active only if Clean Operation was performed on a file */}
                 {hasProcessedFile && (
-                    <button
+                    <button className="download-cleaned-file-button"
                         onClick={onDownload}
                         style={{
                             padding: "10px 15px",
@@ -111,6 +165,25 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                     >
                         Download
                     </button>
+                )}
+            </div>
+
+            {/* File preview section */}
+            <div className="file-preview-section" style={{
+                display: "flex",
+                gap: "20px",
+                marginTop: "20px"  // Add some spacing
+            }}>
+                {/* Source file preview section */}
+                <div className="source-file-preview-container" style={{ flex: 1 }}>
+                    {sourceFilePreview}
+                </div>
+
+                {/* Shifted file preview section - Only show if available */}
+                {processedFile && (
+                    <div className="modified-file-preview-container" style={{ flex: 1 }}>
+                        {cleanedFilePreview}
+                    </div>
                 )}
             </div>
         </div>
