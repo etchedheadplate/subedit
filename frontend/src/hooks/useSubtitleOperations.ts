@@ -261,6 +261,7 @@ export const useSubtitleOperations = (
             const result = await apiService.cleanSubtitles(
                 sessionId,
                 uploadedFile.filename,
+                {},
             );
 
             // Extract actual subtitle entries (excluding metadata)
@@ -281,7 +282,11 @@ export const useSubtitleOperations = (
             });
 
             // Set processed file name
-            setProcessedFile(result.filename);
+            setProcessedFile({
+                filename: `${uploadedFile.filename.split(".srt")[0]}-cleaned.srt`,
+                session_id: sessionId || "",
+                file_path: uploadedFile.file_path, // Same path as a source file
+            });
 
             return subtitles;
         } catch (err: any) {
@@ -321,6 +326,7 @@ export const useSubtitleOperations = (
         fetchExamplePreview,
         shiftSubtitles,
         alignSubtitles,
+        cleanSubtitles,
         getDownloadLink,
         resetResults,
     };
