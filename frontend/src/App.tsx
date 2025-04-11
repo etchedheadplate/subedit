@@ -339,9 +339,11 @@ function App() {
                     onClean={cleanSubtitles}
                     sessionId={sessionId}
                     onDownload={handleDownload}
+                    sourceFile={uploadedFile}
                     hasProcessedFile={!!processedFile}
                     processedFile={processedFile}
                     isLoading={isLoading}
+                    subtitleCount={subtitleCount}
                 />
             )}
         </div>
