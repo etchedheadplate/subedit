@@ -69,7 +69,6 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     const handleShift = async () => {
         const items = useRange ? [rangeStart, rangeEnd] : [];
         const result = await onShift(delay, items);
-        console.log("Shift result:", result);
         setShiftedFile(result); // Store the result
     };
 
@@ -277,8 +276,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     </div>
                 )}
             </div>
+
             {/* File preview section */}
-            <div className="shift-preview-section" style={{
+            <div className="file-preview-section" style={{
                 display: "flex",
                 gap: "20px",
                 marginTop: "20px"  // Add some spacing
@@ -290,7 +290,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
                 {/* Shifted file preview section - Only show if available */}
                 {processedFile && (
-                    <div className="shifted-file-preview-container" style={{ flex: 1 }}>
+                    <div className="modified-file-preview-container" style={{ flex: 1 }}>
                         {shiftedFilePreview}
                     </div>
                 )}
