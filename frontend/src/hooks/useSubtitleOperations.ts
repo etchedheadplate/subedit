@@ -9,36 +9,7 @@ export const useSubtitleOperations = (
     const [processedFile, setProcessedFile] = useState<SubtitleFile | null>(null,);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [subtitleCount, setSubtitleCount] = useState<number>(0);
 
-    // Generic function to fetch subtitle preview
-    const countSubtitles = async (filename: string) => {
-        if (!sessionId) return null;
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            // Request appropriate API method
-            const result = await apiService.showSubtitles(
-                sessionId,
-                filename,
-            )
-
-            // Calculate the number of subtitles in the file
-            const count = Object.keys(result.preview).filter(key => !isNaN(Number(key))).length;
-
-            // Update state
-            setSubtitleCount(count);
-
-            return count;
-        } catch (err: any) {
-            setError(err.message);
-            return null;
-        } finally {
-            setIsLoading(false);
-        }
-    };
 
     // Shift operation
     const shiftSubtitles = async (delay: number, items: number[] = []) => {
@@ -178,8 +149,6 @@ export const useSubtitleOperations = (
         processedFile,
         isLoading,
         error,
-        subtitleCount,
-        countSubtitles,
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
