@@ -1,15 +1,18 @@
 .operation-description {
+    max-width: 50vw;
     text-align: center;
-    margin-bottom: 30px;
+    margin: 0 auto 30px;
     font-size: 0.8em;
     color: #6c757d;
 }
 
 .operation-controls-description {
+    max-width: 50vw;
     text-align: center;
-    margin-bottom: 30px;
+    margin: 0 auto 30px;
     font-size: 0.8em;
     color: #6c757d;
+    max-width: 50vw;
 }
 
 .operation-controls-items {
