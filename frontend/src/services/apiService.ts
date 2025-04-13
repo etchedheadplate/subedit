@@ -49,6 +49,38 @@ export const apiService = {
     },
 
     // Subtitle operations
+    showSubtitles: async (
+        sessionId: string,
+        filename: string,
+    ): Promise<{
+        filename: string;
+        preview: SubtitlePreview;
+        language: string;
+        encoding: string;
+    }> => {
+        const response = await fetch(`${API_BASE_URL}/show/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                session_id: sessionId,
+                filename: filename,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Show operation failed");
+        }
+
+        return {
+            filename: data.filename,
+            preview: data.preview,
+            language: data.language || "Unknown",
+            encoding: data.encoding || "Unknown",
+        };
+    },
+
     shiftSubtitles: async (
         sessionId: string,
         filename: string,

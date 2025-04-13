@@ -116,6 +116,39 @@ async def download_file(session_id: str, filename: str):
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
 
 # Request models and endpoints
+class ShowRequest(BaseModel):
+    session_id: str
+    filename: str
+
+@app.post("/show/")
+async def show_subtitles(request: ShowRequest):
+    try:
+        # Load the session and file
+        session_id, filename = request.session_id, request.filename
+        print(f"Received show request: session_id={session_id}, filename={filename}")
+
+        # Initialize SubEdit object
+        file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+        subedit = SubEdit([file_path])
+
+        # Apply shifting
+        subedit.show_data()
+
+        # Return response with preview and metadata
+        subtitles_data = subedit.subtitles_data[filename]
+
+        return {
+            "session_id": session_id,
+            "filename": filename,
+            "message": "Subtitles data passed",
+            "preview": subtitles_data['subtitles'],
+            "language": subtitles_data['metadata']['language'],
+            "encoding": subtitles_data['metadata']['encoding']
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 class ShiftRequest(BaseModel):
     session_id: str
     filename: str
