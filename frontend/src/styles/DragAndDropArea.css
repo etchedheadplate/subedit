@@ -1,19 +1,21 @@
-/* DragAndDropArea.css */
-
 .drag-and-drop-area {
-    width: 50%;
+    width: 50vw;
     margin: 0 auto;
-    height: 120px;
-    border: 2px dashed #dee2e6;
+    min-height: 160px;
+    max-height: 200px;
+    border: 2px dashed #6c757d;
     border-radius: 0px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+    text-align: center;
     background-color: transparent;
     transition: all 0.3s ease;
     margin-bottom: 20px;
-    cursor: pointer; /* Default cursor */
+    padding: 0 50px;
+    box-sizing: border-box;
+    cursor: pointer;
 }
 
 .drag-and-drop-area.drag-active {
@@ -22,5 +24,32 @@
 }
 
 .drag-and-drop-area.loading {
-    cursor: wait; /* Cursor when loading */
+    cursor: wait;
+}
+
+.drag-and-drop-area-main-text {
+    cursor: wait;
+}
+
+.drag-and-drop-area-sub-text {
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+@keyframes blink-border {
+    0% {
+        border-color: #6c757d;
+    }
+
+    50% {
+        border-color: #dee2e6;
+    }
+
+    100% {
+        border-color: #6c757d;
+    }
+}
+
+.drag-and-drop-area.blinking {
+    animation: blink-border 2s ease-in-out infinite;
 }
