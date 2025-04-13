@@ -1,9 +1,14 @@
 .file-preview-section {
-    justify-content: center; /* Center items horizontally */
-    align-items: center; /* Center items vertically */
-    display: flex; /* Use flexbox layout */
-    gap: 20px; /* Space between flex items */
-    margin-top: 20px; /* Margin at the top */
+    justify-content: center;
+    /* Center items horizontally */
+    align-items: center;
+    /* Center items vertically */
+    display: flex;
+    /* Use flexbox layout */
+    gap: 20px;
+    /* Space between flex items */
+    margin-top: 20px;
+    /* Margin at the top */
 }
 
 .source-file-preview-container,
@@ -25,6 +30,7 @@
     background-color: transparent;
     margin-bottom: 10px;
     width: 100%;
+    height: 120px;
 }
 
 .subtitle-content {
@@ -40,8 +46,10 @@
     margin-bottom: 2px;
     border-radius: 4px;
     transition: background-color 0.2s ease;
-    word-wrap: break-word; /* Forces long words to break */
-    white-space: normal; /* Ensures text wraps normally */
+    word-wrap: break-word;
+    /* Forces long words to break */
+    white-space: normal;
+    /* Ensures text wraps normally */
 }
 
 .subtitle-entry:hover {
