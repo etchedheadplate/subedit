@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { UniversalSubtitlePreview } from "../subtitles/SubtitlePreview";
+import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 
 interface CleanOperationProps {
