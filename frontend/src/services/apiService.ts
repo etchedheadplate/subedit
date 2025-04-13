@@ -91,6 +91,7 @@ export const apiService = {
         preview: SubtitlePreview;
         language: string;
         encoding: string;
+        confidence: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/shift/`, {
             method: "POST",
@@ -114,6 +115,7 @@ export const apiService = {
             preview: data.preview,
             language: data.language || "Unknown",
             encoding: data.encoding || "Unknown",
+            confidence: data.confidence || "Unknown",
         };
     },
 
