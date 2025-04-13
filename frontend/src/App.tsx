@@ -11,6 +11,7 @@ import "./styles/OperationSection.css";
 import "./styles/SubtitlePreview.css";
 import "./styles/DragAndDropArea.css";
 import "./styles/ErrorMessage.css";
+import "./styles/App.css";
 
 function App() {
     // Session hook
@@ -64,70 +65,45 @@ function App() {
     };
 
     return (
-        <div style={{ padding: "20px" }}>
+        <div className="main-app">
 
-            {/* Centered Header */}
-            <div style={{ textAlign: "center", marginBottom: "30px" }}>
-                <h1>[ s u b e d i t ]</h1>
+            {/* Header, always present */}
+            <div className="main-header">
 
+                {/* Main title */}
+                <h1 className="main-title">[ s u b e d i t ]</h1>
+
+                {/* Drag-and-drop Area */}
                 <DragAndDropArea
                     onFileUpload={handleFileUpload}
                     isLoading={isLoading}
                     uploadedFile={uploadedFile}
-                    className=""
+                    className={!uploadedFile ? "blinking" : ""}
                 />
-            </div>
 
-            {errorMessage && (
-                <div className="error-message">
-                    {errorMessage}
-                </div>
-            )}
-
-            {/* Centered Option Buttons */}
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    gap: "20px",
-                    marginBottom: "20px",
-                }}
-            >
-                {/* Editor options */}
-                <div style={{ display: "flex", gap: "10px" }}>
+                {/* Options Buttons */}
+                <div className="main-options">
                     {["shift", "align", "clean", "translate"].map((option) => (
                         <button
+                            className={`main-option-button${activeOption === option ? " active" : ""}`}
                             key={option}
-                            onClick={() =>
-                                handleOptionSelect(option as OperationType)
-                            }
+                            onClick={() => handleOptionSelect(option as OperationType)}
                             disabled={!uploadedFile || isLoading}
-                            style={{
-                                padding: "10px 15px",
-                                color:
-                                    activeOption === option
-                                        ? "#dee2e6"
-                                        : !uploadedFile
-                                            ? "#6c757d"
-                                            : "#dee2e6",
-                                border:
-                                    activeOption === option
-                                        ? "0.1em dashed"
-                                        : "0.1em transparent",
-                                borderRadius: "0px",
-                                cursor: uploadedFile
-                                    ? "pointer"
-                                    : "not-allowed",
-                            }}
                         >
                             <strong>
-                                {option.charAt(0).toUpperCase() +
-                                    option.slice(1)}
+                                {option.charAt(0).toUpperCase() + option.slice(1)}
                             </strong>
                         </button>
                     ))}
                 </div>
             </div>
+
+            {/* Errors, if any */}
+            {errorMessage && (
+                <div className="error-message">
+                    {errorMessage}
+                </div>
+            )}
 
             {/* Active option content */}
             {activeOption === "shift" && uploadedFile && (
