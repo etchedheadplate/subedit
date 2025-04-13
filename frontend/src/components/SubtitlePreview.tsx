@@ -7,6 +7,7 @@ interface SubtitlePreviewProps {
     sessionId: string | null;
     subtitleFile: SubtitleFile | null;
     isDownloadable: boolean | null;
+    fileType?: string;
     onSubtitleCountChange?: (count: number) => void;
 }
 
@@ -14,6 +15,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     sessionId,
     subtitleFile,
     isDownloadable,
+    fileType = "Source",
     onSubtitleCountChange,
 }) => {
     const [subtitleMeta, setSubtitleMeta] = useState<SubtitleMetadata | null>(null);
@@ -51,7 +53,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                 // Extract file metadata
                 const meta: SubtitleMetadata = {
                     encoding: result.encoding || "Unknown",
-                    confidence: 100,
+                    confidence: result.confidence,
                     language: result.language || "Unknown",
                     filename: subtitleFile.filename,
                 }
@@ -96,11 +98,11 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                         {subtitleFile && subtitleMeta && (
                             <div className="metadata-content">
                                 <center>
+                                    <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
+                                        <strong>{fileType} file</strong> | {subtitleMeta.language || "Unknown Language"} ({subtitleMeta.confidence}) | {subtitleMeta.encoding || "Unknown Encoding"} | {subtitleCount || "Unknown number of"} subtitles
+                                    </p>
                                     <p>
                                         {subtitleMeta.filename || "Unknown Filename"}
-                                    </p>
-                                    <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                                        {subtitleMeta.language || "Unknown Language"} | {subtitleMeta.encoding || "Unknown Encoding"} | {subtitleCount || "Unknown number of"} subtitles
                                     </p>
                                 </center>
                             </div>
