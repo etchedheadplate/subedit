@@ -7,9 +7,15 @@ interface SubtitlePreviewProps {
     sessionId: string | null;
     subtitleFile: SubtitleFile | null;
     isDownloadable: boolean | null;
+    onSubtitleCountChange?: (count: number) => void;
 }
 
-const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({ sessionId, subtitleFile, }) => {
+const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
+    sessionId,
+    subtitleFile,
+    isDownloadable,
+    onSubtitleCountChange,
+}) => {
     const [subtitleMeta, setSubtitleMeta] = useState<SubtitleMetadata | null>(null);
     const [subtitlePreview, setSubtitlePreview] = useState<SubtitlePreview | null>(null);
     const [subtitleCount, setSubtitleCount] = useState<number>(0);
@@ -64,6 +70,11 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({ sessionId, s
                 const count = Object.keys(subtitles).length;
                 setSubtitleCount(count);
 
+                // Call the callback with the count if provided
+                if (onSubtitleCountChange) {
+                    onSubtitleCountChange(count);
+                }
+
             } catch (err: any) {
                 setError(err.message);
                 return null;
@@ -72,7 +83,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({ sessionId, s
             }
         };
         fetchFilePreview();
-    }, [sessionId, subtitleFile]); // Empty dependency array ensures fetchFilePreview runs once
+    }, [sessionId, subtitleFile, onSubtitleCountChange]); // Empty dependency array ensures fetchFilePreview runs once
 
     return (
         <>
