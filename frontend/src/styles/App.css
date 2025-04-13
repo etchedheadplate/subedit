@@ -1,0 +1,55 @@
+.app-container {
+    padding: 20px;
+}
+
+.main-app {
+    padding: 20px;
+}
+
+.main-header {
+    padding: 20px;
+    text-align: center;
+    justify-content: center;
+}
+
+.main-title {
+    margin-bottom: 50px;
+}
+
+.main-options {
+    /* Optional: add layout styles if needed */
+}
+
+.main-option-button {
+    padding: 10px 15px;
+    color: #dee2e6;
+    border: 0.1em transparent;
+    border-radius: 0px;
+    cursor: pointer;
+    background: none;
+    font-weight: bold;
+}
+
+/* Disabled state (no file uploaded or loading) */
+.main-option-button:disabled {
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+/* Active option (e.g. when selected) */
+.main-option-button.active {
+    color: #dee2e6;
+    border: 0.1em dashed;
+}
+
+.error-message {
+    background-color: #ffcccc;
+    color: #cc0000;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.operations-container {
+    margin-top: 10px;
+}
