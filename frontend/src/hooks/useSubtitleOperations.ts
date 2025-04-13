@@ -1,113 +1,37 @@
 import { useState } from "react";
 import { apiService } from "../services/apiService";
-import { SubtitlePreview, SubtitleFile, SubtitleMetadata } from "../types";
+import { SubtitlePreview, SubtitleFile } from "../types";
 
 export const useSubtitleOperations = (
     sessionId: string | null,
     uploadedFile: SubtitleFile | null,
 ) => {
-    const [sourcePreview, setSourcePreview] = useState<SubtitlePreview | null>(
-        null,
-    );
-    const [sourceMeta, setSourceMeta] = useState<SubtitleMetadata | null>(null);
-    const [resultPreview, setResultPreview] = useState<SubtitlePreview | null>(
-        null,
-    );
-    const [resultMeta, setResultMeta] = useState<SubtitleMetadata | null>(null);
-    const [examplePreview, setExamplePreview] =
-        useState<SubtitlePreview | null>(null);
-    const [exampleMeta, setExampleMeta] = useState<SubtitleMetadata | null>(
-        null,
-    );
-    const [processedFile, setProcessedFile] = useState<SubtitleFile | null>(
-        null,
-    );
+    const [processedFile, setProcessedFile] = useState<SubtitleFile | null>(null,);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [subtitleCount, setSubtitleCount] = useState<number>(0);
-    const [exampleSubtitleCount, setExampleSubtitleCount] = useState<number>(0);
 
-    // Fetch preview of source file
-    const fetchSourcePreview = async () => {
-        if (!uploadedFile || !sessionId) return;
-
-        setIsLoading(true);
-        setError(null);
-
-        try {
-            const result = await apiService.shiftSubtitles(
-                sessionId,
-                uploadedFile.filename,
-                0,
-                [], // Empty items array for preview
-            );
-
-            // Extract actual subtitle entries (excluding metadata)
-            const subtitles: SubtitlePreview = {};
-            for (const [key, value] of Object.entries(result.preview)) {
-                if (!isNaN(Number(key))) {
-                    subtitles[Number(key)] = value;
-                }
-            }
-
-            setSourcePreview(subtitles);
-
-            // Calculate the number of subtitles in the file
-            const count = Object.keys(subtitles).length;
-            setSubtitleCount(count);
-
-            // Set metadata separately
-            setSourceMeta({
-                encoding: result.encoding || "Unknown",
-                confidence: 100,
-                language: result.language || "Unknown",
-            });
-
-            return subtitles;
-        } catch (err: any) {
-            setError(err.message);
-            return null;
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
-    // Fetch preview of example file
-    const fetchExamplePreview = async (filename: string) => {
-        if (!sessionId) return;
+    // Generic function to fetch subtitle preview
+    const countSubtitles = async (filename: string) => {
+        if (!sessionId) return null;
 
         setIsLoading(true);
         setError(null);
 
         try {
-            const result = await apiService.getSubtitlePreview(
+            // Request appropriate API method
+            const result = await apiService.showSubtitles(
                 sessionId,
                 filename,
-            );
-
-            // Extract actual subtitle entries (excluding metadata)
-            const subtitles: SubtitlePreview = {};
-            for (const [key, value] of Object.entries(result.preview)) {
-                if (!isNaN(Number(key))) {
-                    subtitles[Number(key)] = value;
-                }
-            }
-
-            setExamplePreview(subtitles);
+            )
 
             // Calculate the number of subtitles in the file
-            const count = Object.keys(subtitles).length;
-            setExampleSubtitleCount(count);
+            const count = Object.keys(result.preview).filter(key => !isNaN(Number(key))).length;
 
-            // Set metadata separately
-            setExampleMeta({
-                encoding: result.encoding || "Unknown",
-                confidence: 100,
-                language: result.language || "Unknown",
-                filename: filename,
-            });
+            // Update state
+            setSubtitleCount(count);
 
-            return subtitles;
+            return count;
         } catch (err: any) {
             setError(err.message);
             return null;
@@ -120,58 +44,16 @@ export const useSubtitleOperations = (
     const shiftSubtitles = async (delay: number, items: number[] = []) => {
         if (!uploadedFile || !sessionId) return;
 
-        // Validate items if provided
-        if (items.length > 0 && items.length !== 2) {
-            setError("Items must contain exactly 2 values if specified");
-            return;
-        }
-
-        if (items.length === 2) {
-            const [start, end] = items;
-
-            // Validate range
-            if (start < 1 || start >= subtitleCount) {
-                setError(
-                    `Start index must be between 1 and ${subtitleCount - 1}`,
-                );
-                return;
-            }
-
-            if (end <= start || end > subtitleCount) {
-                setError(
-                    `End index must be between ${start + 1} and ${subtitleCount}`,
-                );
-                return;
-            }
-        }
-
         setIsLoading(true);
         setError(null);
 
         try {
-            const result = await apiService.shiftSubtitles(
+            await apiService.shiftSubtitles(
                 sessionId,
                 uploadedFile.filename,
                 delay,
                 items,
             );
-
-            // Extract actual subtitle entries (excluding metadata)
-            const subtitles: SubtitlePreview = {};
-            for (const [key, value] of Object.entries(result.preview)) {
-                if (!isNaN(Number(key))) {
-                    subtitles[Number(key)] = value;
-                }
-            }
-
-            setResultPreview(subtitles);
-
-            // Set metadata for result
-            setResultMeta({
-                encoding: result.encoding || "Unknown",
-                confidence: 100,
-                language: result.language || "Unknown",
-            });
 
             // Construct filename based on range if specified
             let filenameModifier = `shifted-by-${delay}-ms`;
@@ -185,7 +67,6 @@ export const useSubtitleOperations = (
                 file_path: uploadedFile.file_path, // Same path as a source file
             });
 
-            return subtitles;
         } catch (err: any) {
             setError(err.message);
             return null;
@@ -196,11 +77,12 @@ export const useSubtitleOperations = (
 
     // Align operation
     const alignSubtitles = async (
-        exampleFilename: string,
+        sourceFile: SubtitleFile,
+        exampleFile: SubtitleFile,
         sourceRange?: [number, number],
         exampleRange?: [number, number],
     ) => {
-        if (!uploadedFile || !sessionId) return;
+        if (!sessionId) return;
 
         setIsLoading(true);
         setError(null);
@@ -208,8 +90,8 @@ export const useSubtitleOperations = (
         try {
             const result = await apiService.alignSubtitles(
                 sessionId,
-                uploadedFile.filename,
-                exampleFilename,
+                sourceFile.filename,
+                exampleFile.filename,
                 sourceRange,
                 exampleRange,
             );
@@ -222,24 +104,17 @@ export const useSubtitleOperations = (
                 }
             }
 
-            setResultPreview(subtitles);
-
-            // Set metadata for result
-            setResultMeta({
-                encoding: result.encoding || "Unknown",
-                confidence: 100,
-                language: result.language || "Unknown",
-            });
-
             // Construct filename
             let filenameModifier = "aligned";
             if (sourceRange && exampleRange) {
                 filenameModifier += `-src-${sourceRange[0]}-to-${sourceRange[1]}-ex-${exampleRange[0]}-to-${exampleRange[1]}`;
             }
 
-            setProcessedFile(
-                `${uploadedFile.filename.split(".srt")[0]}-${filenameModifier}.srt`,
-            );
+            setProcessedFile({
+                filename: `${sourceFile.filename.split(".srt")[0]}-${filenameModifier}.srt`,
+                session_id: sessionId || "",
+                file_path: sourceFile.file_path,
+            });
 
             return subtitles;
         } catch (err: any) {
@@ -272,15 +147,6 @@ export const useSubtitleOperations = (
                 }
             }
 
-            setResultPreview(subtitles);
-
-            // Set metadata for result
-            setResultMeta({
-                encoding: result.encoding || "Unknown",
-                confidence: 100,
-                language: result.language || "Unknown",
-            });
-
             // Set processed file name
             setProcessedFile({
                 filename: `${uploadedFile.filename.split(".srt")[0]}-cleaned.srt`,
@@ -305,25 +171,15 @@ export const useSubtitleOperations = (
 
     // Reset operation results
     const resetResults = () => {
-        setResultPreview(null);
-        setResultMeta(null);
         setProcessedFile(null);
     };
 
     return {
-        sourcePreview,
-        sourceMeta,
-        resultPreview,
-        resultMeta,
-        examplePreview,
-        exampleMeta,
-        exampleSubtitleCount,
         processedFile,
         isLoading,
         error,
         subtitleCount,
-        fetchSourcePreview,
-        fetchExamplePreview,
+        countSubtitles,
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
