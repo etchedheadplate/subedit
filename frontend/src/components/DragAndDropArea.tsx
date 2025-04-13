@@ -4,9 +4,10 @@ interface DragAndDropAreaProps {
     onFileUpload: (file: File) => Promise<void>;
     isLoading: boolean;
     uploadedFile: { filename: string } | null;
-    instructionText?: string;
-    subInstructionText?: string;
-    uploadedFileText?: string;
+    preUploadInstructionText?: string;
+    preUploadSubInstructionText?: string;
+    postUploadIntroFileText?: string;
+    postUploadSubInstructionText?: string;
     className?: string;
 }
 
@@ -14,9 +15,10 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
     onFileUpload,
     isLoading,
     uploadedFile,
-    instructionText = "EX Upload subtitles, fren!",
-    subInstructionText = "EX Drag & drop .srt file or click anywhere in this area",
-    uploadedFileText = "EX What do you want to do with",
+    preUploadInstructionText = "Upload subtitles, fren!",
+    preUploadSubInstructionText = "Drag & drop .srt file or click anywhere in this area",
+    postUploadIntroFileText = "Uploaded source file:",
+    postUploadSubInstructionText = "Select option below or upload new file",
     className = "",
 }) => {
     const [dragActive, setDragActive] = useState<boolean>(false);
@@ -91,19 +93,17 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
             >
                 {!uploadedFile ? (
                     <>
-                        <p>{instructionText}</p>
-                        <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                            {subInstructionText}
+                        <p className="drag-and-drop-area-main-text">{preUploadInstructionText}</p>
+                        <p className="drag-and-drop-area-sub-text" style={{ fontSize: "0.8em", color: "#6c757d" }}>
+                            {preUploadSubInstructionText}
                         </p>
                     </>
                 ) : (
                     <>
-                        <p>
-                            {uploadedFileText}{" "}
-                            <strong>{uploadedFile.filename}</strong>?
-                        </p>
-                        <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                            Select option below or upload new file
+                        <p className="drag-and-drop-area-sub-text">{postUploadIntroFileText}</p>
+                        <p className="drag-and-drop-area-main-text"><strong>{uploadedFile.filename}</strong></p>
+                        <p className="drag-and-drop-area-sub-text" style={{ fontSize: "0.8em", color: "#6c757d" }}>
+                            {postUploadSubInstructionText}
                         </p>
                     </>
                 )}
