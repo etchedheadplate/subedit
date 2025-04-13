@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from "react";
+import { useState } from "react";
 import ShiftOperation from "./components/operations/ShiftOperation";
 import AlignOperation from "./components/operations/AlignOperation";
 import CleanOperation from "./components/operations/CleanOperation";
+import DragAndDropArea from "./components/DragAndDropArea";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
@@ -25,14 +26,10 @@ function App() {
 
     // Subtitle operations hook
     const {
-        sourcePreview,
-        exampleSubtitleCount,
         processedFile,
         isLoading: isProcessing,
         error: processingError,
         subtitleCount,
-        fetchSourcePreview,
-        fetchExamplePreview,
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
@@ -42,16 +39,6 @@ function App() {
 
     // Local state
     const [activeOption, setActiveOption] = useState<OperationType | null>(null,);
-    const [dragActive, setDragActive] = useState<boolean>(false);
-
-    // Example file upload state (for Align operation)
-    const [uploadedExampleFile, setUploadedExampleFile] = useState<{
-        filename: string;
-    } | null>(null);
-
-
-    // References to the file inputs
-    const sourceFileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Combine errors for display
     const errorMessage = sessionError || uploadError || processingError;
@@ -63,59 +50,10 @@ function App() {
         setActiveOption(null); // After upload completes, reset the active option
     };
 
-    // Handle file upload via input element
-    const handleUpload = async (inputRef) => {
-        if (!inputRef.target.files) return;
-        await handleFileUpload(inputRef.target.files[0]);
-    };
-
-    // Handle click on the drag-and-drop area
-    const handleClick = (inputRef) => {
-        if (!isLoading && inputRef.current) {
-            inputRef.current.click();
-        }
-    };
-
-    // Handle drag on the drag-and-drop area
-    const handleDrag = useCallback((e: React.DragEvent, setDragActiveState: React.Dispatch<React.SetStateAction<boolean>>) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActiveState(true);
-        } else if (e.type === "dragleave") {
-            setDragActiveState(false);
-        }
-    }, []);
-
-    // Handle drop on the drag-and-drop area
-    const handleDrop = useCallback(
-        async (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDragActive(false);
-
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                const file = e.dataTransfer.files[0];
-                if (file.name.endsWith(".srt")) {
-                    await handleFileUpload(file);
-                } else {
-                    console.error("Only .srt files are allowed"); // Show error for non-srt files
-                }
-            }
-        },
-        [uploadFile],
-    );
-
     // Handle option selection
     const handleOptionSelect = (option: OperationType) => {
         setActiveOption(option);
         resetResults();
-
-        // If we have an uploaded file, fetch its preview
-        if (uploadedFile && sessionId) {
-            fetchSourcePreview();
-        }
     };
 
     // Handle download
@@ -125,14 +63,6 @@ function App() {
         }
     };
 
-    // Handle file upload of the source file
-    const handleSourceFileUpload = (e) => handleUpload(e);
-
-    // Handle drag-and-drop area for the source file
-    const handleSourceAreaClick = () => handleClick(sourceFileInputRef);
-    const handleSourceAreaDrag = (e: React.DragEvent) => handleDrag(e, setDragActive);
-    const handleSourceAreaDrop = (e: React.DragEvent) => handleDrop(e);
-
     return (
         <div style={{ padding: "20px" }}>
 
@@ -140,46 +70,12 @@ function App() {
             <div style={{ textAlign: "center", marginBottom: "30px" }}>
                 <h1>[ s u b e d i t ]</h1>
 
-                {/* Hidden file input */}
-                <input className="drag-and-drop-input"
-                    type="file"
-                    accept=".srt"
-                    onChange={handleSourceFileUpload}
-                    disabled={isLoading}
-                    style={{ display: "none" }}
-                    id="file-upload"
-                    ref={sourceFileInputRef}
+                <DragAndDropArea
+                    onFileUpload={handleFileUpload}
+                    isLoading={isLoading}
+                    uploadedFile={uploadedFile}
+                    className=""
                 />
-
-                {/* Drag and Drop Zone - Entire area is clickable */}
-                <div
-                    className={`drag-and-drop-area ${dragActive ? 'drag-active' : ''} ${isLoading ? 'loading' : ''}`}
-                    onClick={handleSourceAreaClick}
-                    onDragEnter={handleSourceAreaDrag}
-                    onDragLeave={handleSourceAreaDrag}
-                    onDragOver={handleSourceAreaDrag}
-                    onDrop={handleSourceAreaDrop}
-                >
-                    {!uploadedFile ? (
-                        <>
-                            <p>Upload subtitles, fren!</p>
-                            <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                                Drag & drop .srt file or click anywhere in this
-                                area
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <p>
-                                What do you want to do with{" "}
-                                <strong>{uploadedFile.filename}</strong>?
-                            </p>
-                            <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                                Select option below or upload new file
-                            </p>
-                        </>
-                    )}
-                </div>
             </div>
 
             {errorMessage && (
@@ -258,8 +154,6 @@ function App() {
                     isLoading={isLoading}
                     subtitleCount={subtitleCount}
                     exampleSubtitleCount={exampleSubtitleCount}
-                    fetchExamplePreview={fetchExamplePreview}
-                    hasExampleFile={!!uploadedExampleFile}
                 />
             )}
 
