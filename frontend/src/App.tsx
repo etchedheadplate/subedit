@@ -139,7 +139,7 @@ function App() {
                     hasProcessedFile={!!processedFile}
                     processedFile={processedFile}
                     isLoading={isLoading}
-                    subtitleCount={subtitleCount}
+                    subtitleCount={0}
                 />
             )}
 
@@ -152,8 +152,8 @@ function App() {
                     hasProcessedFile={!!processedFile}
                     processedFile={processedFile}
                     isLoading={isLoading}
-                    subtitleCount={subtitleCount}
-                    exampleSubtitleCount={exampleSubtitleCount}
+                    sourceSubtitleCount={subtitleCount}
+                    exampleSubtitleCount={0} // Initialize with 0 and update when example file is loaded
                 />
             )}
 
