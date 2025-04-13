@@ -6,7 +6,10 @@ import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { OperationType } from "./types";
-import "./SubtitlePreview.css";
+import "./styles/OperationSection.css";
+import "./styles/SubtitlePreview.css";
+import "./styles/DragAndDropArea.css";
+import "./styles/ErrorMessage.css";
 
 function App() {
     // Session hook
@@ -38,37 +41,26 @@ function App() {
     } = useSubtitleOperations(sessionId, uploadedFile);
 
     // Local state
-    const [activeOption, setActiveOption] = useState<OperationType | null>(
-        null,
-    );
+    const [activeOption, setActiveOption] = useState<OperationType | null>(null,);
     const [dragActive, setDragActive] = useState<boolean>(false);
-    // const [exampleDragActive, setExampleDragActive] = useState<boolean>(false);
 
     // Example file upload state (for Align operation)
     const [uploadedExampleFile, setUploadedExampleFile] = useState<{
         filename: string;
     } | null>(null);
-    const [isUploadingExample, setIsUploadingExample] =
-        useState<boolean>(false);
-    const [exampleUploadError, setExampleUploadError] = useState<string | null>(
-        null,
-    );
+
 
     // References to the file inputs
     const sourceFileInputRef = React.useRef<HTMLInputElement>(null);
-    // const exampleFileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Combine errors for display
-    const errorMessage =
-        sessionError || uploadError || processingError || exampleUploadError;
-    const isLoading = isUploading || isProcessing || isUploadingExample;
+    const errorMessage = sessionError || uploadError || processingError;
+    const isLoading = isUploading || isProcessing;
 
     // Handle return to initial state when new file uploaded
     const handleFileUpload = async (file) => {
         await uploadFile(file);
-
-        // After upload completes, reset the active option
-        setActiveOption(null);
+        setActiveOption(null); // After upload completes, reset the active option
     };
 
     // Handle file upload via input element
@@ -108,8 +100,7 @@ function App() {
                 if (file.name.endsWith(".srt")) {
                     await handleFileUpload(file);
                 } else {
-                    // Show error for non-srt files
-                    console.error("Only .srt files are allowed");
+                    console.error("Only .srt files are allowed"); // Show error for non-srt files
                 }
             }
         },
@@ -120,11 +111,6 @@ function App() {
     const handleOptionSelect = (option: OperationType) => {
         setActiveOption(option);
         resetResults();
-
-        // Reset example file if changing operation type
-        if (option !== "align") {
-            setUploadedExampleFile(null);
-        }
 
         // If we have an uploaded file, fetch its preview
         if (uploadedFile && sessionId) {
@@ -139,54 +125,23 @@ function App() {
         }
     };
 
-    // Handle file upload of the source and example files
+    // Handle file upload of the source file
     const handleSourceFileUpload = (e) => handleUpload(e);
-    // const handleExampleFileUpload = (e) => handleUpload(e);
 
-    // Handle click on the source and example drag-and-drop areas
+    // Handle drag-and-drop area for the source file
     const handleSourceAreaClick = () => handleClick(sourceFileInputRef);
-    // const handleExampleAreaClick = () => handleClick(exampleFileInputRef);
-
-    // Handle drag on the source and example drag-and-drop areas
     const handleSourceAreaDrag = (e: React.DragEvent) => handleDrag(e, setDragActive);
-    // const handleExampleAreaDrag = (e: React.DragEvent) => handleDrag(e, setExampleDragActive);
-
-    // Handle drop on the source and example drag-and-drop areas
     const handleSourceAreaDrop = (e: React.DragEvent) => handleDrop(e);
-    // const handleExampleAreaDrop = (e: React.DragEvent) => handleDrop(e);
-
-    // Function to render file metadata and subtitles
-    /* const renderFilePreviews = () => {
-        return (
-            <div className="preview-section" style={{ display: "flex", gap: "20px", marginTop: "20px" }}>
-                <div className="source-preview">
-                    <UniversalSubtitlePreview
-                        sessionId={sessionId}
-                        subtitleFile={uploadedFile}
-                        isDownloadable={false}
-                    />
-                </div>
-                {processedFile && (
-                    <div className="processed-preview">
-                        <UniversalSubtitlePreview
-                            sessionId={sessionId}
-                            subtitleFile={processedFile}
-                            isDownloadable={true}
-                        />
-                    </div>
-                )}
-            </div>
-        );
-    };*/
 
     return (
         <div style={{ padding: "20px" }}>
+
             {/* Centered Header */}
             <div style={{ textAlign: "center", marginBottom: "30px" }}>
                 <h1>[ s u b e d i t ]</h1>
 
                 {/* Hidden file input */}
-                <input
+                <input className="drag-and-drop-input"
                     type="file"
                     accept=".srt"
                     onChange={handleSourceFileUpload}
@@ -198,30 +153,12 @@ function App() {
 
                 {/* Drag and Drop Zone - Entire area is clickable */}
                 <div
+                    className={`drag-and-drop-area ${dragActive ? 'drag-active' : ''} ${isLoading ? 'loading' : ''}`}
                     onClick={handleSourceAreaClick}
                     onDragEnter={handleSourceAreaDrag}
                     onDragLeave={handleSourceAreaDrag}
                     onDragOver={handleSourceAreaDrag}
                     onDrop={handleSourceAreaDrop}
-                    style={{
-                        width: "50%",
-                        margin: "0 auto",
-                        height: "120px",
-                        border: dragActive
-                            ? "2px dashed #646cff"
-                            : "2px dashed #dee2e6",
-                        borderRadius: "0px",
-                        display: "flex",
-                        flexDirection: "column",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: dragActive
-                            ? "rgba(100, 108, 255, 0.08)"
-                            : "transparent",
-                        transition: "all 0.3s ease",
-                        marginBottom: "20px",
-                        cursor: isLoading ? "wait" : "pointer",
-                    }}
                 >
                     {!uploadedFile ? (
                         <>
@@ -246,16 +183,7 @@ function App() {
             </div>
 
             {errorMessage && (
-                <div
-                    style={{
-                        backgroundColor: "#ffcccc",
-                        color: "#cc0000",
-                        padding: "10px",
-                        borderRadius: "5px",
-                        marginBottom: "20px",
-                        textAlign: "center",
-                    }}
-                >
+                <div className="error-message">
                     {errorMessage}
                 </div>
             )}
@@ -324,6 +252,7 @@ function App() {
                     onAlign={alignSubtitles}
                     sessionId={sessionId}
                     onDownload={handleDownload}
+                    sourceFile={uploadedFile}
                     hasProcessedFile={!!processedFile}
                     processedFile={processedFile}
                     isLoading={isLoading}
