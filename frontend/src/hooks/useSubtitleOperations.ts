@@ -50,8 +50,8 @@ export const useSubtitleOperations = (
     const alignSubtitles = async (
         sourceFile: SubtitleFile,
         exampleFile: SubtitleFile,
-        sourceRange?: [number, number],
-        exampleRange?: [number, number],
+        sourceRange: [number, number],
+        exampleRange: [number, number],
     ) => {
         if (!sessionId) return;
 
@@ -76,10 +76,7 @@ export const useSubtitleOperations = (
             }
 
             // Construct filename
-            let filenameModifier = "aligned";
-            if (sourceRange && exampleRange) {
-                filenameModifier += `-src-${sourceRange[0]}-to-${sourceRange[1]}-ex-${exampleRange[0]}-to-${exampleRange[1]}`;
-            }
+            const filenameModifier = "aligned";
 
             setProcessedFile({
                 filename: `${sourceFile.filename.split(".srt")[0]}-${filenameModifier}.srt`,
