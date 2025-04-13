@@ -99,6 +99,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={sourceFile}
             isDownloadable={false}
+            fileType="Source"
             onSubtitleCountChange={handleSourceSubtitleCntChange}
         />
     );
@@ -109,6 +110,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={exampleFile}
             isDownloadable={false}
+            fileType="Example"
             onSubtitleCountChange={handleExampleSubtitleCntChange}
         />
     ) : null;
@@ -118,6 +120,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
+            fileType="Aligned"
             isDownloadable={true}
         />
     ) : null;
@@ -134,8 +137,10 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 onFileUpload={handleFileUpload}
                 isLoading={isLoading || isExampleFileUploading}
                 uploadedFile={exampleFile}
-                instructionText="Upload example subtitles, fren!"
-                className=""
+                preUploadInstructionText="Upload example subtitles, fren!"
+                postUploadIntroFileText="Uploaded example file:"
+                postUploadSubInstructionText="Tweak alignment option below or upload new file"
+                className={!exampleFile ? "blinking" : ""}
             />
 
             {/* Display range error if any */}
