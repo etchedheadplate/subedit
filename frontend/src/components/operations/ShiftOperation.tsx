@@ -63,6 +63,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={sourceFile}
             isDownloadable={false}
+            fileType="Source"
             onSubtitleCountChange={handleSubtitleCountChange}
         />
     );
@@ -72,6 +73,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
+            fileType="Shifted"
             isDownloadable={true}
         />
     ) : null;
