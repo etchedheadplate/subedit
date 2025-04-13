@@ -1,27 +1,27 @@
 import React, { useState, useEffect } from "react";
-import { UniversalSubtitlePreview } from "../subtitles/SubtitlePreview";
+import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 
 interface ShiftOperationProps {
     onShift: (delay: number, items: number[]) => Promise<any>;
+    sessionId: string | null;
     onDownload: () => void;
+    sourceFile: SubtitleFile | null;
     hasProcessedFile: boolean;
     processedFile: SubtitleFile | null;
     isLoading: boolean;
     subtitleCount: number;
-    sessionId: string | null;
-    sourceFile: SubtitleFile | null;
 }
 
 const ShiftOperation: React.FC<ShiftOperationProps> = ({
     onShift,
+    sessionId,
     onDownload,
+    sourceFile,
     hasProcessedFile,
     processedFile,
     isLoading,
     subtitleCount,
-    sessionId,
-    sourceFile,
 }) => {
     // State for the shifted file
     const [shiftedFile, setShiftedFile] = useState(null);
@@ -94,208 +94,110 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
         <div className="shift-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
 
             {/* Description of Shift Operation */}
-            <div className="shift-description">
-                <p>
-                    Enter number of milliseconds (1 second = 1000 milliseconds) to shift timing. Number can be positive or negative.
-                </p>
+            <div className="operation-description">
+                <p>Enter number of milliseconds (1 second = 1000 milliseconds) to shift timing. Number can be positive or negative.</p>
             </div>
 
-            {/* Bottom gap below shift button and delay input window */}
-            <div className="shift-controls-section"
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "20px",
-                }}
-            >
-                {/* Gaps between shift button and delay input form */}
-                <div className="shift-controls-container"
-                    style={{
-                        display: "flex",
-                        gap: "10px",
-                        alignItems: "center",
-                    }}
-                >
-                    {/* Shift button is disabled if file not loaded, delay set to 0 or items range set incorrectly */}
-                    <button className="shift-subtitles-button"
+            {/* Shift controls section */}
+            <div className="operation-controls-container">
+
+                {/* Shift controls block */}
+                <div className="operation-controls-items">
+
+                    {/* Delay input control */}
+                    <div className="control-item">
+                        <p className="control-title">shift file by</p>
+
+                        {/* Delay input form, accepts only whole numbers */}
+                        <div className="range-selector">
+                            <input className="range-form"
+                                id="delay-input"
+                                type="number"
+                                step="1"
+                                value={delay}
+                                onChange={(e) => setDelay(Math.floor(Number(e.target.value)))}
+                                style={{ width: 100 }}
+                            />
+                            <label className="range-text" htmlFor="delay-input">ms</label>
+                        </div>
+                    </div>
+
+                    {/* From input control */}
+                    <div className="control-item">
+                        <p className="control-title">from subtitle</p>
+
+                        {/* From input form, accepts only whole numbers */}
+                        <label className="range-text" htmlFor="range-start">number</label>
+                        <input className="range-form"
+                            id="range-start"
+                            type="number"
+                            min={1}
+                            max={subtitleCount - 1}
+                            value={rangeStart}
+                            onChange={(e) =>
+                                setRangeStart(Number(Math.floor(Number(e.target.value))))
+                            }
+                        />
+                    </div>
+
+                    {/* To input control */}
+                    <div className="control-item">
+                        <p className="control-title">to subtitle</p>
+
+                        {/* To input form, accepts only whole numbers */}
+                        <label className="range-text" htmlFor="range-end">number</label>
+                        <input className="range-form"
+                            id="range-end"
+                            type="number"
+                            min={rangeStart + 1}
+                            max={subtitleCount}
+                            value={rangeEnd}
+                            onChange={(e) =>
+                                setRangeEnd(Number(Math.floor(Number(e.target.value))))
+                            }
+                        />
+                    </div>
+                </div>
+
+                {/* Shift and Download buttons */}
+                <div className="operation-controls-buttons">
+
+                    {/* Shift button */}
+                    <button
+                        className="operation-button"
                         onClick={handleShift}
                         disabled={isLoading || delay == 0 || (useRange && !!rangeError)}
-                        style={{
-                            padding: "8px 15px",
-                            backgroundColor: "#dc2f02",
-                            color: "#dee2e6",
-                            border: "none",
-                            borderRadius: "2px",
-                            cursor:
-                                isLoading || (useRange && !!rangeError) || delay == 0
-                                    ? "not-allowed"
-                                    : "pointer",
-                            opacity:
-                                isLoading || (useRange && !!rangeError) || delay == 0
-                                    ? 0.7
-                                    : 1,
-                        }}
                     >
                         Shift
                     </button>
 
-                    <label htmlFor="delay-input">by</label>
-
-                    {/* Delay input form, accepts only whole numbers */}
-                    <input className="delay-input-form"
-                        id="delay-input"
-                        type="number"
-                        step="1"
-                        value={delay}
-                        onChange={(e) => setDelay(Math.floor(Number(e.target.value)))}
-                        style={{
-                            padding: "8px",
-                            width: "100px",
-                            borderRadius: "2px",
-                            border: "1px solid #ccc",
-                        }}
-                    />
-                    <label htmlFor="delay-input">ms</label>
+                    {/* If Shift button pressed */}
+                    {hasProcessedFile && (
+                        <>
+                            {/* Download button */}
+                            <button className="download-button" onClick={onDownload}>Download</button>
+                        </>
+                    )}
                 </div>
-
-                {/* Download button is active only if Shift Operation was performed on a file */}
-                {hasProcessedFile && (
-                    <button className="download-shifted-file-button"
-                        onClick={onDownload}
-                        style={{
-                            padding: "8px 15px",
-                            backgroundColor: "#5a189a",
-                            color: "#dee2e6",
-                            border: "none",
-                            borderRadius: "2px",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Download
-                    </button>
-                )}
             </div>
 
-            {/* Subtitle range selector */}
-            <div className="range-controls-section" style={{ marginBottom: "20px" }}>
-
-                {/* Gap between range checkbox and range description */}
-                <div className="range-controls-container"
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        marginBottom: "10px",
-                    }}
-                >
-                    {/* Checkbox to toggle range selector */}
-                    <input className="shift-range-checkbox"
-                        type="checkbox"
-                        id="use-range"
-                        checked={useRange}
-                        onChange={(e) => setUseRange(e.target.checked)}
-                    />
-                    <label htmlFor="use-range">
-                        Apply to specific subtitle range
-                    </label>
-                </div>
-
-                {/* If range checkbox toggled */}
-                {useRange && (
-                    <div
-                        style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "10px",
-                        }}
-                    >
-                        {/* Gap between from range and to range forms */}
-                        <div className="range-setting-container"
-                            style={{
-                                display: "flex",
-                                gap: "10px",
-                                alignItems: "center",
-                            }}
-                        >
-                            <label htmlFor="range-start">From subtitle:</label>
-
-                            {/* Range start form, accepts only whole numbers */}
-                            <input className="range-start-form"
-                                id="range-start"
-                                type="number"
-                                min={1}
-                                max={subtitleCount - 1}
-                                value={rangeStart}
-                                onChange={(e) =>
-                                    setRangeStart(Number(Math.floor(Number(e.target.value))))
-                                }
-                                style={{
-                                    padding: "8px",
-                                    width: "80px",
-                                    borderRadius: "2px",
-                                    border: "1px solid #ccc",
-                                }}
-                            />
-
-                            <label htmlFor="range-end">To subtitle:</label>
-
-                            {/* Range end form, accepts only whole numbers */}
-                            <input className="range-end-form"
-                                id="range-end"
-                                type="number"
-                                min={rangeStart + 1}
-                                max={subtitleCount}
-                                value={rangeEnd}
-                                onChange={(e) =>
-                                    setRangeEnd(Number(Math.floor(Number(e.target.value))))
-                                }
-                                style={{
-                                    padding: "8px",
-                                    width: "80px",
-                                    borderRadius: "2px",
-                                    border: "1px solid #ccc",
-                                }}
-                            />
-
-                            {/* Total subtitles count reminder */}
-                            <span
-                                style={{ fontSize: "0.8em", color: "#6c757d" }}
-                            >
-                                (Total: {subtitleCount} subtitles)
-                            </span>
-                        </div>
-
-                        {/* Show error message if ranges out of bounds */}
-                        {rangeError && (
-                            <div className="range-error-container"
-                                style={{ color: "#cc0000", fontSize: "0.9em" }}
-                            >
-                                {rangeError}
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
 
             {/* File preview section */}
-            <div className="file-preview-section" style={{
-                display: "flex",
-                gap: "20px",
-                marginTop: "20px"  // Add some spacing
-            }}>
-                {/* Source file preview section */}
+            <div className="file-preview-section">
+
+                {/* Source file preview */}
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
                     {sourceFilePreview}
                 </div>
 
-                {/* Shifted file preview section - Only show if available */}
+                {/* Shifted file preview - Only show if available */}
                 {processedFile && (
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
                         {shiftedFilePreview}
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 };
 
