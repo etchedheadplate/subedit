@@ -1,24 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { UniversalSubtitlePreview } from "../subtitles/SubtitlePreview";
+import React, { useState, useEffect } from "react";
+import DragAndDropArea from "../../components/DragAndDropArea";
+import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
+import { countSubtitles } from "../../hooks/useSubtitleOperations";
 
 interface AlignOperationProps {
-    onAlign: (
-        sourceFilen: SubtitleFile,
-        exampleFilen: SubtitleFile,
-        sourceRange?: [number, number],
-        exampleRange?: [number, number],
-    ) => Promise<any>;
+    onAlign: (sourceFile: SubtitleFile, exampleFile: SubtitleFile, sourceRange?: [number, number], exampleRange?: [number, number]) => Promise<any>;
+    sessionId: string | null;
     onDownload: () => void;
+    sourceFile: SubtitleFile;
     hasProcessedFile: boolean;
     processedFile: SubtitleFile | null;
     isLoading: boolean;
-    sourceFile: SubtitleFile;
-    exampleFile: SubtitleFile;
-    sourceSubtitleCount: number;
+    subtitleCount: number;
     exampleSubtitleCount: number;
-    sessionId: string | null;
+    fetchExamplePreview: (filename: string) => Promise<any>;
 }
 
 const AlignOperation: React.FC<AlignOperationProps> = ({
@@ -27,164 +24,82 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     hasProcessedFile,
     processedFile,
     isLoading,
-    sourceSubtitleCount,
+    subtitleCount,
     exampleSubtitleCount,
     sessionId,
     sourceFile,
 }) => {
-    // State for the aligned file
-    //   const [alignedFile, setAlignedFile] = useState(null);
-
     // State for the example file
     const {
         uploadedFile: exampleFile,
         uploadFile: uploadExampleFile,
-        error: exampleFileError,
         isLoading: isExampleFileUploading,
     } = useFileUpload(sessionId);
 
-    // State for using specific ranges
-    const [useRange, setUseRange] = useState<boolean>(false);
+    // State for ranges with proper defaults
     const [sourceStart, setSourceStart] = useState<number>(1);
-    const [sourceEnd, setSourceEnd] = useState<number>(sourceSubtitleCount > 1 ? sourceSubtitleCount : 2,);
+    const [sourceEnd, setSourceEnd] = useState<number>(subtitleCount > 0 ? subtitleCount : 1);
     const [exampleStart, setExampleStart] = useState<number>(1);
-    const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCount > 1 ? exampleSubtitleCount : 2,);
+    const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCount > 0 ? exampleSubtitleCount : 1);
     const [rangeError, setRangeError] = useState<string | null>(null);
-
-    // State for drag-and-drop area
-    const [dragActive, setDragActive] = useState<boolean>(false);
-
-    // References to the example file inputs
-    const exampleFileInputRef = React.useRef<HTMLInputElement>(null);
 
     // Handle file upload
     const handleFileUpload = async (file) => {
         await uploadExampleFile(file);
     };
 
-    // Handle file upload via input element
-    const handleUpload = async (inputRef) => {
-        if (!inputRef.target.files) return;
-        await handleFileUpload(inputRef.target.files[0]);
-    };
-
-    // Handle click on the drag-and-drop area
-    const handleClick = (inputRef) => {
-        if (!isLoading && inputRef.current) {
-            inputRef.current.click();
-        }
-    };
-
-    // Handle drag on the drag-and-drop area
-    const handleDrag = useCallback((e: React.DragEvent, setDragActiveState: React.Dispatch<React.SetStateAction<boolean>>) => {
-        e.preventDefault();
-        e.stopPropagation();
-
-        if (e.type === "dragenter" || e.type === "dragover") {
-            setDragActiveState(true);
-        } else if (e.type === "dragleave") {
-            setDragActiveState(false);
-        }
-    }, []);
-
-    // Handle drop on the drag-and-drop area
-    const handleDrop = useCallback(
-        async (e: React.DragEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setDragActive(false);
-
-            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-                const file = e.dataTransfer.files[0];
-                if (file.name.endsWith(".srt")) {
-                    await handleFileUpload(file);
-                } else {
-                    console.error("Only .srt files are allowed"); // Show error for non-srt files
-                }
-            }
-        },
-        [exampleFile],
-    );
-
-    // Handle file upload of the source file
-    const handleExampleFileUpload = (e) => handleUpload(e);
-
-    // Handle drag-and-drop area for the source file
-    const handleExampleAreaClick = () => handleClick(exampleFileInputRef);
-    const handleExampleAreaDrag = (e: React.DragEvent) => handleDrag(e, setDragActive);
-    const handleExampleAreaDrop = (e: React.DragEvent) => handleDrop(e);
-
     // Update source file range end when subtitle count changes
     useEffect(() => {
-        if (sourceSubtitleCount > 0) {
-            setSourceEnd(sourceSubtitleCount);
-            // Also reset rangeStart to 1 when subtitleCount changes
+        if (subtitleCount > 0) {
+            setSourceEnd(subtitleCount);
+            // Keep rangeStart at 1
             setSourceStart(1);
         }
-    }, [sourceSubtitleCount]);
+    }, [subtitleCount]);
 
     // Update example file range end when subtitle count changes
     useEffect(() => {
         if (exampleSubtitleCount > 0) {
             setExampleEnd(exampleSubtitleCount);
-            // Also reset rangeStart to 1 when subtitleCount changes
+            // Keep rangeStart at 1
             setExampleStart(1);
         }
     }, [exampleSubtitleCount]);
 
-    // Validate source file range inputs
+    // Simplified validation for source range
     useEffect(() => {
         setRangeError(null);
 
-        if (useRange) {
-            if (sourceStart < 1 || sourceStart >= sourceSubtitleCount) {
-                setRangeError(
-                    `Start must be between 1 and ${sourceSubtitleCount - 1}`,
-                );
-                return;
-            }
-
-            if (sourceEnd <= sourceStart || sourceEnd > sourceSubtitleCount) {
-                setRangeError(
-                    `End must be between ${sourceStart + 1} and ${sourceSubtitleCount}`,
-                );
-                return;
-            }
+        if (sourceStart < 1) {
+            setRangeError("Source start must be at least 1");
+        } else if (sourceEnd > subtitleCount) {
+            setRangeError(`Source end must not exceed ${subtitleCount}`);
+        } else if (sourceStart >= sourceEnd) {
+            setRangeError("Source start must be less than source end");
         }
-    }, [sourceStart, sourceEnd, useRange, sourceSubtitleCount]);
+    }, [sourceStart, sourceEnd, subtitleCount]);
 
-    // Validate example file range inputs
+    // Simplified validation for example range
     useEffect(() => {
-        setRangeError(null);
+        if (rangeError) return; // Skip if source range already has an error
 
-        if (useRange) {
-            if (exampleStart < 1 || exampleStart >= exampleSubtitleCount) {
-                setRangeError(
-                    `Start must be between 1 and ${exampleSubtitleCount - 1}`,
-                );
-                return;
-            }
-
-            if (exampleEnd <= exampleStart || exampleEnd > exampleSubtitleCount) {
-                setRangeError(
-                    `End must be between ${exampleStart + 1} and ${exampleSubtitleCount}`,
-                );
-                return;
-            }
+        if (exampleStart < 1) {
+            setRangeError("Example start must be at least 1");
+        } else if (exampleEnd > exampleSubtitleCount) {
+            setRangeError(`Hello Example end must not exceed ${exampleSubtitleCount}`);
+        } else if (exampleStart >= exampleEnd) {
+            setRangeError("Example start must be less than example end");
         }
-    }, [exampleStart, exampleEnd, useRange, exampleSubtitleCount]);
+    }, [exampleStart, exampleEnd, exampleSubtitleCount, rangeError]);
 
     // Handle align operation
     const handleAlign = async () => {
         if (!exampleFile) return;
 
-        let sourceRange: [number, number] | undefined;
-        let exampleRange: [number, number] | undefined;
+        // Properly declare the ranges
+        const sourceRange: [number, number] = [sourceStart, sourceEnd];
+        const exampleRange: [number, number] = [exampleStart, exampleEnd];
 
-        if (useRange) {
-            sourceRange = [sourceStart, sourceEnd];
-            exampleRange = [exampleStart, exampleEnd];
-        }
         await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
     };
 
@@ -215,7 +130,6 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         />
     ) : null;
 
-
     return (
         <div className="align-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
 
@@ -224,47 +138,20 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 <p>You can align timing of your subtitles by example file. This might be needed if you have rip with subtitles in another language, and subtitles in desired language for other rip.</p>
             </div>
 
-            {/* Hidden file input */}
-            <input className="drag-and-drop-input"
-                type="file"
-                accept=".srt"
-                onChange={handleExampleFileUpload}
-                disabled={isLoading}
-                style={{ display: "none" }}
-                id="file-upload"
-                ref={exampleFileInputRef}
+            <DragAndDropArea
+                onFileUpload={handleFileUpload}
+                isLoading={isLoading || isExampleFileUploading}
+                uploadedFile={exampleFile}
+                instructionText="Upload example subtitles, fren!"
+                className=""
             />
 
-            {/* Drag and Drop Zone - Entire area is clickable */}
-            <div
-                className={`drag-and-drop-area ${dragActive ? 'drag-active' : ''} ${isLoading ? 'loading' : ''}`}
-                onClick={handleExampleAreaClick}
-                onDragEnter={handleExampleAreaDrag}
-                onDragLeave={handleExampleAreaDrag}
-                onDragOver={handleExampleAreaDrag}
-                onDrop={handleExampleAreaDrop}
-                style={{ textAlign: "center", marginBottom: "30px" }}
-            >
-                {!exampleFile ? (
-                    <>
-                        <p>Upload example subtitles, fren!</p>
-                        <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                            Drag & drop .srt file or click anywhere in this
-                            area
-                        </p>
-                    </>
-                ) : (
-                    <>
-                        <p>
-                            What do you want to do with{" "}
-                            <strong>{exampleFile.filename}</strong>?
-                        </p>
-                        <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                            Select option below or upload new file
-                        </p>
-                    </>
-                )}
-            </div>
+            {/* Display range error if any */}
+            {rangeError && (
+                <div className="error-message" style={{ marginBottom: "15px", color: "red" }}>
+                    {rangeError}
+                </div>
+            )}
 
             {/* If Example file uploaded */}
             {exampleFile && (
@@ -293,7 +180,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                                 id="source-start"
                                                 type="number"
                                                 min={1}
-                                                max={sourceEnd - 1}
+                                                max={subtitleCount > 0 ? subtitleCount - 1 : 1}
                                                 value={sourceStart}
                                                 onChange={(e) => setSourceStart(Number(e.target.value))}
                                             />
@@ -305,7 +192,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                                 id="source-end"
                                                 type="number"
                                                 min={sourceStart + 1}
-                                                max={sourceSubtitleCount}
+                                                max={subtitleCount}
                                                 value={sourceEnd}
                                                 onChange={(e) => setSourceEnd(Number(e.target.value))}
                                             />
@@ -326,7 +213,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                                 id="example-start"
                                                 type="number"
                                                 min={1}
-                                                max={exampleEnd - 1}
+                                                max={exampleSubtitleCount > 0 ? exampleSubtitleCount - 1 : 1}
                                                 value={exampleStart}
                                                 onChange={(e) => setExampleStart(Number(e.target.value))}
                                             />
@@ -349,9 +236,14 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                             {/* Align and Download buttons */}
                             <div className="operation-controls-buttons">
-
                                 {/* Align button */}
-                                <button className="operation-button" onClick={handleAlign}>Align</button>
+                                <button
+                                    className="operation-button"
+                                    onClick={handleAlign}
+                                    disabled={!!rangeError}
+                                >
+                                    Align
+                                </button>
 
                                 {/* If Align button pressed */}
                                 {hasProcessedFile && (
@@ -386,7 +278,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                     </div>
                 </>
             )}
-        </div >
+        </div>
     );
 };
 
