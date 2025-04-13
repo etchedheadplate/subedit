@@ -1,0 +1,26 @@
+/* DragAndDropArea.css */
+
+.drag-and-drop-area {
+    width: 50%;
+    margin: 0 auto;
+    height: 120px;
+    border: 2px dashed #dee2e6;
+    border-radius: 0px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+    cursor: pointer; /* Default cursor */
+}
+
+.drag-and-drop-area.drag-active {
+    border: 2px dashed #646cff;
+    background-color: rgba(100, 108, 255, 0.08);
+}
+
+.drag-and-drop-area.loading {
+    cursor: wait; /* Cursor when loading */
+}

@@ -1,0 +1,74 @@
+.operation-description {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.operation-controls-description {
+    text-align: center;
+    margin-bottom: 30px;
+    font-size: 0.8em;
+    color: #6c757d;
+}
+
+.operation-controls-items {
+    text-align: center;
+    margin-bottom: 30px;
+    display: flex;
+    gap: 60px;
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+}
+
+.control-item {
+    margin-bottom: 30px;
+}
+
+.select-range-items {
+    display: flex;
+}
+
+.range-selector {
+    margin: 0px 10px;
+}
+
+.range-text {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-right: 7px;
+}
+
+.range-form {
+    width: 60px;
+}
+
+.operation-controls-buttons {
+    display: flex;
+    gap: 60px;
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+}
+
+.operation-button {
+    padding: 10px 15px;
+    background-color: #0000ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 2px;
+    cursor: pointer; /* Default cursor */
+}
+
+/* Optional: If you want to handle the disabled state */
+.operation-button.disabled {
+    cursor: not-allowed;
+}
+
+.download-button {
+    padding: 10px 15px;
+    background-color: #008000; /* Green color */
+    color: #ffffff; /* White text */
+    border: none;
+    border-radius: 2px;
+    cursor: pointer; /* Pointer cursor */
+}

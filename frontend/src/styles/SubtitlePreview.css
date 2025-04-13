@@ -1,7 +1,9 @@
 .file-preview-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 20px;
+    justify-content: center; /* Center items horizontally */
+    align-items: center; /* Center items vertically */
+    display: flex; /* Use flexbox layout */
+    gap: 20px; /* Space between flex items */
+    margin-top: 20px; /* Margin at the top */
 }
 
 .source-file-preview-container,
