@@ -3,7 +3,6 @@ import DragAndDropArea from "../../components/DragAndDropArea";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
-import { countSubtitles } from "../../hooks/useSubtitleOperations";
 
 interface AlignOperationProps {
     onAlign: (sourceFile: SubtitleFile, exampleFile: SubtitleFile, sourceRange?: [number, number], exampleRange?: [number, number]) => Promise<any>;
@@ -13,9 +12,8 @@ interface AlignOperationProps {
     hasProcessedFile: boolean;
     processedFile: SubtitleFile | null;
     isLoading: boolean;
-    subtitleCount: number;
+    sourceSubtitleCount: number;
     exampleSubtitleCount: number;
-    fetchExamplePreview: (filename: string) => Promise<any>;
 }
 
 const AlignOperation: React.FC<AlignOperationProps> = ({
@@ -24,7 +22,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     hasProcessedFile,
     processedFile,
     isLoading,
-    subtitleCount,
+    sourceSubtitleCount,
     exampleSubtitleCount,
     sessionId,
     sourceFile,
@@ -36,11 +34,18 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         isLoading: isExampleFileUploading,
     } = useFileUpload(sessionId);
 
+    // State for the aligned file
+    const [alignedFile, setAlignedFile] = useState(null);
+
+    // State to store the subtitle count from the preview
+    const [sourceSubtitleCnt, setSourceSubtitleCnt] = useState<number>(sourceSubtitleCount);
+    const [exampleSubtitleCnt, setExampleSubtitleCnt] = useState<number>(exampleSubtitleCount);
+
     // State for ranges with proper defaults
     const [sourceStart, setSourceStart] = useState<number>(1);
-    const [sourceEnd, setSourceEnd] = useState<number>(subtitleCount > 0 ? subtitleCount : 1);
+    const [sourceEnd, setSourceEnd] = useState<number>(sourceSubtitleCnt > 0 ? sourceSubtitleCnt : 1);
     const [exampleStart, setExampleStart] = useState<number>(1);
-    const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCount > 0 ? exampleSubtitleCount : 1);
+    const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCnt > 0 ? exampleSubtitleCnt : 2);
     const [rangeError, setRangeError] = useState<string | null>(null);
 
     // Handle file upload
@@ -50,47 +55,31 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
     // Update source file range end when subtitle count changes
     useEffect(() => {
-        if (subtitleCount > 0) {
-            setSourceEnd(subtitleCount);
+        if (sourceSubtitleCnt > 0) {
+            setSourceEnd(sourceSubtitleCnt);
             // Keep rangeStart at 1
             setSourceStart(1);
         }
-    }, [subtitleCount]);
+    }, [sourceSubtitleCnt]);
 
     // Update example file range end when subtitle count changes
     useEffect(() => {
-        if (exampleSubtitleCount > 0) {
-            setExampleEnd(exampleSubtitleCount);
+        if (exampleSubtitleCnt > 0) {
+            setExampleEnd(exampleSubtitleCnt);
             // Keep rangeStart at 1
             setExampleStart(1);
         }
-    }, [exampleSubtitleCount]);
+    }, [exampleSubtitleCnt]);
 
-    // Simplified validation for source range
-    useEffect(() => {
-        setRangeError(null);
+    // Callback to receive source subtitle count from preview
+    const handleSourceSubtitleCntChange = (count: number) => {
+        setSourceSubtitleCnt(count);
+    };
 
-        if (sourceStart < 1) {
-            setRangeError("Source start must be at least 1");
-        } else if (sourceEnd > subtitleCount) {
-            setRangeError(`Source end must not exceed ${subtitleCount}`);
-        } else if (sourceStart >= sourceEnd) {
-            setRangeError("Source start must be less than source end");
-        }
-    }, [sourceStart, sourceEnd, subtitleCount]);
-
-    // Simplified validation for example range
-    useEffect(() => {
-        if (rangeError) return; // Skip if source range already has an error
-
-        if (exampleStart < 1) {
-            setRangeError("Example start must be at least 1");
-        } else if (exampleEnd > exampleSubtitleCount) {
-            setRangeError(`Hello Example end must not exceed ${exampleSubtitleCount}`);
-        } else if (exampleStart >= exampleEnd) {
-            setRangeError("Example start must be less than example end");
-        }
-    }, [exampleStart, exampleEnd, exampleSubtitleCount, rangeError]);
+    // Callback to receive example subtitle count from preview
+    const handleExampleSubtitleCntChange = (count: number) => {
+        setExampleSubtitleCnt(count);
+    };
 
     // Handle align operation
     const handleAlign = async () => {
@@ -100,7 +89,8 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         const sourceRange: [number, number] = [sourceStart, sourceEnd];
         const exampleRange: [number, number] = [exampleStart, exampleEnd];
 
-        await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
+        const result = await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
+        setAlignedFile(result); // Store the result
     };
 
     // Preview of the source file
@@ -109,6 +99,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={sourceFile}
             isDownloadable={false}
+            onSubtitleCountChange={handleSourceSubtitleCntChange}
         />
     );
 
@@ -118,6 +109,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={exampleFile}
             isDownloadable={false}
+            onSubtitleCountChange={handleExampleSubtitleCntChange}
         />
     ) : null;
 
@@ -180,7 +172,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                                 id="source-start"
                                                 type="number"
                                                 min={1}
-                                                max={subtitleCount > 0 ? subtitleCount - 1 : 1}
+                                                max={sourceSubtitleCnt > 0 ? sourceEnd - 1 : 1}
                                                 value={sourceStart}
                                                 onChange={(e) => setSourceStart(Number(e.target.value))}
                                             />
@@ -192,7 +184,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                                 id="source-end"
                                                 type="number"
                                                 min={sourceStart + 1}
-                                                max={subtitleCount}
+                                                max={sourceSubtitleCnt}
                                                 value={sourceEnd}
                                                 onChange={(e) => setSourceEnd(Number(e.target.value))}
                                             />
@@ -213,7 +205,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                                 id="example-start"
                                                 type="number"
                                                 min={1}
-                                                max={exampleSubtitleCount > 0 ? exampleSubtitleCount - 1 : 1}
+                                                max={exampleSubtitleCnt > 0 ? exampleEnd - 1 : 1}
                                                 value={exampleStart}
                                                 onChange={(e) => setExampleStart(Number(e.target.value))}
                                             />
@@ -225,7 +217,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                                 id="example-end"
                                                 type="number"
                                                 min={exampleStart + 1}
-                                                max={exampleSubtitleCount}
+                                                max={exampleSubtitleCnt}
                                                 value={exampleEnd}
                                                 onChange={(e) => setExampleEnd(Number(e.target.value))}
                                             />
