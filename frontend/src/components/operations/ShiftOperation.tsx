@@ -30,7 +30,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     const [sourceSubtitleCount, setSourceSubtitleCount] = useState<number>(subtitleCount);
 
     // State for setting up delay
-    const [delay, setDelay] = useState<number>(0);
+    const [delay, setDelay] = useState<number>(1000);
 
     // State for using specific ranges
     const [rangeStart, setRangeStart] = useState<number>(1);
@@ -79,11 +79,11 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     ) : null;
 
     return (
-        <div className="shift-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
+        <div className="shift-operation-section">
 
             {/* Description of Shift Operation */}
             <div className="operation-description">
-                <p>Enter number of milliseconds (1 second = 1000 milliseconds) to shift timing. Number can be positive or negative.</p>
+                <p>Enter the number of milliseconds (1 second = 1000 milliseconds) to shift timing. Number can be positive or negative. Optionally you can specify the range of subtitles to be shifted.</p>
             </div>
 
             {/* Shift controls section */}
@@ -94,17 +94,20 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
                     {/* Delay input control */}
                     <div className="control-item">
-                        <p className="control-title">shift file by</p>
+                        <p className="control-title">shift timing by</p>
 
-                        {/* Delay input form, accepts only whole numbers */}
-                        <div className="range-selector">
-                            <input className="range-form"
+                        <div className="select-range-items">
+                            <input
+                                className="range-form"
                                 id="delay-input"
                                 type="number"
                                 step="1"
                                 value={delay}
                                 onChange={(e) => setDelay(Math.floor(Number(e.target.value)))}
-                                style={{ width: 100 }}
+                                style={{
+                                    width: 100,
+                                    color: delay === 0 ? 'red' : 'inherit', // <-- dynamic text color
+                                }}
                             />
                             <label className="range-text" htmlFor="delay-input">ms</label>
                         </div>
@@ -114,58 +117,53 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">from subtitle</p>
 
-                        {/* From input form, accepts only whole numbers */}
-                        <label className="range-text" htmlFor="range-start">number</label>
-                        <input className="range-form"
-                            id="range-start"
-                            type="number"
-                            min={1}
-                            max={rangeEnd - 1}
-                            value={rangeStart}
-                            onChange={(e) =>
-                                setRangeStart(Number(Math.floor(Number(e.target.value))))
-                            }
-                        />
+                        <div className="select-range-items">
+                            <label className="range-text" htmlFor="range-start">number</label>
+                            <input
+                                className="range-form"
+                                id="range-start"
+                                type="number"
+                                min={1}
+                                max={rangeEnd - 1}
+                                value={rangeStart}
+                                onChange={(e) => setRangeStart(Math.floor(Number(e.target.value)))}
+                                onBlur={(e) => {
+                                    let newValue = Math.floor(Number(e.target.value));
+                                    // Enforce minimum value of 1
+                                    if (newValue < 1) newValue = 1;
+                                    // Enforce maximum value of rangeEnd - 1
+                                    if (newValue >= rangeEnd) newValue = rangeEnd - 1;
+                                    setRangeStart(newValue);
+                                }}
+                            />
+                        </div>
                     </div>
 
                     {/* To input control */}
                     <div className="control-item">
                         <p className="control-title">to subtitle</p>
 
-                        {/* To input form, accepts only whole numbers */}
-                        <label className="range-text" htmlFor="range-end">number</label>
-                        <input className="range-form"
-                            id="range-end"
-                            type="number"
-                            min={rangeStart + 1}
-                            max={sourceSubtitleCount}
-                            value={rangeEnd}
-                            onChange={(e) =>
-                                setRangeEnd(Number(Math.floor(Number(e.target.value))))
-                            }
-                        />
+                        <div className="select-range-items">
+                            <label className="range-text" htmlFor="range-end">number</label>
+                            <input
+                                className="range-form"
+                                id="range-end"
+                                type="number"
+                                min={rangeStart + 1}
+                                max={sourceSubtitleCount}
+                                value={rangeEnd}
+                                onChange={(e) => setRangeEnd(Math.floor(Number(e.target.value)))}
+                                onBlur={(e) => {
+                                    let newValue = Math.floor(Number(e.target.value));
+                                    // Enforce minimum value of rangeStart + 1
+                                    if (newValue <= rangeStart) newValue = rangeStart + 1;
+                                    // Enforce maximum value of sourceSubtitleCount
+                                    if (newValue > sourceSubtitleCount) newValue = sourceSubtitleCount;
+                                    setRangeEnd(newValue);
+                                }}
+                            />
+                        </div>
                     </div>
-                </div>
-
-                {/* Shift and Download buttons */}
-                <div className="operation-controls-buttons">
-
-                    {/* Shift button */}
-                    <button
-                        className="operation-button"
-                        onClick={handleShift}
-                        disabled={isLoading || delay == 0 || !!rangeError}
-                    >
-                        Shift
-                    </button>
-
-                    {/* If Shift button pressed */}
-                    {hasProcessedFile && (
-                        <>
-                            {/* Download button */}
-                            <button className="download-button" onClick={onDownload}>Download</button>
-                        </>
-                    )}
                 </div>
             </div>
 
@@ -173,14 +171,32 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
             {/* File preview section */}
             <div className="file-preview-section">
 
-                {/* Source file preview */}
+                {/* Source file preview + Shift button */}
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
+                    {/* Shift Button */}
+                    <div className="operation-controls-buttons">
+                        <button
+                            className="operation-button"
+                            onClick={handleShift}
+                            disabled={isLoading || delay == 0 || !!rangeError}
+                        >
+                            Shift
+                        </button>
+                    </div>
+
+                    {/* Source file preview */}
                     {sourceFilePreview}
                 </div>
 
-                {/* Shifted file preview - Only show if available */}
+                {/* Shifted file preview + Download button */}
                 {processedFile && (
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
+                        {/* Download Button */}
+                        <div className="operation-controls-buttons">
+                            <button className="download-button" onClick={onDownload}>Download</button>
+                        </div>
+
+                        {/* Shifted file preview */}
                         {shiftedFilePreview}
                     </div>
                 )}
