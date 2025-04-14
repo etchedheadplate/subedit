@@ -22,7 +22,7 @@
 
 .main-option-button {
     padding: 10px 15px;
-    color: #dee2e6;
+    color: #DEE2E6;
     border: 0.1em transparent;
     border-radius: 0px;
     cursor: pointer;
@@ -32,13 +32,13 @@
 
 /* Disabled state (no file uploaded or loading) */
 .main-option-button:disabled {
-    color: #6c757d;
+    color: #6C757D;
     cursor: not-allowed;
 }
 
 /* Active option (e.g. when selected) */
 .main-option-button.active {
-    color: #dee2e6;
+    color: #DEE2E6;
     border: 0.1em dashed;
 }
 
@@ -50,6 +50,4 @@
     margin-bottom: 20px;
 }
 
-.operations-container {
-    margin-top: 10px;
-}
+.operations-container {}

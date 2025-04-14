@@ -93,7 +93,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
             {!error ? (
                 < div className="metadata-and-subtitle-preview-section">
                     {/* Container for file metadata */}
-                    <div className="metadata-preview-container" style={{ display: "flex", gap: "20px" }}>
+                    <div className="metadata-preview-container">
                         {/* Metadata content rendered only if file uploaded and metadata fetched */}
                         {subtitleFile && subtitleMeta && (
                             <div className="metadata-content">
@@ -109,7 +109,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                         )}
                     </div>
                     {/* Container for file subtitles */}
-                    <div className="subtitle-preview-container" style={{ display: "flex", gap: "20px" }}>
+                    <div className="subtitle-preview-container">
                         {/* Subtitle content rendered only if file uploaded and subtitles fetched */}
                         {subtitleFile && subtitlePreview && (
                             <div className="subtitle-content">

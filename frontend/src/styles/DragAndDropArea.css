@@ -12,7 +12,7 @@
     text-align: center;
     background-color: transparent;
     transition: all 0.3s ease;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     padding: 0 50px;
     box-sizing: border-box;
     cursor: pointer;
@@ -20,7 +20,7 @@
 
 .drag-and-drop-area.drag-active {
     border: 2px dashed #646cff;
-    background-color: rgba(100, 108, 255, 0.08);
+    background-color: rgba(222, 226, 230, 0.08);
 }
 
 .drag-and-drop-area.loading {
@@ -33,20 +33,20 @@
 
 .drag-and-drop-area-sub-text {
     font-size: 0.8em;
-    color: #6c757d;
+    color: #6C757D;
 }
 
 @keyframes blink-border {
     0% {
-        border-color: #6c757d;
+        border-color: #6C757D;
     }
 
     50% {
-        border-color: #dee2e6;
+        border-color: #DEE2E6;
     }
 
     100% {
-        border-color: #6c757d;
+        border-color: #6C757D;
     }
 }
 
