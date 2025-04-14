@@ -126,7 +126,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     ) : null;
 
     return (
-        <div className="align-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
+        <div className="align-operation-section">
 
             {/* Description of Align operation */}
             <div className="operation-description">
@@ -170,30 +170,42 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                                     {/* Select Source file range */}
                                     <div className="select-range-items">
-                                        <div className="range-selector">
-                                            <label className="range-text" htmlFor="source-start">from</label>
-                                            <input
-                                                className="range-form"
-                                                id="source-start"
-                                                type="number"
-                                                min={1}
-                                                max={sourceSubtitleCnt > 0 ? sourceEnd - 1 : 1}
-                                                value={sourceStart}
-                                                onChange={(e) => setSourceStart(Number(e.target.value))}
-                                            />
-                                        </div>
-                                        <div className="range-selector">
-                                            <label className="range-text" htmlFor="source-end">to</label>
-                                            <input
-                                                className="range-form"
-                                                id="source-end"
-                                                type="number"
-                                                min={sourceStart + 1}
-                                                max={sourceSubtitleCnt}
-                                                value={sourceEnd}
-                                                onChange={(e) => setSourceEnd(Number(e.target.value))}
-                                            />
-                                        </div>
+                                        <label className="range-text" htmlFor="source-start">from</label>
+                                        <input
+                                            className="range-form"
+                                            id="source-start"
+                                            type="number"
+                                            min={1}
+                                            max={sourceSubtitleCnt > 0 ? sourceEnd - 1 : 1}
+                                            value={sourceStart}
+                                            onChange={(e) => setSourceStart(Number(e.target.value))}
+                                            onBlur={(e) => {
+                                                let newValue = Number(e.target.value);
+                                                // Enforce minimum value of 1
+                                                if (newValue < 1) newValue = 1;
+                                                // Enforce maximum value of sourceEnd - 1
+                                                if (newValue >= sourceEnd) newValue = sourceEnd - 1;
+                                                setSourceStart(newValue);
+                                            }}
+                                        />
+                                        <label className="range-text" htmlFor="source-end">to</label>
+                                        <input
+                                            className="range-form"
+                                            id="source-end"
+                                            type="number"
+                                            min={sourceStart + 1}
+                                            max={sourceSubtitleCnt}
+                                            value={sourceEnd}
+                                            onChange={(e) => setSourceEnd(Number(e.target.value))}
+                                            onBlur={(e) => {
+                                                let newValue = Number(e.target.value);
+                                                // Enforce minimum value of sourceStart + 1
+                                                if (newValue <= sourceStart) newValue = sourceStart + 1;
+                                                // Enforce maximum value of sourceSubtitleCnt
+                                                if (newValue > sourceSubtitleCnt) newValue = sourceSubtitleCnt;
+                                                setSourceEnd(newValue);
+                                            }}
+                                        />
                                     </div>
                                 </div>
 
@@ -203,52 +215,51 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                                     {/* Select Example file range */}
                                     <div className="select-range-items">
-                                        <div className="range-selector">
-                                            <label className="range-text" htmlFor="example-start">from</label>
-                                            <input
-                                                className="range-form"
-                                                id="example-start"
-                                                type="number"
-                                                min={1}
-                                                max={exampleSubtitleCnt > 0 ? exampleEnd - 1 : 1}
-                                                value={exampleStart}
-                                                onChange={(e) => setExampleStart(Number(e.target.value))}
-                                            />
-                                        </div>
-                                        <div className="range-selector">
-                                            <label className="range-text" htmlFor="example-end">to</label>
-                                            <input
-                                                className="range-form"
-                                                id="example-end"
-                                                type="number"
-                                                min={exampleStart + 1}
-                                                max={exampleSubtitleCnt}
-                                                value={exampleEnd}
-                                                onChange={(e) => setExampleEnd(Number(e.target.value))}
-                                            />
-                                        </div>
+                                        {/* 'from' label */}
+                                        <label className="range-text" htmlFor="example-start">from</label>
+
+                                        {/* Start input */}
+                                        <input
+                                            className="range-form"
+                                            id="example-start"
+                                            type="number"
+                                            min={1}
+                                            max={exampleSubtitleCnt > 0 ? exampleEnd - 1 : 1}
+                                            value={exampleStart}
+                                            onChange={(e) => setExampleStart(Number(e.target.value))}
+                                            onBlur={(e) => {
+                                                let newValue = Number(e.target.value);
+                                                // Enforce minimum value of 1
+                                                if (newValue < 1) newValue = 1;
+                                                // Enforce maximum value of exampleEnd - 1
+                                                if (newValue >= exampleEnd) newValue = exampleEnd - 1;
+                                                setExampleStart(newValue);
+                                            }}
+                                        />
+
+                                        {/* 'to' label */}
+                                        <label className="range-text" htmlFor="example-end">to</label>
+
+                                        {/* End input */}
+                                        <input
+                                            className="range-form"
+                                            id="example-end"
+                                            type="number"
+                                            min={exampleStart + 1}
+                                            max={exampleSubtitleCnt}
+                                            value={exampleEnd}
+                                            onChange={(e) => setExampleEnd(Number(e.target.value))}
+                                            onBlur={(e) => {
+                                                let newValue = Number(e.target.value);
+                                                // Enforce minimum value of exampleStart + 1
+                                                if (newValue <= exampleStart) newValue = exampleStart + 1;
+                                                // Enforce maximum value of exampleSubtitleCnt
+                                                if (newValue > exampleSubtitleCnt) newValue = exampleSubtitleCnt;
+                                                setExampleEnd(newValue);
+                                            }}
+                                        />
                                     </div>
                                 </div>
-                            </div>
-
-                            {/* Align and Download buttons */}
-                            <div className="operation-controls-buttons">
-                                {/* Align button */}
-                                <button
-                                    className="operation-button"
-                                    onClick={handleAlign}
-                                    disabled={!!rangeError}
-                                >
-                                    Align
-                                </button>
-
-                                {/* If Align button pressed */}
-                                {hasProcessedFile && (
-                                    <>
-                                        {/* Download button */}
-                                        <button className="download-button" onClick={onDownload}>Download</button>
-                                    </>
-                                )}
                             </div>
                         </>
                     </div>
@@ -256,19 +267,44 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                     {/* File preview section */}
                     <div className="file-preview-section">
 
-                        {/* Source file preview */}
+                        {/* Source file preview + Align button */}
                         <div className="source-file-preview-container" style={{ flex: 1 }}>
+                            {/* Align button */}
+                            <div className="operation-controls-buttons">
+                                <button
+                                    className="operation-button"
+                                    onClick={handleAlign}
+                                    disabled={!!rangeError}
+                                >
+                                    Align
+                                </button>
+                            </div>
+
                             {sourceFilePreview}
                         </div>
 
-                        {/* Example file preview */}
+                        {/* Example file preview (no buttons) */}
                         <div className="modified-file-preview-container" style={{ flex: 1 }}>
+
+                            {/* Invisible spacer to match Align/Download buttons */}
+                            <div
+                                className="operation-controls-buttons"
+                                style={{ visibility: "hidden" }}
+                            >
+                                <button className="operation-button">Align</button>
+                            </div>
+
                             {exampleFilePreview}
                         </div>
 
-                        {/* Aligned file preview - Only show if available */}
+                        {/* Aligned file preview + Download button */}
                         {processedFile && (
                             <div className="modified-file-preview-container" style={{ flex: 1 }}>
+                                {/* Download button */}
+                                <div className="operation-controls-buttons">
+                                    <button className="download-button" onClick={onDownload}>Download</button>
+                                </div>
+
                                 {alignedFilePreview}
                             </div>
                         )}
