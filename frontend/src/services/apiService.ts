@@ -85,11 +85,12 @@ export const apiService = {
 
     shiftSubtitles: async (
         sessionId: string,
-        filename: string,
+        sourceFilename: string,
         delay: number,
         items: number[],
     ): Promise<{
-        filename: string;
+        sourceFilename: string;
+        processedFilename: string;
         preview: SubtitlePreview;
         encoding: string;
         confidence: number;
@@ -100,7 +101,7 @@ export const apiService = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 session_id: sessionId,
-                filename: filename,
+                source_filename: sourceFilename,
                 delay: delay,
                 ...(items.length > 0 && { items }), // Only include `items` if it's not null
             }),
@@ -113,7 +114,8 @@ export const apiService = {
         }
 
         return {
-            filename: data.filename,
+            sourceFilename: data.filename,
+            processedFilename: data.processed_filename,
             preview: data.preview,
             encoding: data.encoding,
             confidence: data.confidence,
@@ -124,12 +126,13 @@ export const apiService = {
     // Other operations with metadata
     alignSubtitles: async (
         sessionId: string,
-        filename: string,
+        sourceFilename: string,
         exampleFilename: string,
         sourceSlice?: number[],
         exampleSlice?: number[],
     ): Promise<{
-        filename: string;
+        sourceFilename: string;
+        processedFilename: string;
         preview: SubtitlePreview;
         encoding: string;
         confidence: number;
@@ -140,7 +143,7 @@ export const apiService = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 session_id: sessionId,
-                filename: filename,
+                source_filename: sourceFilename,
                 example_filename: exampleFilename,
                 source_slice: sourceSlice,
                 example_slice: exampleSlice,
@@ -154,7 +157,8 @@ export const apiService = {
         }
 
         return {
-            filename: data.filename,
+            sourceFilename: data.filename,
+            processedFilename: data.processed_filename,
             preview: data.preview,
             encoding: data.encoding,
             confidence: data.confidence,
@@ -164,7 +168,7 @@ export const apiService = {
 
     cleanSubtitles: async (
         sessionId: string,
-        filename: string,
+        sourceFilename: string,
         options: {
             bold?: boolean;
             italic?: boolean;
@@ -174,7 +178,8 @@ export const apiService = {
             font?: boolean;
         },
     ): Promise<{
-        filename: string;
+        sourceFilename: string;
+        processedFilename: string;
         preview: SubtitlePreview;
         encoding: string;
         confidence: number;
@@ -185,7 +190,7 @@ export const apiService = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 session_id: sessionId,
-                filename: filename,
+                source_filename: sourceFilename,
                 ...options,
             }),
         });
@@ -197,7 +202,8 @@ export const apiService = {
         }
 
         return {
-            filename: data.filename,
+            sourceFilename: data.filename,
+            processedFilename: data.processed_filename,
             preview: data.preview,
             encoding: data.encoding,
             confidence: data.confidence,
@@ -207,12 +213,13 @@ export const apiService = {
 
     translateSubtitles: async (
         sessionId: string,
-        filename: string,
+        sourceFilename: string,
         targetLanguage: string,
         modelName: string = "GPT-4o",
         modelThrottle: number = 0.5,
     ): Promise<{
-        filename: string;
+        sourceFilename: string;
+        processedFilename: string;
         preview: SubtitlePreview;
         encoding: string;
         confidence: number;
@@ -223,7 +230,7 @@ export const apiService = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 session_id: sessionId,
-                filename: filename,
+                source_filename: sourceFilename,
                 target_language: targetLanguage,
                 model_name: modelName,
                 model_throttle: modelThrottle,
@@ -237,7 +244,8 @@ export const apiService = {
         }
 
         return {
-            filename: data.filename,
+            sourceFilename: data.filename,
+            processedFilename: data.processed_filename,
             preview: data.preview,
             encoding: data.encoding,
             confidence: data.confidence,

@@ -19,21 +19,15 @@ export const useSubtitleOperations = (
         setError(null);
 
         try {
-            await apiService.shiftSubtitles(
+            const result = await apiService.shiftSubtitles(
                 sessionId,
                 uploadedFile.filename,
                 delay,
                 items,
             );
 
-            // Construct filename based on range if specified
-            let filenameModifier = `shifted-by-${delay}-ms`;
-            if (items.length === 2) {
-                filenameModifier += `-from-${items[0]}-to-${items[1]}`;
-            }
-
             setProcessedFile({
-                filename: `${uploadedFile.filename.split(".srt")[0]}-${filenameModifier}.srt`,
+                filename: result.processedFilename,
                 session_id: sessionId || "",
                 file_path: uploadedFile.file_path, // Same path as a source file
             });
@@ -75,11 +69,8 @@ export const useSubtitleOperations = (
                 }
             }
 
-            // Construct filename
-            const filenameModifier = "aligned";
-
             setProcessedFile({
-                filename: `${sourceFile.filename.split(".srt")[0]}-${filenameModifier}.srt`,
+                filename: result.processedFilename,
                 session_id: sessionId || "",
                 file_path: sourceFile.file_path,
             });
@@ -117,7 +108,7 @@ export const useSubtitleOperations = (
 
             // Set processed file name
             setProcessedFile({
-                filename: `${uploadedFile.filename.split(".srt")[0]}-cleaned.srt`,
+                filename: result.processedFilename,
                 session_id: sessionId || "",
                 file_path: uploadedFile.file_path, // Same path as a source file
             });

@@ -49,6 +49,7 @@ class SubEdit:
 
         self.source_file: str = file_list[0]
         self.example_file: str | None = file_list[1] if len(file_list) == 2 else None
+        self.processed_file:str = ''
 
         if len(file_list) <= 2:
             for file in file_list:
@@ -224,19 +225,26 @@ class SubEdit:
             })
 
         self._create_file(self.shifted_file)
+        self.processed_file = os.path.basename(self.shifted_file)
 
     def align_timing(self, source_slice: list[int] | None = None, example_slice: list[int] | None = None) -> None:
         """Aligns source subtitles timing to match example subtitles timing for the specified slices.
 
         Args:
-            source_slice (list[int] or None): Indices of first and last subtitle to align. Defaults to None (all subtitles are aligned)
-            example_slice (list[int] or None): Indices of first and last subtitle to align. Defaults to None (all subtitles are aligned)
+            source_slice (list[int] or None): Indices of first and last subtitle to align. Defaults to None (all source subtitles are aligned)
+            example_slice (list[int] or None): Indices of first and last subtitle to align by. Defaults to None (aligned by all example subtitles)
         """
         if self.example_file is None:
             raise ValueError('Example file is required for alignment')
 
         source_name, source_ext = os.path.splitext(self.source_file)
         self.aligned_file = f'{source_name}-aligned{source_ext}'
+        if source_slice:
+            self.aligned_file = f'{source_name}-aligned-src-{source_slice[0]}-{source_slice[1]}{source_ext}'
+        if example_slice:
+            self.aligned_file = f'{source_name}-aligned-by-exm-{example_slice[0]}-{example_slice[1]}{source_ext}'
+        if source_slice and example_slice:
+            self.aligned_file = f'{source_name}-aligned-src-{source_slice[0]}-{source_slice[1]}-by-exm-{example_slice[0]}-{example_slice[1]}{source_ext}'
 
         self.subtitles_data[self.aligned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
@@ -318,6 +326,7 @@ class SubEdit:
                 })
 
         self._create_file(self.aligned_file)
+        self.processed_file = os.path.basename(self.aligned_file)
 
     def clean_markup(
         self,
@@ -395,6 +404,7 @@ class SubEdit:
             return unformatted_text
         else:
             self._create_file(self.cleaned_file)
+            self.processed_file = os.path.basename(self.cleaned_file)
 
     def translate_text(
         self,
@@ -503,3 +513,4 @@ class SubEdit:
                 raise ValueError(f'Bad response format: {response_pattern[index]}.')
 
         self._create_file(self.translated_file)
+        self.processed_file = os.path.basename(self.translated_file)

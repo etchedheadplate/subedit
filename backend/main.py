@@ -86,7 +86,7 @@ async def upload_file(
         raise HTTPException(status_code=400, detail="Only SubRip .srt files are allowed")
 
     # Sanitize filename (remove unsafe characters)
-    safe_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', file.filename)
+    safe_filename = re.sub(r'[^a-zA-Z0-9.-]', '-', file.filename)
     file_location = os.path.join(session_path, safe_filename)
 
     # Read file content to check size
@@ -152,7 +152,7 @@ async def show_subtitles(request: ShowRequest):
 
 class ShiftRequest(BaseModel):
     session_id: str
-    filename: str
+    source_filename: str
     delay: int  # Milliseconds to shift
     items: list[int] | None = None  # List of subtitle indices (optional)
 
@@ -160,12 +160,12 @@ class ShiftRequest(BaseModel):
 async def shift_subtitles(request: ShiftRequest):
     try:
         # Load the session and file
-        session_id, filename = request.session_id, request.filename
+        session_id, source_filename = request.session_id, request.source_filename
         shift_delay, shift_items = request.delay, request.items
-        print(f"Received shift request: session_id={session_id}, filename={filename}, delay={shift_delay}, items={shift_items}")
+        print(f"Received shift request: session_id={session_id}, filename={source_filename}, delay={shift_delay}, items={shift_items}")
 
         # Initialize SubEdit object
-        file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+        file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
         subedit = SubEdit([file_path])
 
         # Apply shifting
@@ -176,7 +176,8 @@ async def shift_subtitles(request: ShiftRequest):
 
         return {
             "session_id": session_id,
-            "filename": filename,
+            "source_filename": source_filename,
+            "processed_filename": subedit.processed_file,
             "message": "Subtitles shifted successfully",
             "preview": subtitles_data['subtitles'],
             "encoding": subtitles_data['metadata']['encoding'],
@@ -189,7 +190,7 @@ async def shift_subtitles(request: ShiftRequest):
 
 class AlignRequest(BaseModel):
     session_id: str
-    filename: str
+    source_filename: str
     example_filename: Optional[str] = None
     source_slice: Optional[list[int]] = None
     example_slice: Optional[list[int]] = None
@@ -198,13 +199,13 @@ class AlignRequest(BaseModel):
 async def align_subtitles(request: AlignRequest):
     try:
         # Load the session and file
-        session_id, filename = request.session_id, request.filename
+        session_id, source_filename = request.session_id, request.source_filename
         source_slice, example_slice = request.source_slice, request.example_slice
 
         # Check if example file is provided
         if request.example_filename:
             file_list = [
-                os.path.join(USER_FILES_DIR, session_id, filename),
+                os.path.join(USER_FILES_DIR, session_id, source_filename),
                 os.path.join(USER_FILES_DIR, session_id, request.example_filename)
             ]
         else:
@@ -222,7 +223,8 @@ async def align_subtitles(request: AlignRequest):
         # Return response with preview and metadata
         return {
             "session_id": session_id,
-            "filename": filename,
+            "source_filename": source_filename,
+            "processed_filename": subedit.processed_file,
             "message": "Subtitles aligned successfully",
             "preview": subtitles_data['subtitles'],
             "encoding": subtitles_data['metadata']['encoding'],
@@ -235,7 +237,7 @@ async def align_subtitles(request: AlignRequest):
 
 class CleanRequest(BaseModel):
     session_id: str
-    filename: str
+    source_filename: str
     bold: bool = False
     italic: bool = False
     underline: bool = False
@@ -247,8 +249,8 @@ class CleanRequest(BaseModel):
 async def clean_subtitles(request: CleanRequest):
     try:
         # Load the session and file
-        session_id, filename = request.session_id, request.filename
-        file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+        session_id, source_filename = request.session_id, request.source_filename
+        file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
 
         # Initialize SubEdit object
         subedit = SubEdit([file_path])
@@ -269,7 +271,8 @@ async def clean_subtitles(request: CleanRequest):
         # Return response with preview and metadata
         return {
             "session_id": session_id,
-            "filename": filename,
+            "source_filename": source_filename,
+            "processed_filename": subedit.processed_file,
             "message": "Markup cleaned successfully",
             "preview": subtitles_data['subtitles'],
             "encoding": subtitles_data['metadata']['encoding'],
@@ -282,7 +285,7 @@ async def clean_subtitles(request: CleanRequest):
 
 class TranslateRequest(BaseModel):
     session_id: str
-    filename: str
+    source_filename: str
     target_language: str
     model_name: str = 'GPT-4o'
     model_throttle: float = 0.5
@@ -293,8 +296,8 @@ class TranslateRequest(BaseModel):
 async def translate_subtitles(request: TranslateRequest):
     try:
         # Load the session and file
-        session_id, filename = request.session_id, request.filename
-        file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+        session_id, source_filename = request.session_id, request.source_filename
+        file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
 
         # Initialize SubEdit object
         subedit = SubEdit([file_path])
@@ -314,7 +317,8 @@ async def translate_subtitles(request: TranslateRequest):
         # Return response with preview and metadata
         return {
             "session_id": session_id,
-            "filename": filename,
+            "source_filename": source_filename,
+            "processed_filename": subedit.processed_file,
             "message": f"Subtitles translated to {request.target_language} successfully",
             "preview": subtitles_data['subtitles'],
             "encoding": subtitles_data['metadata']['encoding'],
