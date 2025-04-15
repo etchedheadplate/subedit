@@ -14,7 +14,6 @@ interface SubtitlePreviewProps {
 const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     sessionId,
     subtitleFile,
-    isDownloadable,
     fileType = "Source",
     onSubtitleCountChange,
 }) => {
