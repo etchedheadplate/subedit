@@ -157,22 +157,24 @@ class SubEdit:
                     f'{subtitles_data[index]["text"]}\n\n' # Add empty line at the end
                 )
 
-    def show_data(self, data: SubtitlesDataDict | SubtitleMetadata | SubtitleEntry | None = None, indent: int = 0) -> None:
+    def pass_info(self, data: SubtitlesDataDict | SubtitleMetadata | SubtitleEntry | None = None, show: bool = False, indent: int = 0) -> None:
         """Prints subtitles data to terminal.
 
         Args:
             data (Dict): Dictionary with subtitles data.
+            show (bool): Print data in stdout.
             indent (int): Indent for subdictionaries.
         """
         if data is None:
             data = self.subtitles_data
 
-        for key, value in data.items():
-            if isinstance(value, dict):
-                print('  ' * indent + str(key) + ':')
-                self.show_data(value, indent + 1) # type: ignore
-            else:
-                print('  ' * indent + f'{key}: {value}')
+        if show:
+            for key, value in data.items():
+                if isinstance(value, dict):
+                    print('  ' * indent + str(key) + ':')
+                    self.pass_info(value, indent + 1) # type: ignore
+                else:
+                    print('  ' * indent + f'{key}: {value}')
 
     def shift_timing(self, delay: int, items: list[int] | None = None) -> None:
         """Shifts subtitles by user-defined milliseconds.

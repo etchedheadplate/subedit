@@ -42,11 +42,9 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
 
             try {
                 // Make API empty shift request to get preview elements
-                const result = await apiService.shiftSubtitles(
+                const result = await apiService.fetchSubtitlesInfo(
                     sessionId,
                     subtitleFile.filename,
-                    0,
-                    [], // Empty items array for preview
                 );
 
                 // Extract file metadata

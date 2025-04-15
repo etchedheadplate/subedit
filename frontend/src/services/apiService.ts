@@ -49,7 +49,7 @@ export const apiService = {
     },
 
     // Subtitle operations
-    showSubtitles: async (
+    fetchSubtitlesInfo: async (
         sessionId: string,
         filename: string,
     ): Promise<{
@@ -59,7 +59,7 @@ export const apiService = {
         confidence: number;
         language: string;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/show/`, {
+        const response = await fetch(`${API_BASE_URL}/info/`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -71,7 +71,7 @@ export const apiService = {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.detail || "Show operation failed");
+            throw new Error(data.detail || "Fetch Info operation failed");
         }
 
         return {

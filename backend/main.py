@@ -120,7 +120,7 @@ class ShowRequest(BaseModel):
     session_id: str
     filename: str
 
-@app.post("/show/")
+@app.post("/info/")
 async def show_subtitles(request: ShowRequest):
     try:
         # Load the session and file
@@ -132,15 +132,15 @@ async def show_subtitles(request: ShowRequest):
         subedit = SubEdit([file_path])
 
         # Apply shifting
-        subedit.show_data()
+        subedit.pass_info()
 
         # Return response with preview and metadata
-        subtitles_data = subedit.subtitles_data[filename]
+        subtitles_data = subedit.subtitles_data[subedit.source_file]
 
         return {
             "session_id": session_id,
             "filename": filename,
-            "message": "Subtitles data passed",
+            "message": "Subtitles info passed",
             "preview": subtitles_data['subtitles'],
             "encoding": subtitles_data['metadata']['encoding'],
             "confidence": subtitles_data['metadata']['confidence'],
