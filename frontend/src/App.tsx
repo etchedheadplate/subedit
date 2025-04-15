@@ -30,7 +30,6 @@ function App() {
         processedFile,
         isLoading: isProcessing,
         error: processingError,
-        subtitleCount,
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
@@ -114,8 +113,6 @@ function App() {
                     sourceFile={uploadedFile}
                     hasProcessedFile={!!processedFile}
                     processedFile={processedFile}
-                    isLoading={isLoading}
-                    subtitleCount={0}
                 />
             )}
 
@@ -127,9 +124,7 @@ function App() {
                     sourceFile={uploadedFile}
                     hasProcessedFile={!!processedFile}
                     processedFile={processedFile}
-                    isLoading={isLoading}
-                    sourceSubtitleCount={subtitleCount}
-                    exampleSubtitleCount={0} // Initialize with 0 and update when example file is loaded
+                    resetResults={resetResults}
                 />
             )}
 
@@ -141,8 +136,6 @@ function App() {
                     sourceFile={uploadedFile}
                     hasProcessedFile={!!processedFile}
                     processedFile={processedFile}
-                    isLoading={isLoading}
-                    subtitleCount={subtitleCount}
                 />
             )}
         </div>
