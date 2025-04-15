@@ -11,21 +11,16 @@ interface AlignOperationProps {
     sourceFile: SubtitleFile;
     hasProcessedFile: boolean;
     processedFile: SubtitleFile | null;
-    isLoading: boolean;
-    sourceSubtitleCount: number;
-    exampleSubtitleCount: number;
+    resetResults: () => void;
 }
 
 const AlignOperation: React.FC<AlignOperationProps> = ({
     onAlign,
     onDownload,
-    hasProcessedFile,
     processedFile,
-    isLoading,
-    sourceSubtitleCount,
-    exampleSubtitleCount,
     sessionId,
     sourceFile,
+    resetResults,
 }) => {
     // State for the example file
     const {
@@ -34,23 +29,20 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         isLoading: isExampleFileUploading,
     } = useFileUpload(sessionId);
 
-    // State for the aligned file
-    const [alignedFile, setAlignedFile] = useState(null);
-
     // State to store the subtitle count from the preview
-    const [sourceSubtitleCnt, setSourceSubtitleCnt] = useState<number>(sourceSubtitleCount);
-    const [exampleSubtitleCnt, setExampleSubtitleCnt] = useState<number>(exampleSubtitleCount);
+    const [sourceSubtitleCnt, setSourceSubtitleCnt] = useState<number>(1);
+    const [exampleSubtitleCnt, setExampleSubtitleCnt] = useState<number>(1);
 
     // State for ranges with proper defaults
     const [sourceStart, setSourceStart] = useState<number>(1);
     const [sourceEnd, setSourceEnd] = useState<number>(sourceSubtitleCnt > 0 ? sourceSubtitleCnt : 1);
     const [exampleStart, setExampleStart] = useState<number>(1);
     const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCnt > 0 ? exampleSubtitleCnt : 2);
-    const [rangeError, setRangeError] = useState<string | null>(null);
 
     // Handle file upload
     const handleFileUpload = async (file) => {
         await uploadExampleFile(file);
+        resetResults();
     };
 
     // Update source file range end when subtitle count changes
@@ -72,13 +64,13 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     }, [exampleSubtitleCnt]);
 
     // Callback to receive source subtitle count from preview
-    const handleSourceSubtitleCntChange = (count: number) => {
-        setSourceSubtitleCnt(count);
+    const handleSourceSubtitleCntChange = (sourceCount: number) => {
+        setSourceSubtitleCnt(sourceCount);
     };
 
     // Callback to receive example subtitle count from preview
-    const handleExampleSubtitleCntChange = (count: number) => {
-        setExampleSubtitleCnt(count);
+    const handleExampleSubtitleCntChange = (exampleCount: number) => {
+        setExampleSubtitleCnt(exampleCount);
     };
 
     // Handle align operation
@@ -89,8 +81,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         const sourceRange: [number, number] = [sourceStart, sourceEnd];
         const exampleRange: [number, number] = [exampleStart, exampleEnd];
 
-        const result = await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
-        setAlignedFile(result); // Store the result
+        await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
     };
 
     // Preview of the source file
@@ -135,20 +126,12 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
             <DragAndDropArea
                 onFileUpload={handleFileUpload}
-                isLoading={isLoading || isExampleFileUploading}
                 uploadedFile={exampleFile}
                 preUploadInstructionText="Upload example subtitles, fren!"
                 postUploadIntroFileText="Uploaded example file:"
                 postUploadSubInstructionText="Tweak alignment option below or upload new file"
                 className={!exampleFile ? "blinking" : ""}
             />
-
-            {/* Display range error if any */}
-            {rangeError && (
-                <div className="error-message" style={{ marginBottom: "15px", color: "red" }}>
-                    {rangeError}
-                </div>
-            )}
 
             {/* If Example file uploaded */}
             {exampleFile && (
@@ -269,12 +252,12 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                         {/* Source file preview + Align button */}
                         <div className="source-file-preview-container" style={{ flex: 1 }}>
+
                             {/* Align button */}
                             <div className="operation-controls-buttons">
                                 <button
                                     className="operation-button"
                                     onClick={handleAlign}
-                                    disabled={!!rangeError}
                                 >
                                     Align
                                 </button>
