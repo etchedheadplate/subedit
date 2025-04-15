@@ -9,8 +9,6 @@ interface ShiftOperationProps {
     sourceFile: SubtitleFile | null;
     hasProcessedFile: boolean;
     processedFile: SubtitleFile | null;
-    isLoading: boolean;
-    subtitleCount: number;
 }
 
 const ShiftOperation: React.FC<ShiftOperationProps> = ({
@@ -18,16 +16,10 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     sessionId,
     onDownload,
     sourceFile,
-    hasProcessedFile,
     processedFile,
-    isLoading,
-    subtitleCount,
 }) => {
-    // State for the shifted file
-    const [shiftedFile, setShiftedFile] = useState(null);
-
     // State to store the subtitle count from the preview
-    const [sourceSubtitleCount, setSourceSubtitleCount] = useState<number>(subtitleCount);
+    const [subtitleCount, setSubtitleCount] = useState<number>(1);
 
     // State for setting up delay
     const [delay, setDelay] = useState<number>(1000);
@@ -35,26 +27,24 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     // State for using specific ranges
     const [rangeStart, setRangeStart] = useState<number>(1);
     const [rangeEnd, setRangeEnd] = useState<number>(subtitleCount > 1 ? subtitleCount : 2,);
-    const [rangeError, setRangeError] = useState<string | null>(null);
 
     // Update range end when subtitle count changes
     useEffect(() => {
-        if (sourceSubtitleCount > 0) {
-            setRangeEnd(sourceSubtitleCount);
+        if (subtitleCount > 0) {
+            setRangeEnd(subtitleCount);
             setRangeStart(1);
         }
-    }, [sourceSubtitleCount]);
+    }, [subtitleCount]);
 
     // Callback to receive subtitle count from preview
     const handleSubtitleCountChange = (count: number) => {
-        setSourceSubtitleCount(count);
+        setSubtitleCount(count);
     };
 
     // Handler to store sfifting results
     const handleShift = async () => {
         const items = [rangeStart, rangeEnd];
-        const result = await onShift(delay, items);
-        setShiftedFile(result); // Store the result
+        await onShift(delay, items);
     };
 
     // Preview of the source file
@@ -150,15 +140,15 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                 id="range-end"
                                 type="number"
                                 min={rangeStart + 1}
-                                max={sourceSubtitleCount}
+                                max={subtitleCount}
                                 value={rangeEnd}
                                 onChange={(e) => setRangeEnd(Math.floor(Number(e.target.value)))}
                                 onBlur={(e) => {
                                     let newValue = Math.floor(Number(e.target.value));
                                     // Enforce minimum value of rangeStart + 1
                                     if (newValue <= rangeStart) newValue = rangeStart + 1;
-                                    // Enforce maximum value of sourceSubtitleCount
-                                    if (newValue > sourceSubtitleCount) newValue = sourceSubtitleCount;
+                                    // Enforce maximum value of subtitleCount
+                                    if (newValue > subtitleCount) newValue = subtitleCount;
                                     setRangeEnd(newValue);
                                 }}
                             />
@@ -178,7 +168,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                         <button
                             className="operation-button"
                             onClick={handleShift}
-                            disabled={isLoading || delay == 0 || !!rangeError}
+                            disabled={delay == 0}
                         >
                             Shift
                         </button>
