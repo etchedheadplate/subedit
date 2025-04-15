@@ -55,8 +55,9 @@ export const apiService = {
     ): Promise<{
         filename: string;
         preview: SubtitlePreview;
-        language: string;
         encoding: string;
+        confidence: number;
+        language: string;
     }> => {
         const response = await fetch(`${API_BASE_URL}/show/`, {
             method: "POST",
@@ -76,8 +77,9 @@ export const apiService = {
         return {
             filename: data.filename,
             preview: data.preview,
-            language: data.language || "Unknown",
-            encoding: data.encoding || "Unknown",
+            encoding: data.encoding,
+            confidence: data.confidence,
+            language: data.language,
         };
     },
 
@@ -89,9 +91,9 @@ export const apiService = {
     ): Promise<{
         filename: string;
         preview: SubtitlePreview;
-        language: string;
         encoding: string;
         confidence: number;
+        language: string;
     }> => {
         const response = await fetch(`${API_BASE_URL}/shift/`, {
             method: "POST",
@@ -113,9 +115,9 @@ export const apiService = {
         return {
             filename: data.filename,
             preview: data.preview,
-            language: data.language || "Unknown",
-            encoding: data.encoding || "Unknown",
-            confidence: data.confidence || "Unknown",
+            encoding: data.encoding,
+            confidence: data.confidence,
+            language: data.language,
         };
     },
 
@@ -129,8 +131,9 @@ export const apiService = {
     ): Promise<{
         filename: string;
         preview: SubtitlePreview;
-        language: string;
         encoding: string;
+        confidence: number;
+        language: string;
     }> => {
         const response = await fetch(`${API_BASE_URL}/align/`, {
             method: "POST",
@@ -153,8 +156,9 @@ export const apiService = {
         return {
             filename: data.filename,
             preview: data.preview,
-            language: data.language || "Unknown",
-            encoding: data.encoding || "Unknown",
+            encoding: data.encoding,
+            confidence: data.confidence,
+            language: data.language,
         };
     },
 
@@ -172,8 +176,9 @@ export const apiService = {
     ): Promise<{
         filename: string;
         preview: SubtitlePreview;
-        language: string;
         encoding: string;
+        confidence: number;
+        language: string;
     }> => {
         const response = await fetch(`${API_BASE_URL}/clean/`, {
             method: "POST",
@@ -194,8 +199,9 @@ export const apiService = {
         return {
             filename: data.filename,
             preview: data.preview,
-            language: data.language || "Unknown",
-            encoding: data.encoding || "Unknown",
+            encoding: data.encoding,
+            confidence: data.confidence,
+            language: data.language,
         };
     },
 
@@ -208,8 +214,9 @@ export const apiService = {
     ): Promise<{
         filename: string;
         preview: SubtitlePreview;
-        language: string;
         encoding: string;
+        confidence: number;
+        language: string;
     }> => {
         const response = await fetch(`${API_BASE_URL}/translate/`, {
             method: "POST",
@@ -232,8 +239,9 @@ export const apiService = {
         return {
             filename: data.filename,
             preview: data.preview,
+            encoding: data.encoding,
+            confidence: data.confidence,
             language: targetLanguage,
-            encoding: data.encoding || "Unknown",
         };
     },
 };

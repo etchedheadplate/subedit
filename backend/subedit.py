@@ -12,7 +12,7 @@ from typing import TypedDict, List, Dict
 # Types of parsed subtitles data
 class SubtitleMetadata(TypedDict):
     encoding: str
-    confidence: int
+    confidence: float
     language: str
 
 class SubtitleEntry(TypedDict):
@@ -74,7 +74,7 @@ class SubEdit:
 
                 extracted_metadata: SubtitleMetadata = {
                     'encoding': str(raw_metadata['encoding']),
-                    'confidence': int(raw_metadata['confidence']),
+                    'confidence': float(raw_metadata['confidence']),
                     'language': ''
                 }
 

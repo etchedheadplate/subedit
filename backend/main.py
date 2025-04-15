@@ -142,8 +142,9 @@ async def show_subtitles(request: ShowRequest):
             "filename": filename,
             "message": "Subtitles data passed",
             "preview": subtitles_data['subtitles'],
-            "language": subtitles_data['metadata']['language'],
-            "encoding": subtitles_data['metadata']['encoding']
+            "encoding": subtitles_data['metadata']['encoding'],
+            "confidence": subtitles_data['metadata']['confidence'],
+            "language": subtitles_data['metadata']['language']
         }
 
     except Exception as e:
@@ -178,8 +179,9 @@ async def shift_subtitles(request: ShiftRequest):
             "filename": filename,
             "message": "Subtitles shifted successfully",
             "preview": subtitles_data['subtitles'],
-            "language": subtitles_data['metadata']['language'],
-            "encoding": subtitles_data['metadata']['encoding']
+            "encoding": subtitles_data['metadata']['encoding'],
+            "confidence": subtitles_data['metadata']['confidence'],
+            "language": subtitles_data['metadata']['language']
         }
 
     except Exception as e:
@@ -223,8 +225,9 @@ async def align_subtitles(request: AlignRequest):
             "filename": filename,
             "message": "Subtitles aligned successfully",
             "preview": subtitles_data['subtitles'],
-            "language": subtitles_data['metadata']['language'],
-            "encoding": subtitles_data['metadata']['encoding']
+            "encoding": subtitles_data['metadata']['encoding'],
+            "confidence": subtitles_data['metadata']['confidence'],
+            "language": subtitles_data['metadata']['language']
         }
 
     except Exception as e:
@@ -269,8 +272,9 @@ async def clean_subtitles(request: CleanRequest):
             "filename": filename,
             "message": "Markup cleaned successfully",
             "preview": subtitles_data['subtitles'],
-            "language": subtitles_data['metadata']['language'],
-            "encoding": subtitles_data['metadata']['encoding']
+            "encoding": subtitles_data['metadata']['encoding'],
+            "confidence": subtitles_data['metadata']['confidence'],
+            "language": subtitles_data['metadata']['language']
         }
 
     except Exception as e:
@@ -313,8 +317,9 @@ async def translate_subtitles(request: TranslateRequest):
             "filename": filename,
             "message": f"Subtitles translated to {request.target_language} successfully",
             "preview": subtitles_data['subtitles'],
+            "encoding": subtitles_data['metadata']['encoding'],
+            "confidence": subtitles_data['metadata']['confidence'],
             "language": request.target_language,  # Use target language as the new language
-            "encoding": subtitles_data['metadata']['encoding']
         }
 
     except Exception as e:

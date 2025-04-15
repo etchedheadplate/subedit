@@ -51,9 +51,9 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
 
                 // Extract file metadata
                 const meta: SubtitleMetadata = {
-                    encoding: result.encoding || "Unknown",
-                    confidence: result.confidence,
-                    language: result.language || "Unknown",
+                    encoding: result.encoding,
+                    confidence: result.confidence * 100, // Probability -> Percentage
+                    language: result.language,
                     filename: subtitleFile.filename,
                 }
                 setSubtitleMeta(meta);
@@ -98,7 +98,10 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                             <div className="metadata-content">
                                 <center>
                                     <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                                        <strong>{fileType} file</strong> | {subtitleMeta.language || "Unknown Language"} ({subtitleMeta.confidence}) | {subtitleMeta.encoding || "Unknown Encoding"} | {subtitleCount || "Unknown number of"} subtitles
+                                        <strong>{fileType} file</strong>
+                                        {" | "}{subtitleMeta.language || "? lang"} {subtitleMeta.confidence || ""}%
+                                        {" | "}{subtitleMeta.encoding || "? encoding"}
+                                        {" | "}{subtitleCount || "? num of"} subtitles
                                     </p>
                                     <p>
                                         {subtitleMeta.filename || "Unknown Filename"}
