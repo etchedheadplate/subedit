@@ -26,6 +26,7 @@ export const useSubtitleOperations = (
                 items,
             );
 
+            // Set processed file name
             setProcessedFile({
                 filename: result.processedFilename,
                 session_id: sessionId || "",
@@ -47,7 +48,7 @@ export const useSubtitleOperations = (
         sourceRange: [number, number],
         exampleRange: [number, number],
     ) => {
-        if (!sessionId) return;
+        if (!uploadedFile || !sessionId) return;
 
         setIsLoading(true);
         setError(null);
@@ -69,6 +70,7 @@ export const useSubtitleOperations = (
                 }
             }
 
+            // Set processed file name
             setProcessedFile({
                 filename: result.processedFilename,
                 session_id: sessionId || "",
@@ -85,7 +87,14 @@ export const useSubtitleOperations = (
     };
 
     // Clean operation
-    const cleanSubtitles = async () => {
+    const cleanSubtitles = async (options: {
+        bold: boolean,
+        italic: boolean,
+        underline: boolean,
+        strikethrough: boolean,
+        color: boolean,
+        font: boolean,
+    },) => {
         if (!uploadedFile || !sessionId) return;
 
         setIsLoading(true);
@@ -95,16 +104,8 @@ export const useSubtitleOperations = (
             const result = await apiService.cleanSubtitles(
                 sessionId,
                 uploadedFile.filename,
-                {},
+                options,
             );
-
-            // Extract actual subtitle entries (excluding metadata)
-            const subtitles: SubtitlePreview = {};
-            for (const [key, value] of Object.entries(result.preview)) {
-                if (!isNaN(Number(key))) {
-                    subtitles[Number(key)] = value;
-                }
-            }
 
             // Set processed file name
             setProcessedFile({
@@ -113,7 +114,6 @@ export const useSubtitleOperations = (
                 file_path: uploadedFile.file_path, // Same path as a source file
             });
 
-            return subtitles;
         } catch (err: any) {
             setError(err.message);
             return null;
