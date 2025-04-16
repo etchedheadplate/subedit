@@ -23,6 +23,15 @@
     align-items: center;
 }
 
+/* Grid layout for the other checkboxes */
+.checkboxes-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, auto);
+    column-gap: 30px;
+    text-align: left;
+}
+
 .control-item {
     margin-bottom: 30px;
 }
