@@ -238,13 +238,10 @@ class SubEdit:
             raise ValueError('Example file is required for alignment')
 
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.aligned_file = f'{source_name}-aligned{source_ext}'
-        if source_slice:
-            self.aligned_file = f'{source_name}-aligned-src-{source_slice[0]}-{source_slice[1]}{source_ext}'
-        if example_slice:
-            self.aligned_file = f'{source_name}-aligned-by-exm-{example_slice[0]}-{example_slice[1]}{source_ext}'
-        if source_slice and example_slice:
-            self.aligned_file = f'{source_name}-aligned-src-{source_slice[0]}-{source_slice[1]}-by-exm-{example_slice[0]}-{example_slice[1]}{source_ext}'
+        filename_modifier = ''
+        filename_modifier = filename_modifier + f'-src-{source_slice[0]}-{source_slice[1]}' if source_slice else filename_modifier
+        filename_modifier = filename_modifier + f'-by-exm-{example_slice[0]}-{example_slice[1]}' if example_slice else filename_modifier
+        self.aligned_file = f'{source_name}-aligned{filename_modifier}{source_ext}'
 
         self.subtitles_data[self.aligned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
