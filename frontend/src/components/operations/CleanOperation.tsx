@@ -4,6 +4,7 @@ import { SubtitleFile } from "../../types";
 
 interface CleanOperationProps {
     onClean: (options: {
+        all: boolean;
         bold: boolean;
         italic: boolean;
         underline: boolean;
@@ -11,50 +12,127 @@ interface CleanOperationProps {
         color: boolean;
         font: boolean;
     }) => Promise<any>;
+    sessionId: string | null;
     onDownload: () => void;
+    sourceFile: SubtitleFile | null;
     hasProcessedFile: boolean;
     processedFile: SubtitleFile | null;
-    isLoading: boolean;
-    subtitleCount: number;
-    sessionId: string | null;
-    sourceFile: SubtitleFile | null;
 }
 
 const CleanOperation: React.FC<CleanOperationProps> = ({
     onClean,
-    onDownload,
-    hasProcessedFile,
-    processedFile,
-    isLoading,
-    subtitleCount,
     sessionId,
+    onDownload,
     sourceFile,
+    processedFile,
 }) => {
-    // State for the cleaned file
-    const [cleanedFile, setCleanedFile] = useState(null);
-
-    // State for choosing options
+    // State for choosing options - with default "All" checked
     const [options, setOptions] = useState({
-        bold: true,
-        italic: true,
-        underline: true,
-        strikethrough: true,
-        color: true,
-        font: true,
+        all: true,
+        bold: false,
+        color: false,
+        strikethrough: false,
+        italic: false,
+        font: false,
+        underline: false,
     });
 
     // Handle options change
     const handleOptionChange = (option: keyof typeof options) => {
-        setOptions({
-            ...options,
-            [option]: !options[option],
-        });
+        if (option === 'all') {
+            // If "All" is being checked, uncheck all other options
+            if (!options.all) {
+                setOptions({
+                    all: true,
+                    bold: false,
+                    color: false,
+                    strikethrough: false,
+                    italic: false,
+                    font: false,
+                    underline: false,
+                });
+            }
+        } else {
+            // If any other option is checked or unchecked
+            const newOptions = {
+                ...options,
+                [option]: !options[option as keyof typeof options],
+                all: false,
+            };
+
+            // Count how many individual options are checked
+            const checkedCount = Object.entries(newOptions)
+                .filter(([key]) => key !== 'all')
+                .filter(([_, value]) => value)
+                .length;
+
+            // Get total number of individual options
+            const totalIndividualOptions = Object.keys(newOptions).filter(key => key !== 'all').length;
+
+            // If all individual options become checked, switch to "All" mode
+            if (checkedCount === totalIndividualOptions) {
+                setOptions({
+                    all: true,
+                    bold: false,
+                    color: false,
+                    strikethrough: false,
+                    italic: false,
+                    font: false,
+                    underline: false,
+                });
+                return;
+            }
+
+            // Check if all individual options are unchecked, then check "All"
+            if (checkedCount === 0) {
+                newOptions.all = true;
+            }
+
+            setOptions(newOptions);
+        }
     };
 
     // Handle clean operation
     const handleClean = async () => {
-        const result = await onClean(options);
-        setCleanedFile(result); // Store the result
+        await onClean(options);
+    };
+
+    // Get style for option label based on state
+    const getLabelStyle = (option: string) => {
+        // When All is checked, all other options are grayed out
+        if (options.all && option !== 'all') {
+            return { fontSize: "0.8em", color: "#6C757D" };
+        }
+
+        // When All is unchecked but current option is unchecked
+        if (!options.all && !options[option as keyof typeof options]) {
+            if (option === 'all') {
+                return { color: "#6C757D" };
+            }
+            return { fontSize: "0.8em", color: "#DEE2E6" };
+        }
+
+        // When All is unchecked and current option is checked, apply style based on option name
+        if (!options.all && options[option as keyof typeof options]) {
+            switch (option) {
+                case 'bold':
+                    return { fontSize: "0.8em", fontWeight: 'bold' };
+                case 'italic':
+                    return { fontSize: "0.8em", fontStyle: 'italic' };
+                case 'underline':
+                    return { fontSize: "0.8em", textDecoration: 'underline' };
+                case 'strikethrough':
+                    return { fontSize: "0.8em", textDecoration: 'line-through' };
+                case 'color':
+                    return { fontSize: "0.8em", color: '#00b4d8' };
+                case 'font':
+                    return { fontSize: "0.8em", fontFamily: 'serif' };
+                default:
+                    return { fontSize: "0.8em" };
+            }
+        }
+
+        return {};
     };
 
     // Preview of the source file
@@ -62,126 +140,107 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={sourceFile}
+            fileType="Source"
             isDownloadable={false}
         />
     );
 
-    // Preview of the shifted file
+    // Preview of the cleaned file
     const cleanedFilePreview = processedFile ? (
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
+            fileType="Cleaned"
             isDownloadable={true}
         />
     ) : null;
 
     return (
-        <div className="clean-operation-section" style={{ marginTop: "40px", marginBottom: "20px" }}>
+        <div className="clean-operation-section">
 
             {/* Description of Clean Operation */}
-            <div className="clean-description">
-                <p>
-                    Select markups to remove
-                </p>
+            <div className="operation-description">
+                <p>Select markups to remove</p>
             </div>
 
-            {/* Bottom gap below clean button and option checkboxes */}
-            <div className="clean-options-container"
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: "20px",
-                }}
-            >
-                {/* Option names mapping */}
-                <div className="clean-options-titles" style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
-                    {Object.entries(options).map(([key, value]) => (
-                        <label
-                            key={key}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                cursor: "pointer",
-                                minWidth: "120px",
-                            }}
-                        >
-                            {/* Checkboxes for option names */}
-                            <input className="options-checkboxes"
-                                type="checkbox"
-                                checked={value}
-                                onChange={() =>
-                                    handleOptionChange(
-                                        key as keyof typeof options,
-                                    )
-                                }
-                                style={{ marginRight: "8px" }}
-                            />
-                            {key.charAt(0).toUpperCase() + key.slice(1)}
-                        </label>
-                    ))}
+            {/* Clean controls section */}
+            <div className="operation-controls-container">
+
+                {/* Clean controls block */}
+                <div className="operation-controls-items">
+
+                    {/* All checkbox first */}
+                    <label className="control-item" style={getLabelStyle('all')}>
+                        <input className="options-checkboxes"
+                            type="checkbox"
+                            checked={options.all}
+                            onChange={() => handleOptionChange('all')}
+                            style={{ marginRight: "8px" }}
+                        />
+                        All
+                    </label>
+
+                    {/* Other checkboxes */}
+                    <div className="checkboxes-grid">
+                        {Object.entries(options)
+                            .filter(([key]) => key !== 'all')
+                            .map(([key, value]) => (
+                                <label
+                                    className="control-item"
+                                    key={key}
+                                    style={{
+                                        ...getLabelStyle(key),
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-start'
+                                    }}
+                                >
+                                    <input className="options-checkboxes"
+                                        type="checkbox"
+                                        checked={value}
+                                        onChange={() =>
+                                            handleOptionChange(
+                                                key as keyof typeof options,
+                                            )
+                                        }
+                                        style={{ marginRight: "8px" }}
+                                    />
+                                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                                </label>
+                            ))}
+                    </div>
                 </div>
-            </div>
-
-            <div className="clean-subtitles-button" style={{ display: "flex", gap: "10px" }}>
-                <button
-                    onClick={handleClean}
-                    disabled={
-                        isLoading ||
-                        Object.values(options).every((option) => !option)
-                    }
-                    style={{
-                        padding: "10px 15px",
-                        backgroundColor: "#0000ff",
-                        color: "#ffffff",
-                        border: "none",
-                        borderRadius: "2px",
-                        cursor:
-                            !isLoading &&
-                                Object.values(options).some((option) => option)
-                                ? "pointer"
-                                : "not-allowed",
-                        opacity:
-                            !isLoading &&
-                                Object.values(options).some((option) => option)
-                                ? 1
-                                : 0.7,
-                    }}
-                >
-                    {isLoading ? "Processing..." : "Clean"}
-                </button>
-
-                {/* Download button is active only if Clean Operation was performed on a file */}
-                {hasProcessedFile && (
-                    <button className="download-cleaned-file-button"
-                        onClick={onDownload}
-                        style={{
-                            padding: "10px 15px",
-                            backgroundColor: "#008000",
-                            color: "#ffffff",
-                            border: "none",
-                            borderRadius: "2px",
-                            cursor: "pointer",
-                        }}
-                    >
-                        Download
-                    </button>
-                )}
             </div>
 
             {/* File preview section */}
-            <div className="file-preview-section" style={{
-                display: "flex",
-                gap: "20px",
-                marginTop: "20px"  // Add some spacing
-            }}>
-                {/* Source file preview section */}
+            <div className="file-preview-section">
+
+                {/* Source file preview + Clean button */}
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
+
+                    {/* Clean Button */}
+                    <div className="operation-controls-buttons">
+                        <button
+                            className="operation-button"
+                            onClick={handleClean}
+                        >
+                            Clean
+                        </button>
+                    </div>
+
+                    {/* Source file preview */}
                     {sourceFilePreview}
                 </div>
 
-                {/* Shifted file preview section - Only show if available */}
+                {/* Shifted file preview + Download button */}
                 {processedFile && (
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
+                        {/* Download Button */}
+                        <div className="operation-controls-buttons">
+                            <button className="download-button" onClick={onDownload}>Download</button>
+                        </div>
+
+                        {/* Shifted file preview */}
                         {cleanedFilePreview}
                     </div>
                 )}
