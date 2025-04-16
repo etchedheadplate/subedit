@@ -163,6 +163,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
                 {/* Source file preview + Shift button */}
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
+
                     {/* Shift Button */}
                     <div className="operation-controls-buttons">
                         <button
