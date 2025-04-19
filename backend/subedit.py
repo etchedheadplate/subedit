@@ -438,9 +438,6 @@ class SubEdit:
 
         original_language = self.subtitles_data[file_path]['metadata']['language']
 
-        script_dir = Path(__file__).parent
-        print(script_dir)
-
         with open(Path(__file__).parent / '../shared/translate.json', 'r') as file:
             data: TranslateData = json.load(file)
             translate_from: str = data['codes'][original_language]
