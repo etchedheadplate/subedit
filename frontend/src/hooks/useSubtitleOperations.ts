@@ -129,7 +129,6 @@ export const useSubtitleOperations = (
         modelThrottle: number,
     ) => {
         if (!uploadedFile || !sessionId) return;
-        console.log('USE', 'lang', targetLanguage, 'model', modelName, 'throttle', modelThrottle)
 
         setIsLoading(true);
         setError(null);
