@@ -5,7 +5,7 @@ import time
 import json
 import chardet
 import langdetect # type: ignore
-from duckduckgo_search import DDGS
+from duckai import DuckAI
 from datetime import datetime, timedelta
 from typing import TypedDict, List, Dict
 
@@ -409,8 +409,8 @@ class SubEdit:
         file_path: str | None = None,
         model_name: str = 'GPT-4o',
         model_throttle: float = 0.5,
-        request_timeout: int = 5,
-        response_timeout: int = 60
+        request_timeout: int = 15,
+        response_timeout: int = 45
         ) -> None:
         """Translates subtitles using LLM provided by DuckDuckGo.
 
@@ -421,8 +421,8 @@ class SubEdit:
             model_throttle (float): Coefficient by which the model's token window is reduced.
                 Slows translation time, increases accuracy. Must be between 0 and 1.
                 Defaults to 0.5.
-            request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 5.
-            response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 60.
+            request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 15.
+            response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 45.
         """
         if file_path is None:
             file_path = self.source_file
@@ -490,7 +490,7 @@ class SubEdit:
             prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles[index:limit], start=index + 1)])
             prompt_limit = f' Your response MUST contain exactly {len(clean_subtitles[index:limit])} lines.\n\n'
             prompt = prompt_task + prompt_limit + prompt_text
-            translated_chunk = DDGS().chat(prompt, translator_model, timeout=response_timeout)
+            translated_chunk = DuckAI().chat(prompt, translator_model, timeout=response_timeout)
             translated_text += translated_chunk
             index = limit
             print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
