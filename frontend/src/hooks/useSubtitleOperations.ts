@@ -124,12 +124,12 @@ export const useSubtitleOperations = (
 
     // Translate operation
     const translateSubtitles = async (
-        sourceFile: SubtitleFile,
         targetLanguage: string,
-        modelName?: string,
-        modelThrottle?: number,
+        modelName: string,
+        modelThrottle: number,
     ) => {
         if (!uploadedFile || !sessionId) return;
+        console.log('USE', 'lang', targetLanguage, 'model', modelName, 'throttle', modelThrottle)
 
         setIsLoading(true);
         setError(null);
@@ -137,7 +137,7 @@ export const useSubtitleOperations = (
         try {
             const result = await apiService.translateSubtitles(
                 sessionId,
-                sourceFile.filename,
+                uploadedFile.filename,
                 targetLanguage,
                 modelName,
                 modelThrottle,
@@ -155,7 +155,7 @@ export const useSubtitleOperations = (
             setProcessedFile({
                 filename: result.processedFilename,
                 session_id: sessionId || "",
-                file_path: sourceFile.file_path,
+                file_path: uploadedFile.file_path,
             });
 
             return subtitles;

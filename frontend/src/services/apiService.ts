@@ -235,7 +235,6 @@ export const apiService = {
                 model_throttle: modelThrottle,
             }),
         });
-        console.log(response)
 
         const data = await response.json();
 

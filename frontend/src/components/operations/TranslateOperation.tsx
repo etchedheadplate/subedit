@@ -4,7 +4,7 @@ import { SubtitleFile } from "../../types";
 import translationData from "../../../../shared/translate.json";
 
 interface TranslateOperationProps {
-    onTranslate: (targetLanguage: string, modelName?: string, modelThrottle?: number) => Promise<any>;
+    onTranslate: (targetLanguage: string, modelName: string, modelThrottle: number) => Promise<any>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
@@ -29,7 +29,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const [model, setModel] = useState<string>(defaultModel);
 
     // State for setting up throttle
-    const [throttle, setThrottle] = useState<number>();
+    const [throttle, setThrottle] = useState<number>(0.4);
 
     // Handler for language selection change
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -45,7 +45,6 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const handleTranslate = async () => {
         // Get the model name based on selected model key
         await onTranslate(language, model, throttle);
-        console.log(language, model, throttle)
     };
 
     // Preview of the source file
