@@ -2,6 +2,7 @@ import { useState } from "react";
 import ShiftOperation from "./components/operations/ShiftOperation";
 import AlignOperation from "./components/operations/AlignOperation";
 import CleanOperation from "./components/operations/CleanOperation";
+import TranslateOperation from "./components/operations/TranslateOperation";
 import DragAndDropArea from "./components/DragAndDropArea";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
@@ -33,6 +34,7 @@ function App() {
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
+        translateSubtitles,
         getDownloadLink,
         resetResults,
     } = useSubtitleOperations(sessionId, uploadedFile);
@@ -131,6 +133,17 @@ function App() {
             {activeOption === "clean" && uploadedFile && (
                 <CleanOperation
                     onClean={cleanSubtitles}
+                    sessionId={sessionId}
+                    onDownload={handleDownload}
+                    sourceFile={uploadedFile}
+                    hasProcessedFile={!!processedFile}
+                    processedFile={processedFile}
+                />
+            )}
+
+            {activeOption === "translate" && uploadedFile && (
+                <TranslateOperation
+                    onTranslate={translateSubtitles}
                     sessionId={sessionId}
                     onDownload={handleDownload}
                     sourceFile={uploadedFile}

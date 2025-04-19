@@ -1,4 +1,4 @@
-import { SubtitleFile, SubtitlePreview, SubtitleMetadata } from "../types";
+import { SubtitleFile, SubtitlePreview } from "../types";
 
 const API_BASE_URL = "http://localhost:8000";
 
@@ -123,7 +123,6 @@ export const apiService = {
         };
     },
 
-    // Other operations with metadata
     alignSubtitles: async (
         sessionId: string,
         sourceFilename: string,
@@ -236,6 +235,7 @@ export const apiService = {
                 model_throttle: modelThrottle,
             }),
         });
+        console.log(response)
 
         const data = await response.json();
 
@@ -249,7 +249,7 @@ export const apiService = {
             preview: data.preview,
             encoding: data.encoding,
             confidence: data.confidence,
-            language: targetLanguage,
+            language: data.language,
         };
     },
 };

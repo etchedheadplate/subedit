@@ -122,6 +122,51 @@ export const useSubtitleOperations = (
         }
     };
 
+    // Translate operation
+    const translateSubtitles = async (
+        sourceFile: SubtitleFile,
+        targetLanguage: string,
+        modelName?: string,
+        modelThrottle?: number,
+    ) => {
+        if (!uploadedFile || !sessionId) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            const result = await apiService.translateSubtitles(
+                sessionId,
+                sourceFile.filename,
+                targetLanguage,
+                modelName,
+                modelThrottle,
+            );
+
+            // Extract actual subtitle entries (excluding metadata)
+            const subtitles: SubtitlePreview = {};
+            for (const [key, value] of Object.entries(result.preview)) {
+                if (!isNaN(Number(key))) {
+                    subtitles[Number(key)] = value;
+                }
+            }
+
+            // Set processed file name
+            setProcessedFile({
+                filename: result.processedFilename,
+                session_id: sessionId || "",
+                file_path: sourceFile.file_path,
+            });
+
+            return subtitles;
+        } catch (err: any) {
+            setError(err.message);
+            return null;
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // For downloading processed file
     const getDownloadLink = () => {
         if (!processedFile || !sessionId) return "";
@@ -140,6 +185,7 @@ export const useSubtitleOperations = (
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
+        translateSubtitles,
         getDownloadLink,
         resetResults,
     };
