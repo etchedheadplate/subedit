@@ -5,7 +5,8 @@ import time
 import json
 import chardet
 import langdetect # type: ignore
-from duckai import DuckAI
+from pathlib import Path
+from duckai import DuckAI # type: ignore
 from datetime import datetime, timedelta
 from typing import TypedDict, List, Dict
 
@@ -437,7 +438,10 @@ class SubEdit:
 
         original_language = self.subtitles_data[file_path]['metadata']['language']
 
-        with open('translate.json', 'r') as file:
+        script_dir = Path(__file__).parent
+        print(script_dir)
+
+        with open(Path(__file__).parent / '../shared/translate.json', 'r') as file:
             data: TranslateData = json.load(file)
             translate_from: str = data['codes'][original_language]
             translate_to: str = data['codes'][target_language]
