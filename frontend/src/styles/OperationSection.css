@@ -36,6 +36,14 @@
     margin-bottom: 30px;
 }
 
+.select-drop-down-items {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+}
+
 .select-range-items {
     display: flex;
     justify-content: space-evenly;
@@ -55,6 +63,39 @@
     width: 60px;
 }
 
+.select-slider-items {
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.slider {
+    flex-grow: 1;
+    height: 5px;
+    width: auto;
+    background: #d3d3d3;
+}
+
+.slider-value {
+    min-width: 40px;
+    text-align: center;
+    font-size: 12px;
+}
+
+.slider-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.6rem;
+    color: #ADB5BD;
+    position: relative;
+}
+
+.slider-label-danger {
+    color: #F25C54;
+    font-weight: 600;
+}
+
 .operation-controls-buttons {
     display: flex;
     gap: 60px;
@@ -72,7 +113,6 @@
     cursor: pointer;
 }
 
-/* Optional: If you want to handle the disabled state */
 .operation-button.disabled {
     cursor: not-allowed;
     opacity: 0.7;

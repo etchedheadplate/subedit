@@ -31,6 +31,13 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     // State for setting up throttle
     const [throttle, setThrottle] = useState<number>(0.4);
 
+    const percentage = (throttle * 100).toFixed(0);
+    const isLowAccuracy = throttle > 0.75;
+    const isLowSpeed = throttle < 0.25;
+
+    const accuracyLabelClass = `slider-label${isLowAccuracy ? ' slider-label-danger' : ''}`;
+    const speedLabelClass = `slider-label${isLowSpeed ? ' slider-label-danger' : ''}`;
+
     // Handler for language selection change
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setLanguage(e.target.value);
@@ -45,6 +52,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const handleTranslate = async () => {
         // Get the model name based on selected model key
         await onTranslate(language, model, throttle);
+        console.log(throttle)
     };
 
     // Preview of the source file
@@ -83,41 +91,69 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
                     {/* Language selector */}
                     <div className="control-item">
-                        <label className="control-title" htmlFor="languages-list">translate to</label>
+                        <p className="control-title">translate to</p>
 
-                        <select
-                            id="languages-list"
-                            name="languages"
-                            value={language}
-                            onChange={handleLanguageChange}
-                        >
-                            <option value="">Select a language</option>
-                            {Object.entries(translationData.codes)
-                                .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
-                                .map(([code, name]) => (
-                                    <option key={code} value={code}>
-                                        {name}
-                                    </option>
-                                ))}
-                        </select>
+                        <div className="select-drop-down-items">
+                            <select
+                                id="languages-list"
+                                name="languages"
+                                value={language}
+                                onChange={handleLanguageChange}
+                            >
+                                <option value="">Select a language</option>
+                                {Object.entries(translationData.codes)
+                                    .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
+                                    .map(([code, name]) => (
+                                        <option key={code} value={code}>
+                                            {name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
                     </div>
 
                     {/* Model selector */}
                     <div className="control-item">
-                        <label className="control-title" htmlFor="models-list">with model</label>
+                        <p className="control-title">with model</p>
 
-                        <select
-                            id="models-list"
-                            name="models"
-                            value={model}
-                            onChange={handleModelChange}
-                        >
-                            {Object.keys(translationData.models).map((modelKey) => (
-                                <option key={modelKey} value={modelKey}>
-                                    {modelKey}
-                                </option>
-                            ))}
-                        </select>
+                        <div className="select-drop-down-items">
+                            <select
+                                id="models-list"
+                                name="models"
+                                value={model}
+                                onChange={handleModelChange}
+                            >
+                                {Object.keys(translationData.models).map((modelKey) => (
+                                    <option key={modelKey} value={modelKey}>
+                                        {modelKey}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Throttle selector */}
+                    <div className="control-item">
+                        <p className="control-title">adjusted by</p>
+
+                        <div className="select-slider-items">
+                            {/* Slider */}
+                            <input
+                                type="range"
+                                min="0.01"
+                                max="0.99"
+                                step="0.01"
+                                defaultValue="0.50"
+                                className="slider"
+                                onChange={(e) => setThrottle(parseFloat(e.target.value))}
+                            />
+
+                            {/* Bottom row: left label, value, right label */}
+                            <div className="slider-info-row">
+                                <span className={accuracyLabelClass}>accuracy {100 - Number(percentage)}%</span>
+                                <span className={speedLabelClass}>{percentage}% speed</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
