@@ -167,7 +167,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     {/* Shift Button */}
                     <div className="operation-controls-buttons">
                         <button
-                            className="operation-button"
+                            className={`operation-button${delay == 0 ? " disabled" : ""}`}
                             onClick={handleShift}
                             disabled={delay == 0}
                         >
