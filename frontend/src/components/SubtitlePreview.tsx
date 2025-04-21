@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { apiService } from "../services/apiService";
 import { SubtitlePreview, SubtitleFile, SubtitleMetadata } from "../types";
 
-/* I think all posible arguments that affects preview should be place here */
 interface SubtitlePreviewProps {
     sessionId: string | null;
     subtitleFile: SubtitleFile | null;
@@ -31,6 +30,65 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
 
     // Convert subtitles set to array and sort
     const sortedSubtitles = Array.from(allSubtitles).sort((a, b) => a - b);
+
+    // Helper function to sanitize subtitle text and only allow SRT-compatible tags
+    const sanitizeSubtitleText = (text: string): string => {
+        if (!text) return '';
+
+        // Create a temporary div element to parse the HTML
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = text;
+
+        // Recursive function to sanitize nodes
+        const sanitizeNode = (node: Node): void => {
+            if (node.nodeType === Node.ELEMENT_NODE) {
+                const element = node as HTMLElement;
+                const tagName = element.tagName.toLowerCase();
+
+                // List of allowed tags according to SubRip spec
+                const allowedTags = ['b', 'strong', 'i', 'em', 'u', 's', 'strike', 'font'];
+
+                if (!allowedTags.includes(tagName)) {
+                    // Replace disallowed tags with their text content
+                    const textNode = document.createTextNode(element.textContent || '');
+                    element.parentNode?.replaceChild(textNode, element);
+                } else if (tagName === 'font') {
+                    // For font tags, only allow color attribute
+                    const colorAttr = element.getAttribute('color');
+
+                    // Remove all attributes
+                    while (element.attributes.length > 0) {
+                        element.removeAttribute(element.attributes[0].name);
+                    }
+
+                    // Add back only the color attribute if it existed
+                    if (colorAttr) {
+                        element.setAttribute('color', colorAttr);
+                    }
+                } else {
+                    // For allowed tags, remove all attributes
+                    while (element.attributes.length > 0) {
+                        element.removeAttribute(element.attributes[0].name);
+                    }
+                }
+
+                // Process child nodes
+                Array.from(element.childNodes).forEach(sanitizeNode);
+            }
+        };
+
+        // Process all nodes
+        Array.from(tempDiv.childNodes).forEach(sanitizeNode);
+
+        return tempDiv.innerHTML;
+    };
+
+    // Helper function to safely render sanitized HTML markup in subtitles
+    const renderSubtitleWithMarkup = (text: string) => {
+        // Sanitize the text before rendering
+        const sanitizedText = sanitizeSubtitleText(text);
+        return { __html: sanitizedText };
+    };
 
     // Fetch preview of source file
     useEffect(() => {
@@ -82,13 +140,13 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
             }
         };
         fetchFilePreview();
-    }, [sessionId, subtitleFile, onSubtitleCountChange]); // Empty dependency array ensures fetchFilePreview runs once
+    }, [sessionId, subtitleFile, onSubtitleCountChange]);
 
     return (
         <>
             {/* Metadata content rendered only if file uploaded and metadata fetched */}
             {!error ? (
-                < div className="metadata-and-subtitle-preview-section">
+                <div className="metadata-and-subtitle-preview-section">
                     {/* Container for file metadata */}
                     <div className="metadata-preview-container">
                         {/* Metadata content rendered only if file uploaded and metadata fetched */}
@@ -124,7 +182,9 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                                                     {subtitlePreview[key].start}{" --> "}
                                                     {subtitlePreview[key].end}
                                                 </div>
-                                                <div>{subtitlePreview[key].text}</div>
+                                                <div
+                                                    dangerouslySetInnerHTML={renderSubtitleWithMarkup(subtitlePreview[key].text)}
+                                                />
                                             </>
                                         ) : (
                                             <div>-</div>
@@ -134,7 +194,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                             </div>
                         )}
                     </div>
-                </div >
+                </div>
             ) : (
                 <div className="error-content">
                     <p>
