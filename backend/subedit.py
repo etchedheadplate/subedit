@@ -407,6 +407,7 @@ class SubEdit:
     def translate_text(
         self,
         target_language: str,
+        original_language: str | None = None,
         file_path: str | None = None,
         model_name: str = 'GPT-4o',
         model_throttle: float = 0.5,
@@ -436,7 +437,8 @@ class SubEdit:
             'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy()
         }
 
-        original_language = self.subtitles_data[file_path]['metadata']['language']
+        if original_language is None:
+            original_language = self.subtitles_data[file_path]['metadata']['language']
 
         with open(Path(__file__).parent / '../shared/translate.json', 'r') as file:
             data: TranslateData = json.load(file)
