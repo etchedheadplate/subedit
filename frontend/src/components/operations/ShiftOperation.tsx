@@ -73,7 +73,10 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
             {/* Description of Shift Operation */}
             <div className="operation-description">
-                <p>Enter the number of milliseconds (1 second = 1000 milliseconds) to shift timing. Number can be positive or negative. Optionally you can specify the range of subtitles to be shifted.</p>
+                <p>You can shift subtitle timing by a fixed number of milliseconds (1 second = 1000 milliseconds).
+                    The value can be positive or negative. By default, all subtitles in the file are shifted.
+                    If you only want to shift a specific section, you can specify the range of subtitle lines to adjust.</p>
+                <p>For gradual time shifting, use the Align option instead.</p>
             </div>
 
             {/* Shift controls section */}
