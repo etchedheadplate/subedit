@@ -99,7 +99,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                 onChange={(e) => setDelay(Math.floor(Number(e.target.value)))}
                                 style={{
                                     width: 100,
-                                    color: delay === 0 ? 'red' : 'inherit', // <-- dynamic text color
+                                    color: delay === 0 ? '#F25C54' : 'inherit', // <-- dynamic text color
                                 }}
                             />
                             <label className="range-text" htmlFor="delay-input">ms</label>
