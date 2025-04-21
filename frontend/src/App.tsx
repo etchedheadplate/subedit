@@ -72,7 +72,7 @@ function App() {
             <div className="main-header">
 
                 {/* Main title */}
-                <h1 className="main-title">[ s u b e d i t ]</h1>
+                <h1 className="main-title">[subedit]</h1>
 
                 {/* Drag-and-drop Area */}
                 <DragAndDropArea
