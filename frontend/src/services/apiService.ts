@@ -214,6 +214,7 @@ export const apiService = {
         sessionId: string,
         sourceFilename: string,
         targetLanguage: string,
+        originalLanguage: string,
         modelName: string = "GPT-4o",
         modelThrottle: number = 0.5,
     ): Promise<{
@@ -231,6 +232,7 @@ export const apiService = {
                 session_id: sessionId,
                 source_filename: sourceFilename,
                 target_language: targetLanguage,
+                original_language: originalLanguage,
                 model_name: modelName,
                 model_throttle: modelThrottle,
             }),

@@ -125,6 +125,7 @@ export const useSubtitleOperations = (
     // Translate operation
     const translateSubtitles = async (
         targetLanguage: string,
+        originalLanguage: string,
         modelName: string,
         modelThrottle: number,
     ) => {
@@ -138,6 +139,7 @@ export const useSubtitleOperations = (
                 sessionId,
                 uploadedFile.filename,
                 targetLanguage,
+                originalLanguage,
                 modelName,
                 modelThrottle,
             );
