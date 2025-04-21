@@ -20,7 +20,7 @@
     display: flex;
     gap: 60px;
     justify-content: center;
-    align-items: center;
+    align-items: stretch;
 }
 
 /* Grid layout for the other checkboxes */
@@ -63,12 +63,6 @@
     width: 60px;
 }
 
-.select-slider-items {
-    align-items: center;
-    gap: 10px;
-    width: 100%;
-}
-
 .slider {
     flex-grow: 1;
     height: 5px;
@@ -76,17 +70,11 @@
     background: #d3d3d3;
 }
 
-.slider-value {
-    min-width: 40px;
-    text-align: center;
-    font-size: 12px;
-}
-
 .slider-info-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 0.6rem;
+    font-size: 0.7em;
     color: #ADB5BD;
     position: relative;
 }
@@ -125,4 +113,13 @@
     border: none;
     border-radius: 2px;
     cursor: pointer;
+}
+
+select,
+input {
+    background-color: transparent;
+    border: 1px solid #ADB5BD;
+    font-family: "Source Code Pro", monospace;
+    text-align: center;
+    padding: 0.3em;
 }
