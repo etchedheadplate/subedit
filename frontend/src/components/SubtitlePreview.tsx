@@ -8,6 +8,7 @@ interface SubtitlePreviewProps {
     isDownloadable: boolean | null;
     fileType?: string;
     onSubtitleCountChange?: (count: number) => void;
+    onMetadataLoaded?: (metadata: SubtitleMetadata) => void;
 }
 
 const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
@@ -15,6 +16,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     subtitleFile,
     fileType = "Source",
     onSubtitleCountChange,
+    onMetadataLoaded,
 }) => {
     const [subtitleMeta, setSubtitleMeta] = useState<SubtitleMetadata | null>(null);
     const [subtitlePreview, setSubtitlePreview] = useState<SubtitlePreview | null>(null);
@@ -114,6 +116,11 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                 }
                 setSubtitleMeta(meta);
 
+                // Call the callback with metadata if provided
+                if (onMetadataLoaded) {
+                    onMetadataLoaded(meta);
+                }
+
                 // Extract subtitle entries
                 const subtitles: SubtitlePreview = {};
                 for (const [key, value] of Object.entries(result.preview)) {
@@ -140,7 +147,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
             }
         };
         fetchFilePreview();
-    }, [sessionId, subtitleFile, onSubtitleCountChange]);
+    }, [sessionId, subtitleFile, onSubtitleCountChange, onMetadataLoaded]);
 
     return (
         <>
