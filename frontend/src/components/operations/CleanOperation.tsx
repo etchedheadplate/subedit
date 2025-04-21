@@ -160,7 +160,9 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
 
             {/* Description of Clean Operation */}
             <div className="operation-description">
-                <p>Select markups to remove</p>
+                <p>You can clean a subtitle file by removing markup tags. By default, all markup is removed.
+                    If you only want to remove specific tags, you can select the ones to target on the right.</p>
+                <p>Please note that the <i>All</i> checkbox will remove all markup, not just the tags listed on the right.</p>
             </div>
 
             {/* Clean controls section */}
