@@ -287,6 +287,7 @@ class TranslateRequest(BaseModel):
     session_id: str
     source_filename: str
     target_language: str
+    original_language: str
     model_name: str = 'GPT-4o'
     model_throttle: float = 0.5
     request_timeout: int = 5
@@ -305,6 +306,7 @@ async def translate_subtitles(request: TranslateRequest):
         # Apply translation
         subedit.translate_text(
             target_language=request.target_language,
+            original_language=request.original_language,
             model_name=request.model_name,
             model_throttle=request.model_throttle,
             request_timeout=request.request_timeout,
