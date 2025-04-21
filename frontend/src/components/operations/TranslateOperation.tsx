@@ -29,14 +29,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const [model, setModel] = useState<string>(defaultModel);
 
     // State for setting up throttle
-    const [throttle, setThrottle] = useState<number>(0.4);
-
-    const percentage = (throttle * 100).toFixed(0);
-    const isLowAccuracy = throttle > 0.75;
-    const isLowSpeed = throttle < 0.25;
-
-    const accuracyLabelClass = `slider-label${isLowAccuracy ? ' slider-label-danger' : ''}`;
-    const speedLabelClass = `slider-label${isLowSpeed ? ' slider-label-danger' : ''}`;
+    const [throttle, setThrottle] = useState<number>(0.5);
 
     // Handler for language selection change
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -55,6 +48,13 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
         console.log(throttle)
     };
 
+    // Change label titles based on throttle value
+    const percentage = (throttle * 100).toFixed(0);
+    const isLowAccuracy = throttle > 0.75;
+    const isLowSpeed = throttle < 0.25;
+    const accuracyLabelClass = `slider-label${isLowAccuracy ? ' slider-label-danger' : ''}`;
+    const speedLabelClass = `slider-label${isLowSpeed ? ' slider-label-danger' : ''}`;
+
     // Preview of the source file
     const sourceFilePreview = (
         <UniversalSubtitlePreview
@@ -65,7 +65,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
         />
     );
 
-    // Preview of the shifted file
+    // Preview of the translated file
     const translatedFilePreview = processedFile ? (
         <UniversalSubtitlePreview
             sessionId={sessionId}
@@ -78,9 +78,20 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     return (
         <div className="translate-operation-section">
 
-            {/* Description of Shift Operation */}
+            {/* Description of Translate Operation */}
             <div className="operation-description">
-                <p>Select language to translate.</p>
+                <p>You can translate subtitles using AI models provided by <a href="https://duckduckgo.com/duckduckgo-help-pages/duckai">Duck.ai</a>.</p>
+
+                <p>Since most models have limited context windows, your subtitles will usually be divided into multiple parts and translated one part
+                    at a time. The size of the context window varies by model: GPT-4o, o3, and Llama support up to 2048 tokens, while Claude is
+                    estimated to handle around 1024, and Mixtral only 256.</p>
+
+                <p>To comply with usage limits and respect DuckDuckGo’s free service, there is a 15-second delay between each request to translate a
+                    part of the subtitles. You can try to speed up the process by adjusting the <i>adjusted by</i> slider. This slider controls how many
+                    subtitle lines are packed into each request sent to the model.</p>
+
+                <p><b>For the safest and most reliable option, use GPT-4o. Try to avoid Claude and Mixtral, as they are more prone to errors due to their limited context.
+                    If you encounter errors during the translation process, try adjusting the slider toward the <i>accuracy</i> side for smaller, more manageable chunks.</b></p>
             </div>
 
             {/* Translate controls section */}
@@ -165,11 +176,12 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                 {/* Source file preview + Translate button */}
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
 
-                    {/* Shift Button */}
+                    {/* Translate Button */}
                     <div className="operation-controls-buttons">
                         <button
-                            className="operation-button"
+                            className={`operation-button${language === "" ? " disabled" : ""}`}
                             onClick={handleTranslate}
+                            disabled={language == ""}
                         >
                             Translate
                         </button>
