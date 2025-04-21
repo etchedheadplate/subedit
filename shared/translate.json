@@ -57,23 +57,23 @@
         "zh-tw": "Chinese Traditional"
     },
     "models": {
-        "GPT-4o": {
+        "GPT-4o mini": {
             "name": "gpt-4o-mini",
             "tokens": 2048
         },
-        "o3": {
+        "o3-mini": {
             "name": "o3-mini",
             "tokens": 2048
         },
-        "Llama": {
+        "Llama 3.3 70B": {
             "name": "llama-3.3-70b",
             "tokens": 2048
         },
-        "Claude": {
+        "Claude 3 Haiku": {
             "name": "claude-3-haiku",
             "tokens": 2048
         },
-        "Mixtral": {
+        "Mistral Small 3 24B": {
             "name": "mixtral-8x7b",
             "tokens": 256
         }

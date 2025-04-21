@@ -107,17 +107,17 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
             {/* Description of Translate Operation */}
             <div className="operation-description">
-                <p>You can translate subtitles using AI models provided by <a href="https://duckduckgo.com/duckduckgo-help-pages/duckai">Duck.ai</a>.</p>
+                <p>You can translate subtitles using AI models provided by <a href="https://duckduckgo.com/duckduckgo-help-pages/duckai" target="_blank" rel="noopener noreferrer">Duck.ai</a>.</p>
 
                 <p>Since most models have limited context windows, your subtitles will usually be divided into multiple parts and translated one part
-                    at a time. The size of the context window varies by model: GPT-4o, o3, and Llama support up to 2048 tokens, while Claude is
-                    estimated to handle around 1024, and Mixtral only 256.</p>
+                    at a time. The size of the context window varies by model: GPT-4o mini, o3-mini, and Llama 3.3 70B support up to 2048 tokens, while Claude 3 Haiku is
+                    estimated to handle around 1024, and Mistral Small 3 24B only 256.</p>
 
                 <p>To comply with usage limits and respect DuckDuckGo's free service, there is a 15-second delay between each request to translate a
                     part of the subtitles. You can try to speed up the process by adjusting the <i>adjusted by</i> slider. This slider controls how many
                     subtitle lines are packed into each request sent to the model.</p>
 
-                <p><b>For the safest and most reliable option, use GPT-4o. Try to avoid Claude and Mixtral, as they are more prone to errors due to their limited context.
+                <p><b>For the safest and most reliable option, use GPT-4o. Try to avoid Claude and Mistral, as they are more prone to errors due to their limited context.
                     If you encounter errors during the translation process, try adjusting the slider toward the <i>accuracy</i> side for smaller, more manageable chunks.</b></p>
             </div>
 

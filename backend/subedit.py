@@ -409,7 +409,7 @@ class SubEdit:
         target_language: str,
         original_language: str | None = None,
         file_path: str | None = None,
-        model_name: str = 'GPT-4o',
+        model_name: str = 'GPT-4o mini',
         model_throttle: float = 0.5,
         request_timeout: int = 15,
         response_timeout: int = 45
@@ -418,6 +418,7 @@ class SubEdit:
 
         Args:
             target_language (str): Target language.
+            original_language (str): Original file language.
             file_path (str): String with relative path to file.
             model_name (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
             model_throttle (float): Coefficient by which the model's token window is reduced.
