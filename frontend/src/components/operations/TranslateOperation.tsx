@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
-import { SubtitleFile } from "../../types";
+import { SubtitleFile, SubtitleMetadata } from "../../types";
 import translationData from "../../../../shared/translate.json";
 
 interface TranslateOperationProps {
-    onTranslate: (targetLanguage: string, modelName: string, modelThrottle: number) => Promise<any>;
+    onTranslate: (targetLanguage: string, originalLanguage: string, modelName: string, modelThrottle: number) => Promise<any>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
@@ -19,8 +19,14 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     sourceFile,
     processedFile,
 }) => {
-    // State for setting up language
-    const [language, setLanguage] = useState<string>("");
+    // State for setting up target language
+    const [targetLanguage, setTargetLanguage] = useState<string>("");
+
+    // State for setting up original language
+    const [originalLanguage, setOriginalLanguage] = useState<SubtitleMetadata["language"] | null>(null);
+
+    // State to store detected language metadata
+    const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
 
     // Get first model key for default selection
     const defaultModel = Object.keys(translationData.models)[0];
@@ -31,9 +37,30 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     // State for setting up throttle
     const [throttle, setThrottle] = useState<number>(0.5);
 
-    // Handler for language selection change
-    const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        setLanguage(e.target.value);
+    // Effect to set the original language from the source file when metadata is available
+    useEffect(() => {
+        if (detectedLanguage &&
+            detectedLanguage !== originalLanguage &&
+            Object.keys(translationData.codes).includes(detectedLanguage)) {
+            setOriginalLanguage(detectedLanguage);
+        }
+    }, [detectedLanguage, originalLanguage]);
+
+    // Handler to receive language info from SubtitlePreview
+    const handleSourceLanguageDetected = (metadata: SubtitleMetadata) => {
+        if (metadata && metadata.language && originalLanguage === null) {
+            setOriginalLanguage(metadata.language);
+        }
+    };
+
+    // Handler for target language selection change
+    const handleOriginalLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setOriginalLanguage(e.target.value);
+    };
+
+    // Handler for original language selection change
+    const handleTargetLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        setTargetLanguage(e.target.value);
     };
 
     // Handler for model selection change
@@ -44,8 +71,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     // Handler to store translation results
     const handleTranslate = async () => {
         // Get the model name based on selected model key
-        await onTranslate(language, model, throttle);
-        console.log(throttle)
+        await onTranslate(targetLanguage, originalLanguage, model, throttle);
     };
 
     // Change label titles based on throttle value
@@ -62,6 +88,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
             subtitleFile={sourceFile}
             isDownloadable={false}
             fileType="Source"
+            onMetadataLoaded={handleSourceLanguageDetected}
         />
     );
 
@@ -86,7 +113,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     at a time. The size of the context window varies by model: GPT-4o, o3, and Llama support up to 2048 tokens, while Claude is
                     estimated to handle around 1024, and Mixtral only 256.</p>
 
-                <p>To comply with usage limits and respect DuckDuckGo’s free service, there is a 15-second delay between each request to translate a
+                <p>To comply with usage limits and respect DuckDuckGo's free service, there is a 15-second delay between each request to translate a
                     part of the subtitles. You can try to speed up the process by adjusting the <i>adjusted by</i> slider. This slider controls how many
                     subtitle lines are packed into each request sent to the model.</p>
 
@@ -100,7 +127,30 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                 {/* Translate controls block */}
                 <div className="operation-controls-items">
 
-                    {/* Language selector */}
+                    {/* Original language selector */}
+                    <div className="control-item">
+                        <p className="control-title">translate from</p>
+
+                        <div className="select-drop-down-items">
+                            <select
+                                id="languages-list"
+                                name="languages"
+                                value={originalLanguage || ""}
+                                onChange={handleOriginalLanguageChange}
+                            >
+                                <option value="">Select a language</option>
+                                {Object.entries(translationData.codes)
+                                    .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
+                                    .map(([code, name]) => (
+                                        <option key={code} value={code}>
+                                            {name}
+                                        </option>
+                                    ))}
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Target language selector */}
                     <div className="control-item">
                         <p className="control-title">translate to</p>
 
@@ -108,8 +158,8 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                             <select
                                 id="languages-list"
                                 name="languages"
-                                value={language}
-                                onChange={handleLanguageChange}
+                                value={targetLanguage}
+                                onChange={handleTargetLanguageChange}
                             >
                                 <option value="">Select a language</option>
                                 {Object.entries(translationData.codes)
@@ -179,9 +229,9 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     {/* Translate Button */}
                     <div className="operation-controls-buttons">
                         <button
-                            className={`operation-button${language === "" ? " disabled" : ""}`}
+                            className={`operation-button${(targetLanguage === "" || originalLanguage === "") ? " disabled" : ""}`}
                             onClick={handleTranslate}
-                            disabled={language == ""}
+                            disabled={targetLanguage == ""}
                         >
                             Translate
                         </button>
