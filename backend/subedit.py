@@ -6,7 +6,7 @@ import props
 from pathlib import Path
 from duckai import DuckAI # type: ignore
 from datetime import datetime, timedelta
-from typing import List, Dict
+from typing import List, Dict, Union, Optional
 from structures import SubtitleMetadata, SubtitleEntry, SubtitlesDataDict, TranslateData
 
 class SubEdit:
@@ -19,7 +19,7 @@ class SubEdit:
         self._internal_call: bool = False
         self.subtitles_data: SubtitlesDataDict = {}
         self.source_file: str = file_list[0]
-        self.example_file: str | None = file_list[1] if len(file_list) == 2 else None
+        self.example_file: Optional[str] = file_list[1] if len(file_list) == 2 else None
         self.processed_file:str = ''
 
         # Fill self.subtitles_data
@@ -103,7 +103,7 @@ class SubEdit:
                     f'{subtitles_data[index]["text"]}\n\n' # Add empty line at the end
                 )
 
-    def pass_info(self, data: SubtitlesDataDict | SubtitleMetadata | SubtitleEntry | None = None, show: bool = False, indent: int = 0) -> None:
+    def pass_info(self, data: Optional[Union[SubtitlesDataDict, SubtitleMetadata, SubtitleEntry]] = None, show: bool = False, indent: int = 0) -> None:
         """Prints subtitles data to terminal.
 
         Args:
@@ -123,7 +123,7 @@ class SubEdit:
                 else:
                     print('  ' * indent + f'{key}: {value}')
 
-    def shift_timing(self, delay: int, items: list[int] | None = None) -> None:
+    def shift_timing(self, delay: int, items: Optional[List[int]] = None) -> None:
         """Shifts subtitles by user-defined milliseconds.
 
         Args:
@@ -178,7 +178,7 @@ class SubEdit:
         self._create_file(self.shifted_file)
         self.processed_file = os.path.basename(self.shifted_file)
 
-    def align_timing(self, source_slice: list[int] | None = None, example_slice: list[int] | None = None) -> None:
+    def align_timing(self, source_slice: Optional[List[int]] = None, example_slice: Optional[List[int]] = None) -> None:
         """Aligns source subtitles timing to match example subtitles timing for the specified slices.
 
         Args:
@@ -289,7 +289,7 @@ class SubEdit:
         strikethrough: bool = False,
         color: bool = False,
         font: bool = False
-        ) -> list[str] | None:
+        ) -> None:
         """Removes user-defined markup tags from subtitles.
 
         Args:
@@ -300,9 +300,6 @@ class SubEdit:
             strikethrough (bool): Removes <s></s> tags. Defaults to False.
             color (bool): Removes <font color="color name or #hex"></font> tags. Defaults to False.
             font (bool): Removes <font face="font-family-name"></font> tags. Defaults to False.
-
-        Returns:
-            unformatted_text (list[str]): Unformatted subtitles of whole file if called internally.
         """
         # Set filename for processed subtitles
         source_name, source_ext = os.path.splitext(self.source_file)
@@ -353,8 +350,8 @@ class SubEdit:
     def translate_text(
         self,
         target_language: str,
-        original_language: str | None = None,
-        file_path: str | None = None,
+        original_language: Optional[str] = None,
+        file_path: Optional[str] = None,
         model_name: str = 'gpt-4o-mini',
         model_throttle: float = 0.5,
         request_timeout: int = 15,
@@ -413,7 +410,7 @@ class SubEdit:
             indices_prompt = f' Your response MUST contain exactly {len(indices_subtitles)} lines.\n\n'
 
             # Format subtitles into `%number@ text` lines for later pasring and construct current prompt
-            prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(indices_subtitles, start=current_index + 1)])
+            prompt_text = props.inject_prompt_symbols(indices_subtitles, current_index + 1)
             current_prompt = prompt_task + indices_prompt + prompt_text
 
             # Send request to Duck.ai and save response
