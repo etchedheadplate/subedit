@@ -39,7 +39,7 @@ def cleanup_old_sessions():
             last_modified = os.path.getmtime(session_path)
             if now - last_modified > SESSION_LIFETIME:
                 shutil.rmtree(session_path)
-                print(f"Deleted old session: {session_id}")
+                print(f"[DEBUG] [API] cleanup_old_sessions: {session_id}")
 
 def run_cleanup():
     """Run cleanup function every hour."""
@@ -65,7 +65,7 @@ async def get_session():
     session_id = str(uuid.uuid4())
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
-    print("Received new session:", session_id)
+    print("[DEBUG] [API] /get-session/ endpoint called:", session_id)
     return {"session_id": session_id}
 
 @app.post("/upload/")
@@ -125,7 +125,7 @@ async def show_subtitles(request: ShowRequest):
     try:
         # Load the session and file
         session_id, filename = request.session_id, request.filename
-        print(f"Received show request: session_id={session_id}, filename={filename}")
+        print(f"[DEBUG] [API] /info/ endpoint called: session_id={session_id}, filename={filename}")
 
         # Initialize SubEdit object
         file_path = os.path.join(USER_FILES_DIR, session_id, filename)
@@ -144,7 +144,8 @@ async def show_subtitles(request: ShowRequest):
             "preview": subtitles_data['subtitles'],
             "encoding": subtitles_data['metadata']['encoding'],
             "confidence": subtitles_data['metadata']['confidence'],
-            "language": subtitles_data['metadata']['language']
+            "language": subtitles_data['metadata']['language'],
+            "eta": subtitles_data['eta'],
         }
 
     except Exception as e:
@@ -159,6 +160,8 @@ class ShiftRequest(BaseModel):
 @app.post("/shift/")
 async def shift_subtitles(request: ShiftRequest):
     try:
+        print("[DEBUG] [API] /shift/ endpoint called")
+
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
         shift_delay, shift_items = request.delay, request.items
@@ -198,6 +201,8 @@ class AlignRequest(BaseModel):
 @app.post("/align/")
 async def align_subtitles(request: AlignRequest):
     try:
+        print("[DEBUG] [API] /align/ endpoint called")
+
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
         source_slice, example_slice = request.source_slice, request.example_slice
@@ -248,6 +253,8 @@ class CleanRequest(BaseModel):
 @app.post("/clean/")
 async def clean_subtitles(request: CleanRequest):
     try:
+        print("[DEBUG] [API] /clean/ endpoint called")
+
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
         file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
@@ -288,15 +295,17 @@ class TranslateRequest(BaseModel):
     source_filename: str
     target_language: str
     original_language: str
-    model_name: str = 'GPT-4o'
-    model_throttle: float = 0.5
-    request_timeout: int = 5
-    response_timeout: int = 60
+    model_name: str
+    model_throttle: float
+    request_timeout: int = 10
+    response_timeout: int = 45
 
 @app.post("/translate/")
 async def translate_subtitles(request: TranslateRequest):
     try:
-        # Load the session and file
+        print("[DEBUG] [API] /translate/ endpoint called")
+
+        # Load the session and file information
         session_id, source_filename = request.session_id, request.source_filename
         file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
 
