@@ -143,27 +143,29 @@ class SubEdit:
         else:
             raise ValueError(f'items parameter must be a list with 2 items ({len(items) if type(items) is list else type(items)} provided).')
 
-        # Create processed file dictionary and copy metadata from source file
+        # Create processed file dictionary and copy data from source file
         self.subtitles_data[self.shifted_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {},
             'eta': 1
         }
-
-        time_format = '%H:%M:%S,%f'
-
-        # Original subtitles copied and updated
         shifted_subtitles = self.subtitles_data[self.shifted_file]['subtitles']
         shifted_subtitles.update(parsed_subtitles)
+
+        # Update processed file dictionary with shifted timing
+        time_format = '%H:%M:%S,%f'
         for index in subtitle_indices:
             subtitle = parsed_subtitles[index]
 
+            # Parse original timing
             original_start = datetime.strptime(subtitle['start'], time_format)
             original_end = datetime.strptime(subtitle['end'], time_format)
 
+            # Calculate delay
             delay_start = original_start + timedelta(milliseconds=delay)
             delay_end = original_end + timedelta(milliseconds=delay)
 
+            # Format new timing
             new_start = delay_start.strftime(time_format)[:-3]
             new_end = delay_end.strftime(time_format)[:-3]
 
@@ -211,23 +213,24 @@ class SubEdit:
         if example_slice is None or len(example_slice) == 0:
             example_indices = sorted(parsed_example.keys())
             example_slice = [example_indices[0], example_indices[-1]]
-
         if len(source_slice) != 2 or len(example_slice) != 2:
             raise ValueError(f'Slices must include exactly 2 items (provided {len(source_slice)} source and {len(example_slice)} example items).')
 
+        # Set indices ranges
         source_slice_range = range(source_slice[0], source_slice[1] + 1)
         example_slice_range = range(example_slice[0], example_slice[1] + 1)
         exact_match = (len(source_slice_range) == len(example_slice_range) and
                       source_slice[0] == example_slice[0] and
                       source_slice[1] == example_slice[1])
 
+        # Update processed file dictionary with aligned timing
         subtitle_indices = sorted(parsed_source.keys())
         time_format = '%H:%M:%S,%f'
-
         for index in subtitle_indices:
             subtitle = parsed_source[index]
             aligned_subtitles[index] = subtitle
 
+            # Check if source and example timing are identical
             if source_slice[0] <= index <= source_slice[1]:
                 if exact_match:
                     aligned_subtitles[index].update({
@@ -315,12 +318,13 @@ class SubEdit:
         parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
         cleaned_subtitles = self.subtitles_data[self.cleaned_file]['subtitles']
 
+        # Update processed file dictionary with cleaned text
         subtitle_indices = sorted(parsed_subtitles.keys())
-
         for index in subtitle_indices:
             subtitle = parsed_subtitles[index]
             new_text = subtitle['text']
 
+            # Check if any markup tag is specified
             if bold or italic or underline or strikethrough or color or font:
                 if bold:
                     new_text = re.sub(r'<b>|</b>', '', new_text)
@@ -368,8 +372,8 @@ class SubEdit:
             request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 15.
             response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 45.
         """
-        if file_path is None:
-            file_path = self.source_file
+        file_path = self.source_file if file_path is None else file_path
+        original_language = self.subtitles_data[file_path]['metadata']['language'] if original_language is None else original_language
 
         # Set filename for processed subtitles
         source_name, source_ext = os.path.splitext(self.source_file)
@@ -382,9 +386,7 @@ class SubEdit:
             'eta': 1
         }
 
-        if original_language is None:
-            original_language = self.subtitles_data[file_path]['metadata']['language']
-
+        # Get formated values from shared translation JSON
         with open(Path(__file__).parent / '../shared/translate.json', 'r') as file:
             data: TranslateData = json.load(file)
             translate_from: str = data['codes'][original_language]
@@ -392,6 +394,7 @@ class SubEdit:
             translator_model: str = data['models'][model_name]['name']
             tokens_limit: float = data['models'][model_name]['tokens'] * model_throttle
 
+        # Set operational variables
         clean_subtitles = props.remove_all_markup(self.subtitles_data[file_path])
         prompt_task = props.construct_prompt_task(translate_from, translate_to)
         prompt_subtitles = props.inject_prompt_symbols(clean_subtitles)
@@ -402,19 +405,21 @@ class SubEdit:
         # Save ETA for translation to pass it later to frontend
         self.subtitles_data[self.translated_file]['eta'] = translation_eta
 
-        # Break down subtitles to multiple prompts and translate one prompt at a time
+        # Break down subtitles to multiple prompts and calculate subtitle indices to be translated in current prompt
         translated_text, current_index = '', 0
         while current_index < len(clean_subtitles):
-            # Calculate subtitle indices to be translated in current prompt
             indices_limit = current_index + subtitles_per_prompt
             indices_subtitles = clean_subtitles[current_index:indices_limit]
             indices_prompt = f' Your response MUST contain exactly {len(indices_subtitles)} lines.\n\n'
+
             # Format subtitles into `%number@ text` lines for later pasring and construct current prompt
             prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(indices_subtitles, start=current_index + 1)])
             current_prompt = prompt_task + indices_prompt + prompt_text
+
             # Send request to Duck.ai and save response
             translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
             translated_text += translated_chunk
+
             # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
             current_index = indices_limit
             print(f'Translated {current_index if current_index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
