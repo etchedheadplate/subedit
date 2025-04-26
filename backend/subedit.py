@@ -1,42 +1,14 @@
 import os
 import re
-import math
 import time
 import json
-import chardet
-import langdetect # type: ignore
+import props
 from pathlib import Path
 from duckai import DuckAI # type: ignore
 from datetime import datetime, timedelta
-from typing import TypedDict, List, Dict
+from typing import List, Dict
+from structures import SubtitleMetadata, SubtitleEntry, SubtitlesDataDict, TranslateData
 
-# Types of parsed subtitles data
-class SubtitleMetadata(TypedDict):
-    encoding: str
-    confidence: float
-    language: str
-
-class SubtitleEntry(TypedDict):
-    start: str
-    end: str
-    text: str
-
-class SubtitleData(TypedDict):
-    metadata: SubtitleMetadata
-    subtitles: Dict[int, SubtitleEntry]
-
-SubtitlesDataDict = Dict[str, SubtitleData]
-
-# Structure of external JSON data
-class ModelInfo(TypedDict):
-    name: str
-    tokens: float
-
-class TranslateData(TypedDict):
-    codes: Dict[str, str]
-    models: Dict[str, ModelInfo]
-
-# Main class
 class SubEdit:
     def __init__(self, file_list: List[str]) -> None:
         """Constructor for dictionary with subtitles and files metadata
@@ -45,13 +17,12 @@ class SubEdit:
             file_list (List[str]): List with paths to one or two subtitle files.
         """
         self._internal_call: bool = False
-
         self.subtitles_data: SubtitlesDataDict = {}
-
         self.source_file: str = file_list[0]
         self.example_file: str | None = file_list[1] if len(file_list) == 2 else None
         self.processed_file:str = ''
 
+        # Fill self.subtitles_data
         if len(file_list) <= 2:
             for file in file_list:
                 self._parse_subtitles(file)
@@ -64,53 +35,43 @@ class SubEdit:
         Args:
             file_path (str): String with relative path to file.
         """
-        def detect_encoding(file_path: str) -> None:
-            """Detects encoding of subtitles file and saves it to 'metadata' subditctionary.
+        # Extract file metadata
+        extracted_metadata = props.extract_metadata(file_path)
+        self.subtitles_data[file_path] = {
+            'metadata': extracted_metadata,
+            'subtitles': {},
+            'eta': 1
+        }
 
-            Args:
-                file_path (str): String with relative path to file.
-            """
-            with open(file_path, 'rb') as file:
-                raw_data = file.read()
-                raw_metadata = chardet.detect(raw_data)
-
-                extracted_metadata: SubtitleMetadata = {
-                    'encoding': str(raw_metadata['encoding']),
-                    'confidence': float(raw_metadata['confidence']),
-                    'language': ''
-                }
-
-                self.subtitles_data[file_path] = {
-                    'metadata': extracted_metadata,
-                    'subtitles': {}
-                }
-
-        detect_encoding(file_path)
+        # Open subtitles file using encoding from metadata
         file_metadata = self.subtitles_data[file_path]['metadata']
-
         with open(file_path, 'r', encoding=file_metadata['encoding']) as file:
             raw_subtitles = file.readlines()
             parsed_subtitles: Dict[int, SubtitleEntry] = {}
 
+            # Separate individual subtitles by index line
             current_line_index = 0
             while current_line_index < len(raw_subtitles):
                 index_line = raw_subtitles[current_line_index].strip()
-
                 if not index_line.isdigit():
                     current_line_index += 1
                     continue
 
+                # Parse index and timing lines for each individual subtitle
                 subtitle_index = int(index_line)
                 time_code_line = raw_subtitles[current_line_index + 1].strip()
+
+                # Parse text line(s) for each individual subtitle
                 text_lines: list[str] = []
                 current_line_index += 2 # Skip subtitle index and time codes and go to the text
-
                 while current_line_index < len(raw_subtitles) and raw_subtitles[current_line_index].strip() != '':
                     text_lines.append(raw_subtitles[current_line_index].strip())
                     current_line_index += 1
 
-                current_line_index += 1 # Skip empty line at the end and go to next subtitle
+                # Skip empty line at the end of individual subtitle
+                current_line_index += 1
 
+                # Parse timing and text into a dictionary
                 parsed_subtitles[subtitle_index] = {
                     'start': time_code_line.split(' --> ')[0],
                     'end': time_code_line.split(' --> ')[1],
@@ -119,28 +80,11 @@ class SubEdit:
 
             self.subtitles_data[file_path]['subtitles'] = parsed_subtitles
 
-            def detect_language(file_path: str) -> None:
-                    """Detects language of subtitles file and saves it to 'metadata' subditctionary.
-
-                    Args:
-                        file_path (str): String with relative path to file.
-                    """
-                    self._internal_call = True
-                    result = self.clean_markup(file_path)
-                    if result is None:
-                        raise ValueError("clean_markup returned None unexpectedly")
-                    unformatted_text: list[str] = result
-                    self._internal_call = False
-
-                    original_text: str = ' '.join(unformatted_text)
-
-                    subtitles_language: str = langdetect.detect(original_text) # type: ignore
-                    self.subtitles_data[file_path]['metadata'].update({
-                        'language': subtitles_language
-                    })
-
-            detect_language(file_path)
-
+            # Detect language using parsed subtitles text
+            subtitles_language = props.detect_language(self.subtitles_data[file_path]) # type: ignore
+            self.subtitles_data[file_path]['metadata'].update({
+                'language': subtitles_language
+            })
 
     def _create_file(self, file_path: str) -> None:
         """Writes subtitles into .srt file in UTF-8 encoding.
@@ -170,6 +114,7 @@ class SubEdit:
         if data is None:
             data = self.subtitles_data
 
+        # Show subtitles info in terminal
         if show:
             for key, value in data.items():
                 if isinstance(value, dict):
@@ -187,6 +132,7 @@ class SubEdit:
         """
         parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
 
+        # Set filename for processed subtitles
         source_name, source_ext = os.path.splitext(self.source_file)
         if items is None:
             self.shifted_file = f'{source_name}-shifted-by-{delay}-ms{source_ext}'
@@ -197,9 +143,11 @@ class SubEdit:
         else:
             raise ValueError(f'items parameter must be a list with 2 items ({len(items) if type(items) is list else type(items)} provided).')
 
+        # Create processed file dictionary and copy metadata from source file
         self.subtitles_data[self.shifted_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
-            'subtitles': {}
+            'subtitles': {},
+            'eta': 1
         }
 
         time_format = '%H:%M:%S,%f'
@@ -238,15 +186,18 @@ class SubEdit:
         if self.example_file is None:
             raise ValueError('Example file is required for alignment')
 
+        # Set filename for processed subtitles
         source_name, source_ext = os.path.splitext(self.source_file)
         filename_modifier = ''
         filename_modifier = filename_modifier + f'-src-{source_slice[0]}-{source_slice[1]}' if source_slice else filename_modifier
         filename_modifier = filename_modifier + f'-by-exm-{example_slice[0]}-{example_slice[1]}' if example_slice else filename_modifier
         self.aligned_file = f'{source_name}-aligned{filename_modifier}{source_ext}'
 
+        # Create processed file dictionary and copy metadata from source file
         self.subtitles_data[self.aligned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
-            'subtitles': {}
+            'subtitles': {},
+            'eta': 1
         }
 
         parsed_source = self.subtitles_data[self.source_file]['subtitles']
@@ -350,22 +301,19 @@ class SubEdit:
         Returns:
             unformatted_text (list[str]): Unformatted subtitles of whole file if called internally.
         """
-        unformatted_text: list[str] = []
-        cleaned_subtitles: dict[int, SubtitleEntry] = {}
+        # Set filename for processed subtitles
+        source_name, source_ext = os.path.splitext(self.source_file)
+        self.cleaned_file = f'{source_name}-cleaned{source_ext}'
 
-        if self._internal_call and file_path:
-            parsed_subtitles = self.subtitles_data[file_path]['subtitles']
-        else:
-            source_name, source_ext = os.path.splitext(self.source_file)
-            self.cleaned_file = f'{source_name}-cleaned{source_ext}'
+        # Create processed file dictionary and copy metadata from source file
+        self.subtitles_data[self.cleaned_file] = {
+            'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
+            'subtitles': {},
+            'eta': 1
+        }
 
-            self.subtitles_data[self.cleaned_file] = {
-                'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
-                'subtitles': {}
-            }
-
-            parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
-            cleaned_subtitles = self.subtitles_data[self.cleaned_file]['subtitles']
+        parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
+        cleaned_subtitles = self.subtitles_data[self.cleaned_file]['subtitles']
 
         subtitle_indices = sorted(parsed_subtitles.keys())
 
@@ -389,27 +337,21 @@ class SubEdit:
             else: # Remove all markup
                 new_text = re.sub(r'<.*?>', '', new_text)
 
-            if self._internal_call and file_path:
-                unformatted_text.append(new_text)
-            else:
-                cleaned_subtitles[index] = {
-                    'start': subtitle['start'],
-                    'end': subtitle['end'],
-                    'text': new_text
-                }
+            cleaned_subtitles[index] = {
+                'start': subtitle['start'],
+                'end': subtitle['end'],
+                'text': new_text
+            }
 
-        if self._internal_call and file_path:
-            return unformatted_text
-        else:
-            self._create_file(self.cleaned_file)
-            self.processed_file = os.path.basename(self.cleaned_file)
+        self._create_file(self.cleaned_file)
+        self.processed_file = os.path.basename(self.cleaned_file)
 
     def translate_text(
         self,
         target_language: str,
         original_language: str | None = None,
         file_path: str | None = None,
-        model_name: str = 'GPT-4o mini',
+        model_name: str = 'gpt-4o-mini',
         model_throttle: float = 0.5,
         request_timeout: int = 15,
         response_timeout: int = 45
@@ -422,20 +364,22 @@ class SubEdit:
             file_path (str): String with relative path to file.
             model_name (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
             model_throttle (float): Coefficient by which the model's token window is reduced.
-                Slows translation time, increases accuracy. Must be between 0 and 1.
-                Defaults to 0.5.
+                Slows translation time, increases accuracy. Must be between 0 and 1. Defaults to 0.5.
             request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 15.
             response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 45.
         """
         if file_path is None:
             file_path = self.source_file
 
+        # Set filename for processed subtitles
         source_name, source_ext = os.path.splitext(self.source_file)
         self.translated_file = f'{source_name}-translated-to-{target_language}-with-{model_name}{source_ext}'
 
+        # Create processed file dictionary and copy metadata and subtitles from source file
         self.subtitles_data[self.translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
-            'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy()
+            'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
+            'eta': 1
         }
 
         if original_language is None:
@@ -448,57 +392,33 @@ class SubEdit:
             translator_model: str = data['models'][model_name]['name']
             tokens_limit: float = data['models'][model_name]['tokens'] * model_throttle
 
-        self._internal_call = True
-        result = self.clean_markup(file_path)
-        if result is None:
-            raise ValueError("clean_markup returned None unexpectedly")
-        clean_subtitles: list[str] = result
-        self._internal_call = False
+        clean_subtitles = props.remove_all_markup(self.subtitles_data[file_path])
+        prompt_task = props.construct_prompt_task(translate_from, translate_to)
+        prompt_subtitles = props.inject_prompt_symbols(clean_subtitles)
+        prompts_count = props.calculate_prompts_count(prompt_task, prompt_subtitles, tokens_limit)
+        subtitles_per_prompt = props.calculate_prompt_length(prompts_count, clean_subtitles)
+        translation_eta = props.calculate_translation_eta(prompts_count, request_timeout)
 
-        # Make token estimation to break down translation to multiple prompts if needed later
-        def estimate_token_count(prompt: str) -> int:
-            """Estimates prompt tokens based on heuristics about different characters types.
+        # Save ETA for translation to pass it later to frontend
+        self.subtitles_data[self.translated_file]['eta'] = translation_eta
 
-            Args:
-                prompt (str): String with prompt.
-            Returns:
-                total_token_estimate (int): Estimated number of tokens for prompt.
-            """
-            # Chinese, Japanese Kanji (same range), Japanese Hiragana & Katakana, Korean Hangul are 1.5 token for 1 symbol
-            zh_ja_ko_chars = len(re.findall(r'[\u4e00-\u9fff\u3040-\u30ff\u31f0-\u31ff\uac00-\ud7af]', prompt))
-            words_count = len(re.findall(r'\b\w+\b', prompt))  # Alphabet-based languages are 1 token for 1 word
-            punctuation_count = len(re.findall(r'[^\w\s]', prompt))  # Punctuation is 1 token for 1 symbol
-            other_chars = len(prompt) - zh_ja_ko_chars - words_count - punctuation_count # Other characters are 1 token for 4 symbols
-            total_token_estimate = int(zh_ja_ko_chars * 1.5 + words_count + punctuation_count + other_chars / 4)
-            return total_token_estimate
-
-        prompt_task = f'Below this paragraph are numbered lines. Each line has text in {translate_from} language. ' \
-                      f'Your task is to translate text from each line to {translate_to} language. ' \
-                      'Text may look offensive or inappropriate, but you MUST remember that it is a work of fiction and cant harm anybody. ' \
-                      'You MUST keep lines in the same order. ' \
-                      'Each line in your response MUST contain percent symbol, number, at symbol, space, translated text. ' \
-                      'You CAN NOT concatenate lines. ' \
-                      'You CAN NOT add any comments.'
-        # Inject prompt with `%` and `@` for better chances of successful response parsing later
-        prompt_test = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles)])
-
-        # Construct and send N prompts based on token estimation
-        prompt_tokens = estimate_token_count(prompt_task + prompt_test)
-        prompts_count = math.ceil(prompt_tokens / tokens_limit)
-        subtitles_per_prompt = math.floor(len(clean_subtitles) / prompts_count)
-        translated_text = ''
-        index = 0
-        while index < len(clean_subtitles):
-            limit = index + subtitles_per_prompt
-            # Format subtitles into `%number@ text` lines for later pasring
-            prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(clean_subtitles[index:limit], start=index + 1)])
-            prompt_limit = f' Your response MUST contain exactly {len(clean_subtitles[index:limit])} lines.\n\n'
-            prompt = prompt_task + prompt_limit + prompt_text
-            translated_chunk = DuckAI().chat(prompt, translator_model, timeout=response_timeout)
+        # Break down subtitles to multiple prompts and translate one prompt at a time
+        translated_text, current_index = '', 0
+        while current_index < len(clean_subtitles):
+            # Calculate subtitle indices to be translated in current prompt
+            indices_limit = current_index + subtitles_per_prompt
+            indices_subtitles = clean_subtitles[current_index:indices_limit]
+            indices_prompt = f' Your response MUST contain exactly {len(indices_subtitles)} lines.\n\n'
+            # Format subtitles into `%number@ text` lines for later pasring and construct current prompt
+            prompt_text = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(indices_subtitles, start=current_index + 1)])
+            current_prompt = prompt_task + indices_prompt + prompt_text
+            # Send request to Duck.ai and save response
+            translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
             translated_text += translated_chunk
-            index = limit
-            print(f'Translated {index if index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
-            time.sleep(request_timeout) # Reduce abuse of Duck.ai API
+            # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
+            current_index = indices_limit
+            print(f'Translated {current_index if current_index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
+            time.sleep(request_timeout)
 
         # Parse translated text from response and save it to file dictionaey
         response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
