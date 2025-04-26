@@ -4,12 +4,12 @@ import shutil
 import uuid
 import threading
 import re
-from typing import Dict, Any, Optional
+from typing import Dict, Any, AsyncGenerator
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
+from structures import ShowRequest, ShiftRequest, AlignRequest, CleanRequest, TranslateRequest
 from subedit import SubEdit
 
 # Constants
@@ -24,14 +24,25 @@ if not os.path.exists(USER_FILES_DIR):
     os.makedirs(USER_FILES_DIR)
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """Lifespan event handler for FastAPI (startup/shutdown)."""
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Lifespan event handler for FastAPI (startup/shutdown).
+
+    Args:
+        app (FastAPI): The FastAPI application instance.
+
+    Yields:
+        None: Control is yielded back to FastAPI during application runtime.
+    """
     cleanup_thread = threading.Thread(target=run_cleanup, daemon=True)
     cleanup_thread.start()
     yield
 
-def cleanup_old_sessions():
-    """Delete session folders older than SESSION_LIFETIME."""
+def cleanup_old_sessions() -> None:
+    """Delete session folders older than SESSION_LIFETIME.
+
+    Scans the user_files directory and removes any session folders
+    that have not been modified within the SESSION_LIFETIME period.
+    """
     now = time.time()
     for session_id in os.listdir(USER_FILES_DIR):
         session_path = os.path.join(USER_FILES_DIR, session_id)
@@ -41,8 +52,12 @@ def cleanup_old_sessions():
                 shutil.rmtree(session_path)
                 print(f"[DEBUG] [API] cleanup_old_sessions: {session_id}")
 
-def run_cleanup():
-    """Run cleanup function every hour."""
+def run_cleanup() -> None:
+    """Run cleanup function every hour.
+
+    This function is intended to be run in a separate thread to
+    periodically clean up old session directories.
+    """
     while True:
         cleanup_old_sessions()
         time.sleep(3600)
@@ -60,8 +75,15 @@ app.add_middleware(
 
 # Service endpoints
 @app.post("/get-session/")
-async def get_session():
-    """Generate a new session ID."""
+async def get_session() -> Dict[str, str]:
+    """Generate a new session ID.
+
+    Creates a new UUID-based session ID and initializes a corresponding
+    directory for user files.
+
+    Returns:
+        Dict[str, str]: Dictionary containing the generated session ID.
+    """
     session_id = str(uuid.uuid4())
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
@@ -73,20 +95,34 @@ async def upload_file(
     session_id: str = Form(...),
     file: UploadFile = File(...)
 ) -> Dict[str, Any]:
-    """Upload and validate subtitle file."""
+    """Upload and validate subtitle file.
+
+    Args:
+        session_id (str): The session ID for the current user.
+        file (UploadFile): The subtitle file to be uploaded.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing session info, file details, and status message.
+
+    Raises:
+        HTTPException: If file extension is invalid or file size exceeds the limit.
+    """
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
 
     # Extract file extension
-    _, ext = os.path.splitext(file.filename)
-    ext = ext.lower()
+    split_result = os.path.splitext(file.filename or "")
+    _ = split_result[0]
+    ext = str(split_result[1]).lower()
 
     # Validate file extension
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail="Only SubRip .srt files are allowed")
 
     # Sanitize filename (remove unsafe characters)
-    safe_filename = re.sub(r'[^a-zA-Z0-9.-]', '-', file.filename)
+    filename_to_sanitize = str(file.filename or "")
+    safe_filename = re.sub(r'[^a-zA-Z0-9.-]', '-', filename_to_sanitize)
+    assert isinstance(safe_filename, str)
     file_location = os.path.join(session_path, safe_filename)
 
     # Read file content to check size
@@ -108,20 +144,38 @@ async def upload_file(
     }
 
 @app.get("/download/")
-async def download_file(session_id: str, filename: str):
-    """Download a processed file."""
+async def download_file(session_id: str, filename: str) -> FileResponse:
+    """Download a processed file.
+
+    Args:
+        session_id (str): The session ID for the current user.
+        filename (str): The name of the file to download.
+
+    Returns:
+        FileResponse: The requested file as a downloadable response.
+
+    Raises:
+        HTTPException: If the requested file is not found.
+    """
     file_path = os.path.join(USER_FILES_DIR, session_id, filename)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
 
-# Request models and endpoints
-class ShowRequest(BaseModel):
-    session_id: str
-    filename: str
-
 @app.post("/info/")
-async def show_subtitles(request: ShowRequest):
+async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
+    """Retrieve information about a subtitle file.
+
+    Args:
+        request (ShowRequest): Request containing session ID and filename.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing file information, subtitles preview,
+                       and metadata like encoding and language.
+
+    Raises:
+        HTTPException: If an error occurs during processing.
+    """
     try:
         # Load the session and file
         session_id, filename = request.session_id, request.filename
@@ -151,14 +205,21 @@ async def show_subtitles(request: ShowRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class ShiftRequest(BaseModel):
-    session_id: str
-    source_filename: str
-    delay: int  # Milliseconds to shift
-    items: list[int] | None = None  # List of subtitle indices (optional)
-
 @app.post("/shift/")
-async def shift_subtitles(request: ShiftRequest):
+async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
+    """Shift the timing of subtitles by a specified delay.
+
+    Args:
+        request (ShiftRequest): Request containing session ID, filename,
+                              delay amount, and optional subtitle indices.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing file information, processed filename,
+                       subtitles preview, and metadata.
+
+    Raises:
+        HTTPException: If an error occurs during processing.
+    """
     try:
         print("[DEBUG] [API] /shift/ endpoint called")
 
@@ -191,15 +252,21 @@ async def shift_subtitles(request: ShiftRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class AlignRequest(BaseModel):
-    session_id: str
-    source_filename: str
-    example_filename: Optional[str] = None
-    source_slice: Optional[list[int]] = None
-    example_slice: Optional[list[int]] = None
-
 @app.post("/align/")
-async def align_subtitles(request: AlignRequest):
+async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
+    """Align subtitles timing based on an example file.
+
+    Args:
+        request (AlignRequest): Request containing session ID, source filename,
+                              example filename, and optional slice indices.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing file information, processed filename,
+                       subtitles preview, and metadata.
+
+    Raises:
+        HTTPException: If an error occurs during processing or if example file is missing.
+    """
     try:
         print("[DEBUG] [API] /align/ endpoint called")
 
@@ -240,18 +307,21 @@ async def align_subtitles(request: AlignRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class CleanRequest(BaseModel):
-    session_id: str
-    source_filename: str
-    bold: bool = False
-    italic: bool = False
-    underline: bool = False
-    strikethrough: bool = False
-    color: bool = False
-    font: bool = False
-
 @app.post("/clean/")
-async def clean_subtitles(request: CleanRequest):
+async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
+    """Clean markup from subtitles based on specified options.
+
+    Args:
+        request (CleanRequest): Request containing session ID, filename,
+                              and boolean flags for markup types to clean.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing file information, processed filename,
+                       subtitles preview, and metadata.
+
+    Raises:
+        HTTPException: If an error occurs during processing.
+    """
     try:
         print("[DEBUG] [API] /clean/ endpoint called")
 
@@ -290,18 +360,21 @@ async def clean_subtitles(request: CleanRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-class TranslateRequest(BaseModel):
-    session_id: str
-    source_filename: str
-    target_language: str
-    original_language: str
-    model_name: str
-    model_throttle: float
-    request_timeout: int = 10
-    response_timeout: int = 45
-
 @app.post("/translate/")
-async def translate_subtitles(request: TranslateRequest):
+async def translate_subtitles(request: TranslateRequest) -> Dict[str, Any]:
+    """Translate subtitles to the specified target language.
+
+    Args:
+        request (TranslateRequest): Request containing session ID, filename,
+                                  language settings, model configuration, and timeouts.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing file information, processed filename,
+                       translated subtitles preview, and metadata.
+
+    Raises:
+        HTTPException: If an error occurs during processing.
+    """
     try:
         print("[DEBUG] [API] /translate/ endpoint called")
 
