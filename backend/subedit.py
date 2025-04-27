@@ -103,7 +103,7 @@ class SubEdit:
                     f'{subtitles_data[index]["text"]}\n\n' # Add empty line at the end
                 )
 
-    def pass_info(self, data: Optional[Union[SubtitlesDataDict, SubtitleMetadata, SubtitleEntry]] = None, show: bool = False, indent: int = 0) -> None:
+    def pass_info(self, data: Optional[Union[SubtitlesDataDict, SubtitleMetadata, SubtitleEntry]] = None, show: bool = False, indent: int = 4) -> None:
         """Prints subtitles data to terminal.
 
         Args:
