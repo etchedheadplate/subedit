@@ -40,7 +40,7 @@ class SubEdit:
         self.subtitles_data[file_path] = {
             'metadata': extracted_metadata,
             'subtitles': {},
-            'eta': 1
+            'eta': 0
         }
 
         # Open subtitles file using encoding from metadata
@@ -82,9 +82,11 @@ class SubEdit:
 
             # Detect language using parsed subtitles text
             subtitles_language = props.detect_language(self.subtitles_data[file_path]) # type: ignore
-            self.subtitles_data[file_path]['metadata'].update({
-                'language': subtitles_language
-            })
+            self.subtitles_data[file_path]['metadata'].update({'language': subtitles_language})
+
+            # Calculate and save ETA for translation
+            translation_eta = props.calculate_translation_eta(self.subtitles_data[file_path])
+            self.subtitles_data[file_path]['eta'] = translation_eta
 
     def _create_file(self, file_path: str) -> None:
         """Writes subtitles into .srt file in UTF-8 encoding.
@@ -147,7 +149,7 @@ class SubEdit:
         self.subtitles_data[self.shifted_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {},
-            'eta': 1
+            'eta': 0
         }
         shifted_subtitles = self.subtitles_data[self.shifted_file]['subtitles']
         shifted_subtitles.update(parsed_subtitles)
@@ -199,7 +201,7 @@ class SubEdit:
         self.subtitles_data[self.aligned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {},
-            'eta': 1
+            'eta': 0
         }
 
         parsed_source = self.subtitles_data[self.source_file]['subtitles']
@@ -309,7 +311,7 @@ class SubEdit:
         self.subtitles_data[self.cleaned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {},
-            'eta': 1
+            'eta': 0
         }
 
         parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
@@ -354,7 +356,7 @@ class SubEdit:
         file_path: Optional[str] = None,
         model_name: str = 'gpt-4o-mini',
         model_throttle: float = 0.5,
-        request_timeout: int = 15,
+        request_timeout: int = 10,
         response_timeout: int = 45
         ) -> None:
         """Translates subtitles using LLM provided by DuckDuckGo.
@@ -366,7 +368,7 @@ class SubEdit:
             model_name (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
             model_throttle (float): Coefficient by which the model's token window is reduced.
                 Slows translation time, increases accuracy. Must be between 0 and 1. Defaults to 0.5.
-            request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 15.
+            request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 10.
             response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 45.
         """
         file_path = self.source_file if file_path is None else file_path
@@ -380,7 +382,7 @@ class SubEdit:
         self.subtitles_data[self.translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
-            'eta': 1
+            'eta': 0
         }
 
         # Get formated values from shared translation JSON
@@ -397,14 +399,17 @@ class SubEdit:
         prompt_subtitles = props.inject_prompt_symbols(clean_subtitles)
         prompts_count = props.calculate_prompts_count(prompt_task, prompt_subtitles, tokens_limit)
         subtitles_per_prompt = props.calculate_prompt_length(prompts_count, clean_subtitles)
-        translation_eta = props.calculate_translation_eta(prompts_count, request_timeout)
 
-        # Save ETA for translation to pass it later to frontend
-        self.subtitles_data[self.translated_file]['eta'] = translation_eta
+        # Debug variables
+        prompt_number, tanslation_start_timestamp = 1, time.time()
+        prompt_length: List[int] = []
+        translation_pace: List[float] = []
+        translation_time: List[float] = []
 
         # Break down subtitles to multiple prompts and calculate subtitle indices to be translated in current prompt
         translated_text, current_index = '', 0
         while current_index < len(clean_subtitles):
+            loop_start_timestamp = time.time()
             indices_limit = current_index + subtitles_per_prompt
             indices_subtitles = clean_subtitles[current_index:indices_limit]
             indices_prompt = f' Your response MUST contain exactly {len(indices_subtitles)} lines.\n\n'
@@ -412,15 +417,41 @@ class SubEdit:
             # Format subtitles into `%number@ text` lines for later pasring and construct current prompt
             prompt_text = props.inject_prompt_symbols(indices_subtitles, current_index + 1)
             current_prompt = prompt_task + indices_prompt + prompt_text
+            prompt_length.append(len(current_prompt))
 
             # Send request to Duck.ai and save response
+            request_timestamp = time.time()
             translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
+            response_timestamp = time.time()
+            translation_time.append(response_timestamp - request_timestamp)
+            translation_pace.append(len(current_prompt)/(response_timestamp - request_timestamp))
+            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] [+{response_timestamp - request_timestamp:.2f}s] "\
+                f"Response received (time: {response_timestamp - request_timestamp:.2f}s, "\
+                f"est: {request_timeout:.2f}s, "\
+                f"dif: {request_timeout - (response_timestamp - request_timestamp):.2f}s, "\
+                f"len: {len(current_prompt)} chars, "\
+                f"pace: {len(current_prompt)/(response_timestamp - request_timestamp):.2f}char/s)")
             translated_text += translated_chunk
 
             # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
             current_index = indices_limit
-            print(f'Translated {current_index if current_index < len(clean_subtitles) else len(clean_subtitles)} of {len(clean_subtitles)} subtitles')
+            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] [+{request_timeout:.2f}s] Waiting {request_timeout}s timeout")
             time.sleep(request_timeout)
+            loop_end_timestamp = time.time()
+            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] [{loop_end_timestamp - tanslation_start_timestamp:.2f}s] "\
+                f"Prompt {prompt_number}/{prompts_count} completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
+            prompt_number += 1
+
+        translation_end_timestamp = time.time()
+        print(f"[DEBUG] [TRANSLATE] [T {translation_end_timestamp - tanslation_start_timestamp:.2f}s] "\
+            f"Translation completed for {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
+            f"(avg resp time: {sum(translation_time)/len(translation_time):.2f}, "\
+            f"est: {self.subtitles_data[file_path]['eta']:.2f}, "\
+            f"dif: {self.subtitles_data[file_path]['eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}, "\
+            f"avg len: {sum(prompt_length)/len(prompt_length):.2f} chars, "\
+            f"avg pace: {sum(translation_pace)/len(translation_pace):.2f} char/s)")
+
+        props.update_estimated_response_time(sum(translation_time)/len(translation_time))
 
         # Parse translated text from response and save it to file dictionaey
         response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
