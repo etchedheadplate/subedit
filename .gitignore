@@ -7,6 +7,9 @@ venv
 test_files
 user_files
 
+# Statistics
+/shared/statistics.json
+
 # Junk
 *.md
 *.DS_Store
