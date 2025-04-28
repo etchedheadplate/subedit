@@ -123,8 +123,13 @@ def calculate_prompts_count(prompt_task: str, injected_subtitles: str, model_lim
     Returns:
         int: Number of prompts needed to process all subtitles.
     """
-    prompt_tokens = estimate_token_count(prompt_task + injected_subtitles)
-    prompts_count = math.ceil(prompt_tokens / model_limit) if model_limit else 1
+    # Calculate count for injected subtitles without prompt task
+    injected_subtitles_tokens = estimate_token_count(injected_subtitles)
+    injected_subtitles_count = math.ceil(injected_subtitles_tokens / model_limit)
+
+    # Add prompt task to each subtitle chunk and calculate final count of prompts
+    prompt_tokens = estimate_token_count(prompt_task * injected_subtitles_count + injected_subtitles)
+    prompts_count = math.ceil(prompt_tokens / model_limit)
 
     return prompts_count
 
