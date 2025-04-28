@@ -1,8 +1,10 @@
 import re
 import math
+import json
 import chardet
 import langdetect # type: ignore
-from structures import SubtitleMetadata, SubtitleData
+from pathlib import Path
+from structures import SubtitleMetadata, SubtitleData, TranslationData
 
 def extract_metadata(file_path: str) -> SubtitleMetadata:
     """Detects encoding of subtitles file and returns metadata.
@@ -11,7 +13,7 @@ def extract_metadata(file_path: str) -> SubtitleMetadata:
         file_path (str): String with relative path to file.
 
     Returns:
-        SubtitleMetadata: Dictionary containing encoding information and confidence level.
+        SubtitleMetadata: Metadata containing encoding information and confidence level.
     """
     with open(file_path, 'rb') as file:
         raw_data = file.read()
@@ -140,16 +142,70 @@ def calculate_prompt_length(prompts_count: int, cleaned_subtitles: list[str]) ->
 
     return prompt_length
 
-def calculate_translation_eta(prompts_count: int, request_timeout: int = 15) -> int:
-    """Estimates the time required to translate all prompts.
+def update_estimated_response_time(new_response_time: float) -> None:
+    """Updates the estimated average response time for translation requests.
+
+    This function reads the existing translation statistics from a JSON file, updates the average response duration
+    based on the new response time provided, and writes the updated statistics back to the JSON file. It increments
+    the total count of responses and updates the total duration of responses.
 
     Args:
-        prompts_count (int): Number of prompts to be processed.
+        new_response_time (float): The response time for the latest translation request, in seconds.
+
+    Returns:
+        None: This function does not return a value. It modifies the statistics stored in the JSON file.
+    """
+    # Load the existing data from the JSON file
+    with open(Path(__file__).parent / '../shared/statistics.json', 'r') as file:
+        data: TranslationData = json.load(file)
+        total_count_of_responses: int = data['translation_time']['total_count_of_responses']
+        average_response_duration: float = data['translation_time']['average_response_duration']
+
+        # Calculate the updated average response duration
+        updated_average_response_duration = (average_response_duration * total_count_of_responses + new_response_time) / (total_count_of_responses + 1)
+
+        # Update the data structure with the new average
+        data['translation_time']['average_response_duration'] = updated_average_response_duration
+        data['translation_time']['total_count_of_responses'] += 1  # Increment the count of responses
+        data['translation_time']['total_responses_duration'] += new_response_time  # Update the total duration
+
+    # Write the updated data back to the JSON file
+    with open(Path(__file__).parent / '../shared/statistics.json', 'w') as file:
+        json.dump(data, file, indent=4)
+
+def calculate_translation_eta(
+    subtitle_data: SubtitleData,
+    translate_from: str = 'Chinese Simplified',
+    translate_to: str = 'Chinese Traditional',
+    model_limit: float = 2048,
+    model_throttle: float = 0.5,
+    request_timeout: int = 15
+) -> int:
+    """Estimates the time required to translate all prompts based on subtitle data and model parameters.
+
+    This function calculates the estimated time in seconds needed to translate subtitles from one language to another.
+    It takes into account the average response duration from previous translations, the number of prompts to be processed,
+    and the model's token limit.
+
+    Args:
+        subtitle_data (SubtitleData): Dictionary containing subtitle data, including the text to be translated.
+        translate_from (str, optional): The source language name. Defaults to 'Chinese Simplified'.
+        translate_to (str, optional): The target language name. Defaults to 'Chinese Traditional'.
+        model_limit (float, optional): The token limit of the model. Defaults to 2048.
+        model_throttle (float, optional): A throttle factor to adjust the model limit. Defaults to 0.5.
         request_timeout (int, optional): Timeout per request in seconds. Defaults to 15.
 
     Returns:
-        int: Estimated time in seconds for the complete translation.
+        int: Estimated time in seconds for the complete translation of all prompts.
     """
-    translation_eta = prompts_count * request_timeout
+    with open(Path(__file__).parent / '../shared/statistics.json', 'r') as file:
+        data: TranslationData = json.load(file)
+        average_response_duration: float = data['translation_time']['average_response_duration']
+
+    cleaned_subtitles = remove_all_markup(subtitle_data)
+    prompt_task = construct_prompt_task(translate_from, translate_to)
+    injected_subtitles = inject_prompt_symbols(cleaned_subtitles)
+    prompts_count = calculate_prompts_count(prompt_task, injected_subtitles, model_limit * model_throttle)
+    translation_eta = prompts_count * (request_timeout + int(average_response_duration))
 
     return translation_eta
