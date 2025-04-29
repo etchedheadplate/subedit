@@ -58,6 +58,7 @@ export const apiService = {
         encoding: string;
         confidence: number;
         language: string;
+        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/info/`, {
             method: "POST",
@@ -80,6 +81,7 @@ export const apiService = {
             encoding: data.encoding,
             confidence: data.confidence,
             language: data.language,
+            eta: data.eta,
         };
     },
 
