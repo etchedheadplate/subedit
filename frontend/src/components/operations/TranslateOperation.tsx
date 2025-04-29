@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile, SubtitleMetadata } from "../../types";
 import translationData from "../../../../shared/translate.json";
+import translatingGif from "../../assets/translating.gif";
 
 interface TranslateOperationProps {
     onTranslate: (targetLanguage: string, originalLanguage: string, modelName: string, modelThrottle: number) => Promise<any>;
@@ -37,6 +38,15 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     // State for setting up throttle
     const [throttle, setThrottle] = useState<number>(0.5);
 
+    // State for tracking if translation is in progress
+    const [isTranslating, setIsTranslating] = useState<boolean>(false);
+
+    // State for tracking remaining time for translation
+    const [remainingTime, setRemainingTime] = useState<number>(0);
+
+    // State to store the ETA for translation
+    const [translationEta, setTranslationEta] = useState<number>(0);
+
     // Effect to set the original language from the source file when metadata is available
     useEffect(() => {
         if (detectedLanguage &&
@@ -50,6 +60,11 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const handleSourceLanguageDetected = (metadata: SubtitleMetadata) => {
         if (metadata && metadata.language && originalLanguage === null) {
             setOriginalLanguage(metadata.language);
+        }
+
+        // Store the ETA for use when translation starts
+        if (metadata && metadata.eta) {
+            setTranslationEta(metadata.eta);
         }
     };
 
@@ -70,8 +85,62 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
     // Handler to store translation results
     const handleTranslate = async () => {
-        // Get the model name based on selected model key
-        await onTranslate(targetLanguage, originalLanguage, model, throttle);
+        // Set translation in progress
+        setIsTranslating(true);
+
+        // Set the initial remaining time from ETA
+        setRemainingTime(translationEta);
+
+        try {
+            // Get the model name based on selected model key
+            await onTranslate(targetLanguage, originalLanguage, model, throttle);
+        } catch (error) {
+            console.error("Translation error:", error);
+        } finally {
+            // End translation progress state
+            setIsTranslating(false);
+        }
+    };
+
+    // Effect to handle the countdown timer
+    useEffect(() => {
+        let timerId: NodeJS.Timeout | null = null;
+
+        // Only run timer when translation is in progress and we have remaining time
+        if (isTranslating && remainingTime > 0) {
+            timerId = setInterval(() => {
+                setRemainingTime(prevTime => {
+                    // Decrease time by 1 second
+                    const newTime = prevTime - 1;
+
+                    // If time is up, clear the interval
+                    if (newTime <= 0) {
+                        if (timerId) clearInterval(timerId);
+                        return 0;
+                    }
+
+                    return newTime;
+                });
+            }, 1000); // Update every second
+        }
+
+        // Clean up timer when component unmounts or translation completes
+        return () => {
+            if (timerId) clearInterval(timerId);
+        };
+    }, [isTranslating, remainingTime]);
+
+    /// Format the remaining time as approximate minutes
+    const formatTime = (seconds: number): string => {
+        const minutes = Math.ceil(seconds / 60); // Round up to nearest minute
+
+        if (minutes > 1) {
+            return `${minutes} minutes`;
+        } else if (minutes === 1) {
+            return "1 minute";
+        } else {
+            return "less than 1 minute";
+        }
     };
 
     // Change label titles based on throttle value
@@ -101,6 +170,16 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
             isDownloadable={true}
         />
     ) : null;
+
+    // Translation timer component with GIF image and approximate time
+    const translationTimer = (
+        <div className="translation-progress">
+            <img src={translatingGif} alt="Translation in progress" />
+            <h3>Translation in progress</h3>
+            <p>ETA: {formatTime(remainingTime)}</p>
+            <p>This may take longer depending on the subtitle length and selected model.</p>
+        </div>
+    );
 
     return (
         <div className="translate-operation-section">
@@ -137,6 +216,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                                 name="languages"
                                 value={originalLanguage || ""}
                                 onChange={handleOriginalLanguageChange}
+                                disabled={isTranslating}
                             >
                                 <option value="">Select a language</option>
                                 {Object.entries(translationData.codes)
@@ -160,6 +240,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                                 name="languages"
                                 value={targetLanguage}
                                 onChange={handleTargetLanguageChange}
+                                disabled={isTranslating}
                             >
                                 <option value="">Select a language</option>
                                 {Object.entries(translationData.codes)
@@ -183,6 +264,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                                 name="models"
                                 value={model}
                                 onChange={handleModelChange}
+                                disabled={isTranslating}
                             >
                                 {Object.keys(translationData.models).map((modelKey) => (
                                     <option key={modelKey} value={modelKey}>
@@ -207,6 +289,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                                 defaultValue="0.50"
                                 className="slider"
                                 onChange={(e) => setThrottle(parseFloat(e.target.value))}
+                                disabled={isTranslating}
                             />
 
                             {/* Bottom row: left label, value, right label */}
@@ -222,16 +305,14 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
             {/* File preview section */}
             <div className="file-preview-section">
-
                 {/* Source file preview + Translate button */}
-                <div className="source-file-preview-container" style={{ flex: 1 }}>
-
+                <div className="source-file-preview-container" style={{ flex: (processedFile || isTranslating) ? 1 : 2 }}>
                     {/* Translate Button */}
                     <div className="operation-controls-buttons">
                         <button
-                            className={`operation-button${(targetLanguage === "" || originalLanguage === "") ? " disabled" : ""}`}
+                            className={`operation-button${(targetLanguage === "" || originalLanguage === "" || isTranslating) ? " disabled" : ""}`}
                             onClick={handleTranslate}
-                            disabled={targetLanguage == ""}
+                            disabled={targetLanguage === "" || originalLanguage === "" || isTranslating}
                         >
                             Translate
                         </button>
@@ -241,16 +322,31 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     {sourceFilePreview}
                 </div>
 
-                {/* Translated file preview + Download button */}
-                {processedFile && (
+                {/* Timer + Invisible spacer or Translated file preview + Download button */}
+                {(processedFile || isTranslating) && (
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
-                        {/* Download Button */}
-                        <div className="operation-controls-buttons">
-                            <button className="download-button" onClick={onDownload}>Download</button>
-                        </div>
 
-                        {/* Translated file preview */}
-                        {translatedFilePreview}
+                        {isTranslating ? (
+                            <>
+                                {/* Invisible spacer to match Translate/Download buttons */}
+                                <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
+                                    <button className="operation-button">Align</button>
+                                </div>
+
+                                {/* Timer */}
+                                {translationTimer}
+                            </>
+                        ) : processedFile ? (
+                            <>
+                                {/* Download Button */}
+                                <div className="operation-controls-buttons">
+                                    <button className="download-button" onClick={onDownload}>Download</button>
+                                </div>
+
+                                {/* Translated file preview */}
+                                {translatedFilePreview}
+                            </>
+                        ) : null}
                     </div>
                 )}
             </div>
