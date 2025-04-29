@@ -8,6 +8,7 @@ export interface SubtitleMetadata {
     encoding: string;
     confidence: number;
     language: string;
+    eta: number;
     filename?: string;
 }
 
