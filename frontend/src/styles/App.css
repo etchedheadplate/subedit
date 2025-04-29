@@ -27,7 +27,7 @@
 .main-option-button {
     padding: 10px 15px;
     color: #DEE2E6;
-    border: 2px transparent;
+    border: 1px transparent;
     border-radius: 0px;
     cursor: pointer;
     background: none;
@@ -37,14 +37,14 @@
 /* Disabled state (no file uploaded or loading) */
 .main-option-button:disabled {
     color: #6C757D;
-    border: 2px transparent;
+    border: 1px transparent;
     cursor: not-allowed;
 }
 
 /* Active option (e.g. when selected) */
 .main-option-button.active {
     color: #DEE2E6;
-    border: 2px dashed;
+    border: 1px solid;
 }
 
 .error-message {
