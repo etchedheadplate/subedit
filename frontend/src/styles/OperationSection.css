@@ -148,20 +148,31 @@ input {
     padding: 20px;
 }
 
+.translation-progress img {
+    max-width: 20vw;
+    opacity: 75%;
+}
+
 @keyframes pulse {
     0% {
-        opacity: 0.75;
+        color: #6C757D;
     }
 
     50% {
-        opacity: 0.50;
+        color: #DEE2E6;
     }
 
     100% {
-        opacity: 0.75;
+        color: #6C757D;
     }
 }
 
-.translation-progress img {
-    max-width: 20vw;
+.translation-progress-eta {
     animation: pulse 2s infinite ease-in-out;
+}
+
+.translation-progress-text {
+    font-size: 0.8em;
+    color: #ADB5BD;
+    max-width: 50vw;
+}

@@ -175,9 +175,8 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const translationTimer = (
         <div className="translation-progress">
             <img src={translatingGif} alt="Translation in progress" />
-            <h3>Translation in progress</h3>
-            <p>ETA: {formatTime(remainingTime)}</p>
-            <p>This may take longer depending on the subtitle length and selected model.</p>
+            <p className="translation-progress-eta">ETA: {formatTime(remainingTime)}</p>
+            <p className="translation-progress-text">This may take longer for Claude and Mistral.</p>
         </div>
     );
 
