@@ -250,8 +250,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                     {/* File preview section */}
                     <div className="file-preview-section">
 
-                        {/* Source file preview + Align button */}
-                        <div className="source-file-preview-container" style={{ flex: 1 }}>
+                        <div className="files-container">
 
                             {/* Align button */}
                             <div className="operation-controls-buttons">
@@ -262,35 +261,32 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     Align
                                 </button>
                             </div>
-
-                            {sourceFilePreview}
-                        </div>
-
-                        {/* Example file preview (no buttons) */}
-                        <div className="modified-file-preview-container" style={{ flex: 1 }}>
-
-                            {/* Invisible spacer to match Align/Download buttons */}
-                            <div
-                                className="operation-controls-buttons"
-                                style={{ visibility: "hidden" }}
-                            >
-                                <button className="operation-button">Align</button>
-                            </div>
-
-                            {exampleFilePreview}
-                        </div>
-
-                        {/* Aligned file preview + Download button */}
-                        {processedFile && (
-                            <div className="modified-file-preview-container" style={{ flex: 1 }}>
-                                {/* Download button */}
-                                <div className="operation-controls-buttons">
-                                    <button className="download-button" onClick={onDownload}>Download</button>
+                            <div className="uploaded-files-preview-container">
+                                {/* Source file preview + Align button */}
+                                <div className="source-file-preview-container">
+                                    {sourceFilePreview}
                                 </div>
 
-                                {alignedFilePreview}
+                                {/* Example file preview (no buttons) */}
+                                <div className="modified-file-preview-container">
+                                    {exampleFilePreview}
+                                </div>
                             </div>
-                        )}
+                        </div>
+
+                        <div className="files-container">
+                            {/* Aligned file preview + Download button */}
+                            {processedFile && (
+                                <div className="modified-file-preview-container">
+                                    {/* Download button */}
+                                    <div className="operation-controls-buttons">
+                                        <button className="download-button" onClick={onDownload}>Download</button>
+                                    </div>
+
+                                    {alignedFilePreview}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </>
             )}
