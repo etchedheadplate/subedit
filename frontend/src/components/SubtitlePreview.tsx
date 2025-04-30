@@ -112,6 +112,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                     encoding: result.encoding,
                     confidence: result.confidence * 100, // Probability -> Percentage
                     language: result.language,
+                    eta: result.eta,
                     filename: subtitleFile.filename,
                 }
                 setSubtitleMeta(meta);
