@@ -16,11 +16,15 @@
 }
 
 .operation-controls-items {
-    text-align: center;
     display: flex;
+    flex-wrap: wrap;
     gap: 60px;
     justify-content: center;
-    align-items: stretch;
+    align-items: flex-end;
+    text-align: center;
+    max-width: 100%;
+    overflow-x: hidden;
+    padding: 10px;
 }
 
 /* Grid layout for the other checkboxes */
@@ -174,5 +178,4 @@ input {
 .translation-progress-text {
     font-size: 0.8em;
     color: #ADB5BD;
-    max-width: 50vw;
 }
