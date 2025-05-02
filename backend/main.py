@@ -16,7 +16,7 @@ from subedit import SubEdit
 # Load environment variables from .env file
 load_dotenv()
 
-# Opearitional constants
+# Constants
 DEBUG = os.getenv('DEBUG')
 FRONTEND_URL: str = "http://localhost:5173" if DEBUG else os.getenv('FRONTEND_URL', "http://localhost:5173")
 PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
