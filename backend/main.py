@@ -4,12 +4,12 @@ import shutil
 import uuid
 import threading
 import re
-from typing import Dict, Any, AsyncGenerator
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from typing import Dict, Any, AsyncGenerator, Optional, List
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from structures import ShowRequest, ShiftRequest, AlignRequest, CleanRequest, TranslateRequest
+from structures import StatusRequest, ShowRequest, ShiftRequest, AlignRequest, CleanRequest, TranslateRequest
 from subedit import SubEdit
 
 # Constants
@@ -162,6 +162,37 @@ async def download_file(session_id: str, filename: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
 
+@app.post("/task-status/")
+async def check_task_status(request: StatusRequest) -> Dict[str, Any]:
+    """Check if a processed file exists from a background task.
+
+    Args:
+        request (StatusRequest): Request containing session ID and filename to check.
+
+    Returns:
+        Dict[str, Any]: Dictionary containing status information.
+    """
+    session_path = os.path.join(USER_FILES_DIR, request.session_id)
+
+    # Check for possible processed filenames (adjust as needed)
+    source_name, source_ext = os.path.splitext(request.filename)
+    possible_files = [
+        f for f in os.listdir(session_path)
+        if f.startswith(source_name) and f != request.filename
+    ]
+
+    if possible_files:
+        # Return the most recently modified file
+        latest_file = max(possible_files, key=lambda f: os.path.getmtime(os.path.join(session_path, f)))
+        return {
+            "status": "completed",
+            "processed_filename": latest_file
+        }
+    else:
+        return {
+            "status": "processing"
+        }
+
 @app.post("/info/")
 async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
     """Retrieve information about a subtitle file.
@@ -206,19 +237,19 @@ async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/shift/")
-async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
-    """Shift the timing of subtitles by a specified delay.
+async def shift_subtitles(
+    background_tasks: BackgroundTasks,
+    request: ShiftRequest
+) -> Dict[str, Any]:
+    """Shift the timing of subtitles by a specified delay in the background.
 
     Args:
+        background_tasks: BackgroundTasks instance for running operations asynchronously
         request (ShiftRequest): Request containing session ID, filename,
                               delay amount, and optional subtitle indices.
 
     Returns:
-        Dict[str, Any]: Dictionary containing file information, processed filename,
-                       subtitles preview, and metadata.
-
-    Raises:
-        HTTPException: If an error occurs during processing.
+        Dict[str, Any]: Dictionary containing file information and status.
     """
     try:
         print("[DEBUG] [API] /shift/ endpoint called")
@@ -232,40 +263,64 @@ async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
         file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
         subedit = SubEdit([file_path])
 
-        # Apply shifting
-        subedit.shift_timing(delay=shift_delay, items=shift_items)
+        # Add shift task to background tasks
+        background_tasks.add_task(
+            perform_shift_task,
+            subedit,
+            shift_delay,
+            shift_items,
+            session_id,
+            source_filename
+        )
 
-        # Return response with preview and metadata
-        subtitles_data = subedit.subtitles_data[subedit.shifted_file]
-
+        # Return immediate response with status
         return {
             "session_id": session_id,
             "source_filename": source_filename,
-            "processed_filename": subedit.processed_file,
-            "message": "Subtitles shifted successfully",
-            "preview": subtitles_data['subtitles'],
-            "encoding": subtitles_data['metadata']['encoding'],
-            "confidence": subtitles_data['metadata']['confidence'],
-            "language": subtitles_data['metadata']['language']
+            "message": "Subtitle shifting started in the background",
+            "status": "processing"
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/align/")
-async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
-    """Align subtitles timing based on an example file.
+def perform_shift_task(
+    subedit: SubEdit,
+    delay: int,
+    items: Optional[List[int]],
+    session_id: str,
+    source_filename: str
+) -> None:
+    """Perform the subtitle shifting task in the background.
 
     Args:
+        subedit: SubEdit instance with loaded subtitles
+        delay: Delay in milliseconds
+        items: Optional list of subtitle indices to shift
+        session_id: Current session ID
+        source_filename: Source filename
+    """
+    try:
+        # Apply shifting in the background
+        subedit.shift_timing(delay=delay, items=items)
+        print(f"[DEBUG] [BACKGROUND] Shifting for {source_filename} completed successfully")
+    except Exception as e:
+        print(f"[DEBUG] [BACKGROUND] Shifting error: {str(e)}")
+
+@app.post("/align/")
+async def align_subtitles(
+    background_tasks: BackgroundTasks,
+    request: AlignRequest
+) -> Dict[str, Any]:
+    """Align subtitles timing based on an example file in the background.
+
+    Args:
+        background_tasks: BackgroundTasks instance for running operations asynchronously
         request (AlignRequest): Request containing session ID, source filename,
                               example filename, and optional slice indices.
 
     Returns:
-        Dict[str, Any]: Dictionary containing file information, processed filename,
-                       subtitles preview, and metadata.
-
-    Raises:
-        HTTPException: If an error occurs during processing or if example file is missing.
+        Dict[str, Any]: Dictionary containing file information and status message.
     """
     try:
         print("[DEBUG] [API] /align/ endpoint called")
@@ -275,52 +330,73 @@ async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
         source_slice, example_slice = request.source_slice, request.example_slice
 
         # Check if example file is provided
-        if request.example_filename:
-            file_list = [
-                os.path.join(USER_FILES_DIR, session_id, source_filename),
-                os.path.join(USER_FILES_DIR, session_id, request.example_filename)
-            ]
-        else:
+        if not request.example_filename:
             raise HTTPException(status_code=400, detail="Example file is required for alignment")
+
+        file_list = [
+            os.path.join(USER_FILES_DIR, session_id, source_filename),
+            os.path.join(USER_FILES_DIR, session_id, request.example_filename)
+        ]
 
         # Initialize SubEdit object
         subedit = SubEdit(file_list)
 
-        # Apply alignment
-        subedit.align_timing(source_slice=source_slice, example_slice=example_slice)
+        # Calculate preliminary ETA for response
+        eta = subedit.subtitles_data[file_list[0]]['eta']
 
-        # Get the aligned file data with metadata
-        subtitles_data = subedit.subtitles_data[subedit.aligned_file]
+        # Add alignment task to background tasks
+        background_tasks.add_task(
+            perform_align_task,
+            subedit,
+            source_slice,
+            example_slice
+        )
 
-        # Return response with preview and metadata
+        # Return immediate response with status
         return {
             "session_id": session_id,
             "source_filename": source_filename,
-            "processed_filename": subedit.processed_file,
-            "message": "Subtitles aligned successfully",
-            "preview": subtitles_data['subtitles'],
-            "encoding": subtitles_data['metadata']['encoding'],
-            "confidence": subtitles_data['metadata']['confidence'],
-            "language": subtitles_data['metadata']['language']
+            "message": "Subtitle alignment started in the background",
+            "eta": eta,
+            "status": "processing"
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/clean/")
-async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
-    """Clean markup from subtitles based on specified options.
+def perform_align_task(
+    subedit: SubEdit,
+    source_slice: Optional[List[int]],
+    example_slice: Optional[List[int]]
+) -> None:
+    """Perform the subtitle alignment task in the background.
 
     Args:
+        subedit: SubEdit instance with loaded subtitles
+        source_slice: Optional slice indices for source file
+        example_slice: Optional slice indices for example file
+    """
+    try:
+        # Apply alignment in the background
+        subedit.align_timing(source_slice=source_slice, example_slice=example_slice)
+        print(f"[DEBUG] [BACKGROUND] Alignment completed successfully")
+    except Exception as e:
+        print(f"[DEBUG] [BACKGROUND] Alignment error: {str(e)}")
+
+@app.post("/clean/")
+async def clean_subtitles(
+    background_tasks: BackgroundTasks,
+    request: CleanRequest
+) -> Dict[str, Any]:
+    """Clean markup from subtitles based on specified options in the background.
+
+    Args:
+        background_tasks: BackgroundTasks instance for running operations asynchronously
         request (CleanRequest): Request containing session ID, filename,
                               and boolean flags for markup types to clean.
 
     Returns:
-        Dict[str, Any]: Dictionary containing file information, processed filename,
-                       subtitles preview, and metadata.
-
-    Raises:
-        HTTPException: If an error occurs during processing.
+        Dict[str, Any]: Dictionary containing file information and status message.
     """
     try:
         print("[DEBUG] [API] /clean/ endpoint called")
@@ -332,48 +408,81 @@ async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
         # Initialize SubEdit object
         subedit = SubEdit([file_path])
 
-        # Apply markup cleaning
-        subedit.clean_markup(
-            bold=request.bold,
-            italic=request.italic,
-            underline=request.underline,
-            strikethrough=request.strikethrough,
-            color=request.color,
-            font=request.font
+        # Calculate preliminary ETA for response
+        eta = subedit.subtitles_data[file_path]['eta']
+
+        # Add cleaning task to background tasks
+        background_tasks.add_task(
+            perform_clean_task,
+            subedit,
+            request.bold,
+            request.italic,
+            request.underline,
+            request.strikethrough,
+            request.color,
+            request.font
         )
 
-        # Get the cleaned file data with metadata
-        subtitles_data = subedit.subtitles_data[subedit.cleaned_file]
-
-        # Return response with preview and metadata
+        # Return immediate response with status
         return {
             "session_id": session_id,
             "source_filename": source_filename,
-            "processed_filename": subedit.processed_file,
-            "message": "Markup cleaned successfully",
-            "preview": subtitles_data['subtitles'],
-            "encoding": subtitles_data['metadata']['encoding'],
-            "confidence": subtitles_data['metadata']['confidence'],
-            "language": subtitles_data['metadata']['language']
+            "message": "Markup cleaning started in the background",
+            "eta": eta,
+            "status": "processing"
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/translate/")
-async def translate_subtitles(request: TranslateRequest) -> Dict[str, Any]:
-    """Translate subtitles to the specified target language.
+def perform_clean_task(
+    subedit: SubEdit,
+    bold: bool,
+    italic: bool,
+    underline: bool,
+    strikethrough: bool,
+    color: bool,
+    font: bool
+) -> None:
+    """Perform the markup cleaning task in the background.
 
     Args:
+        subedit: SubEdit instance with loaded subtitles
+        bold: Whether to clean bold markup
+        italic: Whether to clean italic markup
+        underline: Whether to clean underline markup
+        strikethrough: Whether to clean strikethrough markup
+        color: Whether to clean color markup
+        font: Whether to clean font markup
+    """
+    try:
+        # Apply markup cleaning in the background
+        subedit.clean_markup(
+            bold=bold,
+            italic=italic,
+            underline=underline,
+            strikethrough=strikethrough,
+            color=color,
+            font=font
+        )
+        print(f"[DEBUG] [BACKGROUND] Markup cleaning completed successfully")
+    except Exception as e:
+        print(f"[DEBUG] [BACKGROUND] Markup cleaning error: {str(e)}")
+
+@app.post("/translate/")
+async def translate_subtitles(
+    background_tasks: BackgroundTasks,
+    request: TranslateRequest
+) -> Dict[str, Any]:
+    """Translate subtitles to the specified target language in the background.
+
+    Args:
+        background_tasks: BackgroundTasks instance for running operations asynchronously
         request (TranslateRequest): Request containing session ID, filename,
                                   language settings, model configuration, and timeouts.
 
     Returns:
-        Dict[str, Any]: Dictionary containing file information, processed filename,
-                       translated subtitles preview, and metadata.
-
-    Raises:
-        HTTPException: If an error occurs during processing.
+        Dict[str, Any]: Dictionary containing file information and status message.
     """
     try:
         print("[DEBUG] [API] /translate/ endpoint called")
@@ -385,33 +494,68 @@ async def translate_subtitles(request: TranslateRequest) -> Dict[str, Any]:
         # Initialize SubEdit object
         subedit = SubEdit([file_path])
 
-        # Apply translation
-        subedit.translate_text(
-            target_language=request.target_language,
-            original_language=request.original_language,
-            model_name=request.model_name,
-            model_throttle=request.model_throttle,
-            request_timeout=request.request_timeout,
-            response_timeout=request.response_timeout
+        # Calculate preliminary ETA for response
+        eta = subedit.subtitles_data[file_path]['eta']
+
+        # Add translation task to background tasks
+        background_tasks.add_task(
+            perform_translation_task,
+            subedit,
+            request.target_language,
+            request.original_language,
+            request.model_name,
+            request.model_throttle,
+            request.request_timeout,
+            request.response_timeout
         )
 
-        # Get the translated file data with metadata
-        subtitles_data = subedit.subtitles_data[subedit.translated_file]
-
-        # Return response with preview and metadata
+        # Return immediate response with status
         return {
             "session_id": session_id,
             "source_filename": source_filename,
-            "processed_filename": subedit.processed_file,
-            "message": f"Subtitles translated to {request.target_language} successfully",
-            "preview": subtitles_data['subtitles'],
-            "encoding": subtitles_data['metadata']['encoding'],
-            "confidence": subtitles_data['metadata']['confidence'],
-            "language": request.target_language,  # Use target language as the new language
+            "message": f"Translation to {request.target_language} started in the background",
+            "eta": eta,
+            "status": "processing"
         }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+def perform_translation_task(
+    subedit: SubEdit,
+    target_language: str,
+    original_language: str,
+    model_name: str,
+    model_throttle: float,
+    request_timeout: int,
+    response_timeout: int
+) -> None:
+    """Perform the translation task in the background.
+
+    This function is run as a background task and won't block the main application.
+
+    Args:
+        subedit: SubEdit instance with loaded subtitles
+        target_language: Target language for translation
+        original_language: Source language of subtitles
+        model_name: LLM model to use for translation
+        model_throttle: Model throttle settings
+        request_timeout: Request timeout in seconds
+        response_timeout: Response timeout in seconds
+    """
+    try:
+        # Apply translation in the background
+        subedit.translate_text(
+            target_language=target_language,
+            original_language=original_language,
+            model_name=model_name,
+            model_throttle=model_throttle,
+            request_timeout=request_timeout,
+            response_timeout=response_timeout
+        )
+        print(f"[DEBUG] [BACKGROUND] Translation to {target_language} completed successfully")
+    except Exception as e:
+        print(f"[DEBUG] [BACKGROUND] Translation error: {str(e)}")
 
 if __name__ == '__main__':
     run_cleanup()

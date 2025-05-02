@@ -45,6 +45,10 @@ class TranslationData(TypedDict):
     translation_time: TranslationTime
 
 # Structures of API requests
+class StatusRequest(BaseModel):
+    session_id: str
+    filename: str
+
 class ShowRequest(BaseModel):
     session_id: str
     filename: str
