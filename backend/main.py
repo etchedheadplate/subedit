@@ -4,6 +4,7 @@ import shutil
 import uuid
 import threading
 import re
+from dotenv import load_dotenv
 from typing import Dict, Any, AsyncGenerator, Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
 from fastapi.responses import FileResponse
@@ -12,7 +13,12 @@ from contextlib import asynccontextmanager
 from structures import StatusRequest, ShowRequest, ShiftRequest, AlignRequest, CleanRequest, TranslateRequest
 from subedit import SubEdit
 
+# Load environment variables from .env file
+load_dotenv()
+
 # Constants
+DEBUG = os.getenv('DEBUG')
+FRONTEND_URL: str = "http://localhost:5173" if DEBUG else os.getenv('FRONTEND_URL', "http://localhost:5173")
 PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
 USER_FILES_DIR = os.path.join(PARENT_DIR, "..", "user_files")
 SESSION_LIFETIME = 3600  # 1 hour in seconds
@@ -67,7 +73,7 @@ app = FastAPI(lifespan=lifespan)
 # Cross-Origin Resource Sharing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Frontend URL
+    allow_origins=[FRONTEND_URL],  # Frontend URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

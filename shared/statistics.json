@@ -7,8 +7,8 @@
         "translate": 1
     },
     "translation_time": {
-        "total_count_of_responses": 1,
-        "total_responses_duration": 1,
-        "average_response_duration": 1
+        "total_count_of_responses": 87,
+        "total_responses_duration": 1336.2187354176285,
+        "average_response_duration": 10.988491211696878
     }
 }
