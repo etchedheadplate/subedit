@@ -1,12 +1,14 @@
 # Enviroment
 .env
 .python-version
+passenger_wsgi.py
 
 # Testing
 test.py
 *.log
 
 # Junk
+tmp
 temp
 **/__pycache__
 *.pyc
