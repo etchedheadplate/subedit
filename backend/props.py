@@ -1,4 +1,6 @@
+import os
 import re
+import time
 import math
 import json
 import chardet
@@ -160,22 +162,51 @@ def update_estimated_response_time(new_response_time: float) -> None:
     Returns:
         None: This function does not return a value. It modifies the statistics stored in the JSON file.
     """
+    current_timestamp = time.time()
+
     # Load the existing data from the JSON file
-    with open(Path(__file__).parent / '../shared/statistics.json', 'r') as file:
-        data: TranslationData = json.load(file)
-        total_count_of_responses: int = data['translation_time']['total_count_of_responses']
-        average_response_duration: float = data['translation_time']['average_response_duration']
+    statistics_file = Path(__file__).parent / '../shared/statistics.json'
+    default_statistics = {
+        "last_update": current_timestamp,
+        "files_processed": {
+            "shift": 1,
+            "align": 1,
+            "clean": 1,
+            "translate": 1
+        },
+        "translation_time": {
+            "total_count_of_responses": 1,
+            "total_responses_duration": new_response_time,
+            "average_response_duration": new_response_time
+        }
+    }
 
-        # Calculate the updated average response duration
-        updated_average_response_duration = (average_response_duration * total_count_of_responses + new_response_time) / (total_count_of_responses + 1)
+    # Check if the file exists
+    if not os.path.exists(statistics_file):
+        # If it does not exist, create the file and write the default content
+        with open(statistics_file, 'w') as file:
+            json.dump(default_statistics, file, indent=4)
+        print(f"{statistics_file} created with default content.")
+        return  # Exit the function after creating the file
 
-        # Update the data structure with the new average
-        data['translation_time']['average_response_duration'] = updated_average_response_duration
-        data['translation_time']['total_count_of_responses'] += 1  # Increment the count of responses
-        data['translation_time']['total_responses_duration'] += new_response_time  # Update the total duration
+    # If the file exists, read the data
+    with open(statistics_file, 'r') as file:
+        data = json.load(file)
+
+    total_count_of_responses = data['translation_time']['total_count_of_responses']
+    average_response_duration = data['translation_time']['average_response_duration']
+
+    # Calculate the updated average response duration
+    updated_average_response_duration = (average_response_duration * total_count_of_responses + new_response_time) / (total_count_of_responses + 1)
+
+    # Update the data structure with the new average
+    data['last_update'] = current_timestamp
+    data['translation_time']['average_response_duration'] = updated_average_response_duration
+    data['translation_time']['total_count_of_responses'] += 1  # Increment the count of responses
+    data['translation_time']['total_responses_duration'] += new_response_time  # Update the total duration
 
     # Write the updated data back to the JSON file
-    with open(Path(__file__).parent / '../shared/statistics.json', 'w') as file:
+    with open(statistics_file, 'w') as file:
         json.dump(data, file, indent=4)
 
 def calculate_translation_eta(
