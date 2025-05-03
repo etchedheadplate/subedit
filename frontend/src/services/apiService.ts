@@ -90,6 +90,35 @@ export const apiService = {
         };
     },
 
+    // Check task status
+    checkTaskStatus: async (
+        sessionId: string,
+        filename: string,
+    ): Promise<{
+        status: string;
+        processed_filename?: string;
+    }> => {
+        const response = await fetch(`${API_BASE_URL}/task-status/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                session_id: sessionId,
+                filename: filename,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Status check failed");
+        }
+
+        return {
+            status: data.status,
+            processed_filename: data.processed_filename,
+        };
+    },
+
     shiftSubtitles: async (
         sessionId: string,
         sourceFilename: string,
@@ -97,11 +126,8 @@ export const apiService = {
         items: number[],
     ): Promise<{
         sourceFilename: string;
-        processedFilename: string;
-        preview: SubtitlePreview;
-        encoding: string;
-        confidence: number;
-        language: string;
+        status: string;
+        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/shift/`, {
             method: "POST",
@@ -121,12 +147,9 @@ export const apiService = {
         }
 
         return {
-            sourceFilename: data.filename,
-            processedFilename: data.processed_filename,
-            preview: data.preview,
-            encoding: data.encoding,
-            confidence: data.confidence,
-            language: data.language,
+            sourceFilename: data.source_filename || data.filename,
+            status: data.status,
+            eta: data.eta,
         };
     },
 
@@ -138,11 +161,8 @@ export const apiService = {
         exampleSlice?: number[],
     ): Promise<{
         sourceFilename: string;
-        processedFilename: string;
-        preview: SubtitlePreview;
-        encoding: string;
-        confidence: number;
-        language: string;
+        status: string;
+        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/align/`, {
             method: "POST",
@@ -163,12 +183,9 @@ export const apiService = {
         }
 
         return {
-            sourceFilename: data.filename,
-            processedFilename: data.processed_filename,
-            preview: data.preview,
-            encoding: data.encoding,
-            confidence: data.confidence,
-            language: data.language,
+            sourceFilename: data.filename || data.source_filename,
+            status: data.status,
+            eta: data.eta,
         };
     },
 
@@ -185,11 +202,8 @@ export const apiService = {
         },
     ): Promise<{
         sourceFilename: string;
-        processedFilename: string;
-        preview: SubtitlePreview;
-        encoding: string;
-        confidence: number;
-        language: string;
+        status: string;
+        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/clean/`, {
             method: "POST",
@@ -208,12 +222,9 @@ export const apiService = {
         }
 
         return {
-            sourceFilename: data.filename,
-            processedFilename: data.processed_filename,
-            preview: data.preview,
-            encoding: data.encoding,
-            confidence: data.confidence,
-            language: data.language,
+            sourceFilename: data.filename || data.source_filename,
+            status: data.status,
+            eta: data.eta,
         };
     },
 
@@ -224,13 +235,12 @@ export const apiService = {
         originalLanguage: string,
         modelName: string = "GPT-4o",
         modelThrottle: number = 0.5,
+        requestTimeout: number = 60,
+        responseTimeout: number = 60,
     ): Promise<{
         sourceFilename: string;
-        processedFilename: string;
-        preview: SubtitlePreview;
-        encoding: string;
-        confidence: number;
-        language: string;
+        status: string;
+        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/translate/`, {
             method: "POST",
@@ -242,6 +252,8 @@ export const apiService = {
                 original_language: originalLanguage,
                 model_name: modelName,
                 model_throttle: modelThrottle,
+                request_timeout: requestTimeout,
+                response_timeout: responseTimeout,
             }),
         });
 
@@ -252,12 +264,9 @@ export const apiService = {
         }
 
         return {
-            sourceFilename: data.filename,
-            processedFilename: data.processed_filename,
-            preview: data.preview,
-            encoding: data.encoding,
-            confidence: data.confidence,
-            language: data.language,
+            sourceFilename: data.source_filename,
+            status: data.status,
+            eta: data.eta,
         };
     },
 };
