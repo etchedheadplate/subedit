@@ -4,8 +4,12 @@ import { SubtitleFile, SubtitleMetadata } from "../../types";
 import translationData from "../../../../shared/translate.json";
 import translatingGif from "../../assets/translating.gif";
 
+interface TranslateResult {
+    eta: number;
+}
+
 interface TranslateOperationProps {
-    onTranslate: (targetLanguage: string, originalLanguage: string, modelName: string, modelThrottle: number) => Promise<any>;
+    onTranslate: (targetLanguage: string, originalLanguage: string, modelName: string, modelThrottle: number) => Promise<TranslateResult>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
@@ -24,10 +28,10 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const [targetLanguage, setTargetLanguage] = useState<string>("");
 
     // State for setting up original language
-    const [originalLanguage, setOriginalLanguage] = useState<SubtitleMetadata["language"] | null>(null);
+    const [originalLanguage, setOriginalLanguage] = useState<SubtitleMetadata["language"]>("");
 
     // State to store detected language metadata
-    const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
+    const [detectedLanguage,] = useState<string | null>(null);
 
     // Get first model key for default selection
     const defaultModel = Object.keys(translationData.models)[0];
@@ -45,7 +49,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const [remainingTime, setRemainingTime] = useState<number>(0);
 
     // State to store the ETA for translation
-    const [translationEta, setTranslationEta] = useState<number>(0);
+    const [, setTranslationEta] = useState<number>(0);
 
     // Effect to set the original language from the source file when metadata is available
     useEffect(() => {
@@ -58,7 +62,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
     // Handler to receive language info from SubtitlePreview
     const handleSourceLanguageDetected = (metadata: SubtitleMetadata) => {
-        if (metadata && metadata.language && originalLanguage === null) {
+        if (metadata && metadata.language && originalLanguage === "") {
             setOriginalLanguage(metadata.language);
         }
 
@@ -113,7 +117,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
     // Effect to handle the countdown timer
     useEffect(() => {
-        let timerId: NodeJS.Timeout | null = null;
+        let timerId: number | null = null;
 
         // Only run timer when translation is in progress and we have remaining time
         if (isTranslating && remainingTime > 0) {
