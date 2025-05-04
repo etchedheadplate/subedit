@@ -9,7 +9,12 @@ interface TranslateResult {
 }
 
 interface TranslateOperationProps {
-    onTranslate: (targetLanguage: string, originalLanguage: string, modelName: string, modelThrottle: number) => Promise<TranslateResult>;
+    onTranslate: (
+        targetLanguage: string,
+        originalLanguage: string,
+        modelName: string,
+        modelThrottle: number
+    ) => Promise<TranslateResult | null | undefined>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
