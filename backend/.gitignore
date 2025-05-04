@@ -1,7 +1,6 @@
 # Enviroment
 .env
 .python-version
-passenger_wsgi.py
 
 # Testing
 test.py
