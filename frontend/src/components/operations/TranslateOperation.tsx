@@ -88,19 +88,28 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
         // Set translation in progress
         setIsTranslating(true);
 
-        // Set the initial remaining time from ETA
-        setRemainingTime(translationEta);
-
         try {
-            // Get the model name based on selected model key
-            await onTranslate(targetLanguage, originalLanguage, model, throttle);
+            // Start the translation and get ETA
+            const result = await onTranslate(targetLanguage, originalLanguage, model, throttle);
+
+            // If we got a result with ETA, use it for countdown
+            if (result && result.eta) {
+                setTranslationEta(result.eta);
+                setRemainingTime(result.eta);
+            }
         } catch (error) {
             console.error("Translation error:", error);
-        } finally {
-            // End translation progress state
             setIsTranslating(false);
         }
+        // isTranslating will be updated by the parent component when polling completes
     };
+
+    // Effect to monitor processedFile and update isTranslating
+    useEffect(() => {
+        if (processedFile) {
+            setIsTranslating(false);
+        }
+    }, [processedFile]);
 
     // Effect to handle the countdown timer
     useEffect(() => {
