@@ -3,10 +3,11 @@ import time
 import shutil
 import uuid
 import threading
+import asyncio
 import re
 from dotenv import load_dotenv
-from typing import Dict, Any, AsyncGenerator, Optional, List
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
+from typing import Dict, Any, AsyncGenerator, Optional, List, Coroutine
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -31,17 +32,16 @@ if not os.path.exists(USER_FILES_DIR):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Lifespan event handler for FastAPI (startup/shutdown).
-
-    Args:
-        app (FastAPI): The FastAPI application instance.
-
-    Yields:
-        None: Control is yielded back to FastAPI during application runtime.
-    """
+    """Lifespan event handler for FastAPI (startup/shutdown)."""
     cleanup_thread = threading.Thread(target=run_cleanup, daemon=True)
     cleanup_thread.start()
     yield
+
+    # Cancel any running tasks when shutting down
+    # Use the public method to get session IDs
+    session_ids: List[str] = TaskManager.get_all_session_ids()
+    for session_id in session_ids:
+        TaskManager.cancel_tasks(session_id)
 
 def cleanup_old_sessions() -> None:
     """Delete session folders older than SESSION_LIFETIME.
@@ -170,18 +170,14 @@ async def download_file(session_id: str, filename: str) -> FileResponse:
 
 @app.post("/task-status/")
 async def check_task_status(request: StatusRequest) -> Dict[str, Any]:
-    """Check if a processed file exists from a background task.
-
-    Args:
-        request (StatusRequest): Request containing session ID and filename to check.
-
-    Returns:
-        Dict[str, Any]: Dictionary containing status information.
-    """
+    """Check if a processed file exists from a background task."""
     session_path = os.path.join(USER_FILES_DIR, request.session_id)
 
-    # Check for possible processed filenames (adjust as needed)
-    source_name, source_ext = os.path.splitext(request.filename)
+    # Get tasks for this session
+    tasks = TaskManager.get_tasks(request.session_id)
+
+    # Check for possible processed filenames
+    source_name = os.path.splitext(request.filename)[0]
     possible_files = [
         f for f in os.listdir(session_path)
         if f.startswith(source_name) and f != request.filename
@@ -194,9 +190,15 @@ async def check_task_status(request: StatusRequest) -> Dict[str, Any]:
             "status": "completed",
             "processed_filename": latest_file
         }
+    elif tasks:
+        # Tasks are still running
+        return {
+            "status": "processing",
+            "tasks_count": len(tasks)
+        }
     else:
         return {
-            "status": "processing"
+            "status": "unknown"  # No tasks found and no output files
         }
 
 @app.post("/info/")
@@ -242,21 +244,49 @@ async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class TaskManager:
+    """Manage background tasks using asyncio."""
+
+    # Specify the type of _tasks dictionary
+    _tasks: Dict[str, List[asyncio.Task[Any]]] = {}
+
+    @classmethod
+    def create_task(cls, session_id: str, coroutine: Coroutine[Any, Any, Any]) -> asyncio.Task[Any]:
+        """Create and track a new background task."""
+        task: asyncio.Task[Any] = asyncio.create_task(coroutine)
+        if session_id not in cls._tasks:
+            cls._tasks[session_id] = []
+        cls._tasks[session_id].append(task)
+
+        # Set up callback to remove task when done
+        task.add_done_callback(
+            lambda t: cls._tasks[session_id].remove(t) if t in cls._tasks.get(session_id, []) else None
+        )
+        return task
+
+    @classmethod
+    def get_tasks(cls, session_id: str) -> List[asyncio.Task[Any]]:
+        """Get all tasks for a session."""
+        return cls._tasks.get(session_id, [])
+
+    @classmethod
+    def cancel_tasks(cls, session_id: str) -> None:
+        """Cancel all tasks for a session."""
+        tasks = cls._tasks.get(session_id, [])
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        cls._tasks[session_id] = []
+
+    # Add this method to the TaskManager class:
+    @classmethod
+    def get_all_session_ids(cls) -> List[str]:
+        """Get all session IDs that have active tasks."""
+        return list(cls._tasks.keys())
+
 @app.post("/shift/")
-async def shift_subtitles(
-    background_tasks: BackgroundTasks,
-    request: ShiftRequest
-) -> Dict[str, Any]:
-    """Shift the timing of subtitles by a specified delay in the background.
-
-    Args:
-        background_tasks: BackgroundTasks instance for running operations asynchronously
-        request (ShiftRequest): Request containing session ID, filename,
-                              delay amount, and optional subtitle indices.
-
-    Returns:
-        Dict[str, Any]: Dictionary containing file information and status.
-    """
+async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
+    """Shift the timing of subtitles by a specified delay."""
     try:
         print("[DEBUG] [API] /shift/ endpoint called")
 
@@ -269,14 +299,10 @@ async def shift_subtitles(
         file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
         subedit = SubEdit([file_path])
 
-        # Add shift task to background tasks
-        background_tasks.add_task(
-            perform_shift_task,
-            subedit,
-            shift_delay,
-            shift_items,
+        # Create task using asyncio
+        TaskManager.create_task(
             session_id,
-            source_filename
+            perform_shift_task(subedit, shift_delay, shift_items, session_id, source_filename)
         )
 
         # Return immediate response with status
@@ -290,22 +316,14 @@ async def shift_subtitles(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def perform_shift_task(
+async def perform_shift_task(
     subedit: SubEdit,
     delay: int,
     items: Optional[List[int]],
     session_id: str,
     source_filename: str
 ) -> None:
-    """Perform the subtitle shifting task in the background.
-
-    Args:
-        subedit: SubEdit instance with loaded subtitles
-        delay: Delay in milliseconds
-        items: Optional list of subtitle indices to shift
-        session_id: Current session ID
-        source_filename: Source filename
-    """
+    """Perform the subtitle shifting task in the background."""
     try:
         # Apply shifting in the background
         subedit.shift_timing(delay=delay, items=items)
@@ -314,20 +332,8 @@ def perform_shift_task(
         print(f"[DEBUG] [BACKGROUND] Shifting error: {str(e)}")
 
 @app.post("/align/")
-async def align_subtitles(
-    background_tasks: BackgroundTasks,
-    request: AlignRequest
-) -> Dict[str, Any]:
-    """Align subtitles timing based on an example file in the background.
-
-    Args:
-        background_tasks: BackgroundTasks instance for running operations asynchronously
-        request (AlignRequest): Request containing session ID, source filename,
-                              example filename, and optional slice indices.
-
-    Returns:
-        Dict[str, Any]: Dictionary containing file information and status message.
-    """
+async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
+    """Align subtitles timing based on an example file."""
     try:
         print("[DEBUG] [API] /align/ endpoint called")
 
@@ -350,12 +356,10 @@ async def align_subtitles(
         # Calculate preliminary ETA for response
         eta = subedit.subtitles_data[file_list[0]]['eta']
 
-        # Add alignment task to background tasks
-        background_tasks.add_task(
-            perform_align_task,
-            subedit,
-            source_slice,
-            example_slice
+        # Create task using asyncio
+        TaskManager.create_task(
+            session_id,
+            perform_align_task(subedit, source_slice, example_slice)
         )
 
         # Return immediate response with status
@@ -370,40 +374,22 @@ async def align_subtitles(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def perform_align_task(
+async def perform_align_task(
     subedit: SubEdit,
     source_slice: Optional[List[int]],
     example_slice: Optional[List[int]]
 ) -> None:
-    """Perform the subtitle alignment task in the background.
-
-    Args:
-        subedit: SubEdit instance with loaded subtitles
-        source_slice: Optional slice indices for source file
-        example_slice: Optional slice indices for example file
-    """
+    """Perform the subtitle alignment task in the background."""
     try:
         # Apply alignment in the background
         subedit.align_timing(source_slice=source_slice, example_slice=example_slice)
-        print(f"[DEBUG] [BACKGROUND] Alignment completed successfully")
+        print("[DEBUG] [BACKGROUND] Alignment completed successfully")
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Alignment error: {str(e)}")
 
 @app.post("/clean/")
-async def clean_subtitles(
-    background_tasks: BackgroundTasks,
-    request: CleanRequest
-) -> Dict[str, Any]:
-    """Clean markup from subtitles based on specified options in the background.
-
-    Args:
-        background_tasks: BackgroundTasks instance for running operations asynchronously
-        request (CleanRequest): Request containing session ID, filename,
-                              and boolean flags for markup types to clean.
-
-    Returns:
-        Dict[str, Any]: Dictionary containing file information and status message.
-    """
+async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
+    """Clean markup from subtitles based on specified options."""
     try:
         print("[DEBUG] [API] /clean/ endpoint called")
 
@@ -417,16 +403,18 @@ async def clean_subtitles(
         # Calculate preliminary ETA for response
         eta = subedit.subtitles_data[file_path]['eta']
 
-        # Add cleaning task to background tasks
-        background_tasks.add_task(
-            perform_clean_task,
-            subedit,
-            request.bold,
-            request.italic,
-            request.underline,
-            request.strikethrough,
-            request.color,
-            request.font
+        # Create task using asyncio
+        TaskManager.create_task(
+            session_id,
+            perform_clean_task(
+                subedit,
+                request.bold,
+                request.italic,
+                request.underline,
+                request.strikethrough,
+                request.color,
+                request.font
+            )
         )
 
         # Return immediate response with status
@@ -441,7 +429,7 @@ async def clean_subtitles(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def perform_clean_task(
+async def perform_clean_task(
     subedit: SubEdit,
     bold: bool,
     italic: bool,
@@ -450,17 +438,7 @@ def perform_clean_task(
     color: bool,
     font: bool
 ) -> None:
-    """Perform the markup cleaning task in the background.
-
-    Args:
-        subedit: SubEdit instance with loaded subtitles
-        bold: Whether to clean bold markup
-        italic: Whether to clean italic markup
-        underline: Whether to clean underline markup
-        strikethrough: Whether to clean strikethrough markup
-        color: Whether to clean color markup
-        font: Whether to clean font markup
-    """
+    """Perform the markup cleaning task in the background."""
     try:
         # Apply markup cleaning in the background
         subedit.clean_markup(
@@ -471,25 +449,13 @@ def perform_clean_task(
             color=color,
             font=font
         )
-        print(f"[DEBUG] [BACKGROUND] Markup cleaning completed successfully")
+        print("[DEBUG] [BACKGROUND] Markup cleaning completed successfully")
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Markup cleaning error: {str(e)}")
 
 @app.post("/translate/")
-async def translate_subtitles(
-    background_tasks: BackgroundTasks,
-    request: TranslateRequest
-) -> Dict[str, Any]:
-    """Translate subtitles to the specified target language in the background.
-
-    Args:
-        background_tasks: BackgroundTasks instance for running operations asynchronously
-        request (TranslateRequest): Request containing session ID, filename,
-                                  language settings, model configuration, and timeouts.
-
-    Returns:
-        Dict[str, Any]: Dictionary containing file information and status message.
-    """
+async def translate_subtitles(request: TranslateRequest) -> Dict[str, Any]:
+    """Translate subtitles to the specified target language."""
     try:
         print("[DEBUG] [API] /translate/ endpoint called")
 
@@ -503,17 +469,20 @@ async def translate_subtitles(
         # Calculate preliminary ETA for response
         eta = subedit.subtitles_data[file_path]['eta']
 
-        # Add translation task to background tasks
-        background_tasks.add_task(
-            perform_translation_task,
-            subedit,
-            request.target_language,
-            request.original_language,
-            request.model_name,
-            request.model_throttle,
-            request.request_timeout,
-            request.response_timeout
+        # Create task using asyncio
+        TaskManager.create_task(
+            session_id,
+            perform_translation_task(
+                subedit,
+                request.target_language,
+                request.original_language,
+                request.model_name,
+                request.model_throttle,
+                request.request_timeout,
+                request.response_timeout
+            )
         )
+        print("[DEBUG] [API] /translate/ task created")
 
         # Return immediate response with status
         return {
@@ -527,7 +496,7 @@ async def translate_subtitles(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-def perform_translation_task(
+async def perform_translation_task(
     subedit: SubEdit,
     target_language: str,
     original_language: str,
@@ -536,22 +505,12 @@ def perform_translation_task(
     request_timeout: int,
     response_timeout: int
 ) -> None:
-    """Perform the translation task in the background.
-
-    This function is run as a background task and won't block the main application.
-
-    Args:
-        subedit: SubEdit instance with loaded subtitles
-        target_language: Target language for translation
-        original_language: Source language of subtitles
-        model_name: LLM model to use for translation
-        model_throttle: Model throttle settings
-        request_timeout: Request timeout in seconds
-        response_timeout: Response timeout in seconds
-    """
+    """Perform the translation task in the background."""
     try:
-        # Apply translation in the background
-        subedit.translate_text(
+        print("[DEBUG] [API] perform_translation_task started")
+
+        # No need for nested async function since we're already in an async function
+        await subedit.translate_text(
             target_language=target_language,
             original_language=original_language,
             model_name=model_name,
@@ -559,7 +518,10 @@ def perform_translation_task(
             request_timeout=request_timeout,
             response_timeout=response_timeout
         )
+
         print(f"[DEBUG] [BACKGROUND] Translation to {target_language} completed successfully")
+    except asyncio.TimeoutError:
+        print(f"[DEBUG] [BACKGROUND] Translation timed out after {response_timeout * 10} seconds")
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Translation error: {str(e)}")
 
