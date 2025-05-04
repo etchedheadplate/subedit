@@ -1,6 +1,6 @@
 import { SubtitleFile, SubtitlePreview } from "../types";
 
-let API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+let API_BASE_URL = import.meta.env.VITE_API_BASE_URL.replace(/\/+$/, "");
 const DEBUG = false
 
 if (DEBUG) {
