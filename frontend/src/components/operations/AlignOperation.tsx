@@ -5,7 +5,12 @@ import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
 
 interface AlignOperationProps {
-    onAlign: (sourceFile: SubtitleFile, exampleFile: SubtitleFile, sourceRange?: [number, number], exampleRange?: [number, number]) => Promise<null>;
+    onAlign: (
+        sourceFile: SubtitleFile,
+        exampleFile: SubtitleFile,
+        sourceRange: [number, number],
+        exampleRange: [number, number]
+    ) => Promise<{ eta: number } | null | undefined>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile;
