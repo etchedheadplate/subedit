@@ -18,7 +18,7 @@ from subedit import SubEdit
 load_dotenv()
 
 # Constants
-DEBUG = os.getenv('DEBUG')
+DEBUG = False
 FRONTEND_URL: str = "http://localhost:5173" if DEBUG else os.getenv('FRONTEND_URL', "http://localhost:5173")
 PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
 USER_FILES_DIR = os.path.join(PARENT_DIR, "..", "user_files")
@@ -80,6 +80,10 @@ app.add_middleware(
 )
 
 # Service endpoints
+@app.get("/ping")
+def ping():
+    return {"status": "ok"}
+
 @app.post("/get-session/")
 async def get_session() -> Dict[str, str]:
     """Generate a new session ID.

@@ -11,6 +11,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 # Locals
+public/
 src/assets
 node_modules
 dist
