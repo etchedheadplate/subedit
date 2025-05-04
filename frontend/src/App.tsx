@@ -47,7 +47,7 @@ function App() {
     const isLoading = isUploading || isProcessing;
 
     // Handle return to initial state when new file uploaded
-    const handleFileUpload = async (file) => {
+    const handleFileUpload = async (file: File) => {
         await uploadFile(file);
         setActiveOption(null); // After upload completes, reset the active option
     };
