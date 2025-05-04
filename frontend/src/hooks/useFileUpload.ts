@@ -14,8 +14,12 @@ export const useFileUpload = (sessionId: string | null) => {
             const result = await apiService.uploadFile(file, sessionId || "");
             setUploadedFile(result);
             return result; // Return the uploaded file info
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message); // Now it's safe to access `err.message`
+            } else {
+                setError("An unexpected error occurred.");
+            }
             return null;
         } finally {
             setIsLoading(false);

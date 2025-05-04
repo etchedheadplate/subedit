@@ -140,8 +140,13 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                     onSubtitleCountChange(count);
                 }
 
-            } catch (err: any) {
-                setError(err.message);
+            } catch (err: unknown) {
+                // Narrow the error type to `Error` before accessing properties
+                if (err instanceof Error) {
+                    setError(err.message);
+                } else {
+                    setError("An unexpected error occurred.");
+                }
                 return null;
             } finally {
                 setIsLoading(false);

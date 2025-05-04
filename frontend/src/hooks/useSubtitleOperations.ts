@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { apiService } from "../services/apiService";
-import { SubtitlePreview, SubtitleFile } from "../types";
+import { SubtitleFile } from "../types";
 
 export const useSubtitleOperations = (
     sessionId: string | null,
@@ -51,11 +51,16 @@ export const useSubtitleOperations = (
 
                         setIsLoading(false);
                     }
-                } catch (err: any) {
+                } catch (err: unknown) {
                     clearInterval(interval);
                     setIsPolling(false);
-                    setError(err.message);
                     setIsLoading(false);
+
+                    if (err instanceof Error) {
+                        setError(err.message);
+                    } else {
+                        setError("An unexpected error occurred.");
+                    }
                 }
             }, 500); // Poll every 0.5 seconds
 
@@ -64,8 +69,12 @@ export const useSubtitleOperations = (
             return {
                 eta: result.eta,
             };
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unexpected error occurred.");
+            }
             setIsLoading(false);
             return null;
         }
@@ -116,11 +125,18 @@ export const useSubtitleOperations = (
 
                         setIsLoading(false);
                     }
-                } catch (err: any) {
-                    clearInterval(interval);
-                    setIsPolling(false);
-                    setError(err.message);
-                    setIsLoading(false);
+                } catch (err: unknown) {
+                    if (err instanceof Error) {
+                        clearInterval(interval);
+                        setIsPolling(false);
+                        setError(err.message);
+                        setIsLoading(false);
+                    } else {
+                        clearInterval(interval);
+                        setIsPolling(false);
+                        setError("An unexpected error occurred.");
+                        setIsLoading(false);
+                    }
                 }
             }, 500); // Poll every 0.5 seconds
 
@@ -129,8 +145,12 @@ export const useSubtitleOperations = (
             return {
                 eta: result.eta,
             };
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unexpected error occurred.");
+            }
             setIsLoading(false);
             return null;
         }
@@ -181,10 +201,16 @@ export const useSubtitleOperations = (
 
                         setIsLoading(false);
                     }
-                } catch (err: any) {
+                } catch (err: unknown) {
                     clearInterval(interval);
                     setIsPolling(false);
-                    setError(err.message);
+
+                    if (err instanceof Error) {
+                        setError(err.message);
+                    } else {
+                        setError("An unexpected error occurred.");
+                    }
+
                     setIsLoading(false);
                 }
             }, 500); // Poll every 0.5 seconds
@@ -194,8 +220,12 @@ export const useSubtitleOperations = (
             return {
                 eta: result.eta,
             };
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unexpected error occurred.");
+            }
             setIsLoading(false);
             return null;
         }
@@ -247,10 +277,16 @@ export const useSubtitleOperations = (
 
                         setIsLoading(false);
                     }
-                } catch (err: any) {
+                } catch (err: unknown) {
                     clearInterval(interval);
                     setIsPolling(false);
-                    setError(err.message);
+
+                    if (err instanceof Error) {
+                        setError(err.message);
+                    } else {
+                        setError("An unexpected error occurred.");
+                    }
+
                     setIsLoading(false);
                 }
             }, 3000); // Poll every 3 seconds
@@ -260,8 +296,12 @@ export const useSubtitleOperations = (
             return {
                 eta: result.eta,
             };
-        } catch (err: any) {
-            setError(err.message);
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unexpected error occurred.");
+            }
             setIsLoading(false);
             return null;
         }
