@@ -158,7 +158,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     return (
         <>
             {/* Metadata content rendered only if file uploaded and metadata fetched */}
-            {!error ? (
+            {!error && !isLoading ? (
                 <div className="metadata-and-subtitle-preview-section">
                     {/* Container for file metadata */}
                     <div className="metadata-preview-container">
