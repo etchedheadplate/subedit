@@ -3,6 +3,7 @@ import re
 import time
 import json
 import props
+import asyncio
 from pathlib import Path
 from duckai import DuckAI # type: ignore
 from datetime import datetime, timedelta
@@ -349,7 +350,7 @@ class SubEdit:
         self._create_file(self.cleaned_file)
         self.processed_file = os.path.basename(self.cleaned_file)
 
-    def translate_text(
+    async def translate_text(
         self,
         target_language: str,
         original_language: Optional[str] = None,
@@ -402,8 +403,6 @@ class SubEdit:
 
         # Debug variables
         prompt_number, tanslation_start_timestamp = 1, time.time()
-        prompt_length: List[int] = []
-        translation_pace: List[float] = []
         translation_time: List[float] = []
 
         # Break down subtitles to multiple prompts and calculate subtitle indices to be translated in current prompt
@@ -417,43 +416,33 @@ class SubEdit:
             # Format subtitles into `%number@ text` lines for later pasring and construct current prompt
             prompt_text = props.inject_prompt_symbols(indices_subtitles, current_index + 1)
             current_prompt = prompt_task + indices_prompt + prompt_text
-            prompt_length.append(len(current_prompt))
 
             # Send request to Duck.ai and save response
             request_timestamp = time.time()
             translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
             response_timestamp = time.time()
             translation_time.append(response_timestamp - request_timestamp)
-            translation_pace.append(len(current_prompt)/(response_timestamp - request_timestamp))
-            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] [+{response_timestamp - request_timestamp:.2f}s] "\
-                f"Response received (time: {response_timestamp - request_timestamp:.2f}s, "\
-                f"est: {request_timeout:.2f}s, "\
-                f"dif: {request_timeout - (response_timestamp - request_timestamp):.2f}s, "\
-                f"len: {len(current_prompt)} chars, "\
-                f"pace: {len(current_prompt)/(response_timestamp - request_timestamp):.2f}char/s)")
+            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Response received in {response_timestamp - request_timestamp:.2f}s")
             translated_text += translated_chunk
 
             # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
             current_index = indices_limit
-            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] [+{request_timeout:.2f}s] Waiting {request_timeout}s timeout")
-            time.sleep(request_timeout)
+            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Waiting for {request_timeout}s timeout")
+            # Use async sleep instead of blocking sleep
+            await asyncio.sleep(request_timeout)
             loop_end_timestamp = time.time()
-            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] [{loop_end_timestamp - tanslation_start_timestamp:.2f}s] "\
-                f"Prompt {prompt_number}/{prompts_count} completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
+            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
             prompt_number += 1
 
         translation_end_timestamp = time.time()
-        print(f"[DEBUG] [TRANSLATE] [T {translation_end_timestamp - tanslation_start_timestamp:.2f}s] "\
-            f"Translation completed for {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
-            f"(avg resp time: {sum(translation_time)/len(translation_time):.2f}, "\
-            f"est: {self.subtitles_data[file_path]['eta']:.2f}, "\
-            f"dif: {self.subtitles_data[file_path]['eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}, "\
-            f"avg len: {sum(prompt_length)/len(prompt_length):.2f} chars, "\
-            f"avg pace: {sum(translation_pace)/len(translation_pace):.2f} char/s)")
+        print(f"[DEBUG] [TRANSLATE] Translation completed in {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
+            f"(est: {self.subtitles_data[file_path]['eta']:.2f}, "\
+            f"dif: {self.subtitles_data[file_path]['eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}) "\
+            f"with avg {sum(translation_time)/len(translation_time):.2f}s response ")
 
         props.update_estimated_response_time(sum(translation_time)/len(translation_time))
 
-        # Parse translated text from response and save it to file dictionaey
+        # Parse translated text from response and save it to file dictionary
         response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
         translated_subtitles = self.subtitles_data[self.translated_file]
         for index in range(0, len(response_pattern), 2):
