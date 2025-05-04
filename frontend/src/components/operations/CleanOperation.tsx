@@ -11,7 +11,7 @@ interface CleanOperationProps {
         strikethrough: boolean;
         color: boolean;
         font: boolean;
-    }) => Promise<any>;
+    }) => Promise<null>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
@@ -63,7 +63,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
             // Count how many individual options are checked
             const checkedCount = Object.entries(newOptions)
                 .filter(([key]) => key !== 'all')
-                .filter(([_, value]) => value)
+                .filter(([, value]) => value)
                 .length;
 
             // Get total number of individual options

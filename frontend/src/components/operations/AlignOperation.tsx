@@ -5,7 +5,7 @@ import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
 
 interface AlignOperationProps {
-    onAlign: (sourceFile: SubtitleFile, exampleFile: SubtitleFile, sourceRange?: [number, number], exampleRange?: [number, number]) => Promise<any>;
+    onAlign: (sourceFile: SubtitleFile, exampleFile: SubtitleFile, sourceRange?: [number, number], exampleRange?: [number, number]) => Promise<null>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile;
@@ -40,7 +40,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCnt > 0 ? exampleSubtitleCnt : 2);
 
     // Handle file upload
-    const handleFileUpload = async (file) => {
+    const handleFileUpload = async (file: File) => {
         await uploadExampleFile(file);
         resetResults();
     };
@@ -126,6 +126,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
             <DragAndDropArea
                 onFileUpload={handleFileUpload}
+                isLoading={isExampleFileUploading}
                 uploadedFile={exampleFile}
                 preUploadInstructionText="Upload example subtitles, fren!"
                 postUploadIntroFileText="Uploaded example file:"

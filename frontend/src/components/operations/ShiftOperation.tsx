@@ -3,7 +3,7 @@ import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 
 interface ShiftOperationProps {
-    onShift: (delay: number, items: number[]) => Promise<any>;
+    onShift: (delay: number, items: number[]) => Promise<null>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
