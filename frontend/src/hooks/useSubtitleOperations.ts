@@ -9,8 +9,8 @@ export const useSubtitleOperations = (
     const [processedFile, setProcessedFile] = useState<SubtitleFile | null>(null,);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
-    const [isPolling, setIsPolling] = useState<boolean>(false);
-    const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
+    const [, setIsPolling] = useState<boolean>(false);
+    const [pollInterval, setPollInterval] = useState<number | null>(null);
 
     // Shift operation
     const shiftSubtitles = async (delay: number, items: number[] = []) => {
