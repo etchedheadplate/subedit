@@ -92,7 +92,11 @@ def inject_prompt_symbols(cleaned_subtitles: list[str], index: int = 0) -> str:
     Returns:
         str: String with all subtitles formatted with prompt symbols.
     """
-    injected_subtitles = '\n'.join([f"%{i}@ {subtitle.replace('\n', ' ')}" for i, subtitle in enumerate(cleaned_subtitles, start=index)])
+    lines: list[str] = []
+    for i, subtitle in enumerate(cleaned_subtitles, start=index):
+        cleaned = subtitle.replace('\n', ' ')
+        lines.append(f"%{i}@ {cleaned}")
+    injected_subtitles = '\n'.join(lines)
 
     return injected_subtitles
 
