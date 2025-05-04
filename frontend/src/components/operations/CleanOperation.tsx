@@ -4,14 +4,13 @@ import { SubtitleFile } from "../../types";
 
 interface CleanOperationProps {
     onClean: (options: {
-        all: boolean;
         bold: boolean;
         italic: boolean;
         underline: boolean;
         strikethrough: boolean;
         color: boolean;
         font: boolean;
-    }) => Promise<null>;
+    }) => Promise<{ eta: number } | null | undefined>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
