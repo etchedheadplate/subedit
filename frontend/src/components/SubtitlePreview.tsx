@@ -21,7 +21,6 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     const [subtitleMeta, setSubtitleMeta] = useState<SubtitleMetadata | null>(null);
     const [subtitlePreview, setSubtitlePreview] = useState<SubtitlePreview | null>(null);
     const [subtitleCount, setSubtitleCount] = useState<number>(0);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
 
     // Get all subtitles set
@@ -97,7 +96,6 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
         const fetchFilePreview = async () => {
             if (!subtitleFile || !sessionId) return;
 
-            setIsLoading(true);
             setError(null);
 
             try {
@@ -148,8 +146,6 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                     setError("An unexpected error occurred.");
                 }
                 return null;
-            } finally {
-                setIsLoading(false);
             }
         };
         fetchFilePreview();
@@ -158,7 +154,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     return (
         <>
             {/* Metadata content rendered only if file uploaded and metadata fetched */}
-            {!error && !isLoading ? (
+            {!error ? (
                 <div className="metadata-and-subtitle-preview-section">
                     {/* Container for file metadata */}
                     <div className="metadata-preview-container">
