@@ -235,8 +235,8 @@ export const apiService = {
         originalLanguage: string,
         modelName: string = "GPT-4o",
         modelThrottle: number = 0.5,
-        requestTimeout: number = 60,
-        responseTimeout: number = 60,
+        requestTimeout: number = 10,
+        responseTimeout: number = 45,
     ): Promise<{
         sourceFilename: string;
         status: string;
