@@ -26,8 +26,8 @@ export interface ProcessingOptions {
     shift: {
         delay: number;
     };
-    align: {};
-    clean: {};
+    align: null;
+    clean: null;
     translate: {
         targetLanguage?: string;
     };
