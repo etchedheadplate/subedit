@@ -5,7 +5,7 @@ import json
 import props
 import asyncio
 from pathlib import Path
-from duckai import DuckAI # type: ignore
+#from duckai import DuckAI # type: ignore
 from datetime import datetime, timedelta
 from typing import List, Dict, Union, Optional
 from structures import SubtitleMetadata, SubtitleEntry, SubtitlesDataDict, TranslateData
@@ -419,7 +419,11 @@ class SubEdit:
 
             # Send request to Duck.ai and save response
             request_timestamp = time.time()
-            translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
+
+            # Temporaly disable Duck.ai translation
+            # translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
+            translated_chunk = prompt_text
+
             response_timestamp = time.time()
             translation_time.append(response_timestamp - request_timestamp)
             print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Response received in {response_timestamp - request_timestamp:.2f}s")
