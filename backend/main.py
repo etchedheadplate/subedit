@@ -84,7 +84,7 @@ app.add_middleware(
 def ping():
     return {"status": "ok"}
 
-@app.post("/get-session/")
+@app.post("/get-session")
 async def get_session() -> Dict[str, str]:
     """Generate a new session ID.
 
@@ -100,7 +100,7 @@ async def get_session() -> Dict[str, str]:
     print("[DEBUG] [API] /get-session/ endpoint called:", session_id)
     return {"session_id": session_id}
 
-@app.post("/upload/")
+@app.post("/upload")
 async def upload_file(
     session_id: str = Form(...),
     file: UploadFile = File(...)
@@ -153,7 +153,7 @@ async def upload_file(
         "message": "File uploaded successfully"
     }
 
-@app.get("/download/")
+@app.get("/download")
 async def download_file(session_id: str, filename: str) -> FileResponse:
     """Download a processed file.
 
@@ -172,7 +172,7 @@ async def download_file(session_id: str, filename: str) -> FileResponse:
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
 
-@app.post("/task-status/")
+@app.post("/task-status")
 async def check_task_status(request: StatusRequest) -> Dict[str, Any]:
     """Check if a processed file exists from a background task."""
     session_path = os.path.join(USER_FILES_DIR, request.session_id)
@@ -205,7 +205,7 @@ async def check_task_status(request: StatusRequest) -> Dict[str, Any]:
             "status": "unknown"  # No tasks found and no output files
         }
 
-@app.post("/info/")
+@app.post("/info")
 async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
     """Retrieve information about a subtitle file.
 
@@ -288,7 +288,7 @@ class TaskManager:
         """Get all session IDs that have active tasks."""
         return list(cls._tasks.keys())
 
-@app.post("/shift/")
+@app.post("/shift")
 async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
     """Shift the timing of subtitles by a specified delay."""
     try:
@@ -335,7 +335,7 @@ async def perform_shift_task(
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Shifting error: {str(e)}")
 
-@app.post("/align/")
+@app.post("/align")
 async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
     """Align subtitles timing based on an example file."""
     try:
@@ -391,7 +391,7 @@ async def perform_align_task(
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Alignment error: {str(e)}")
 
-@app.post("/clean/")
+@app.post("/clean")
 async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
     """Clean markup from subtitles based on specified options."""
     try:
@@ -457,7 +457,7 @@ async def perform_clean_task(
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Markup cleaning error: {str(e)}")
 
-@app.post("/translate/")
+@app.post("/translate")
 async def translate_subtitles(request: TranslateRequest) -> Dict[str, Any]:
     """Translate subtitles to the specified target language."""
     try:
