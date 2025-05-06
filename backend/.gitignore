@@ -3,6 +3,7 @@
 .python-version
 
 # Production
+passenger_wsgi.py
 *.sh
 
 # Testing
