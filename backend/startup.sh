@@ -10,7 +10,7 @@ source "$VENV_PATH/bin/activate"
 cd "$APP_PATH" || exit 1
 
 # Start Uvicorn in the background and write its PID to a file
-nohup uvicorn app.main:app --host "$HOST" --port "$PORT" --workers 1 > uvicorn.log 2>&1 &
+nohup uvicorn main:app --host "$HOST" --port "$PORT" --workers 1 > uvicorn.log 2>&1 &
 echo $! > uvicorn.pid
 
 echo "Uvicorn started with PID $(cat uvicorn.pid)"
