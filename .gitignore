@@ -7,8 +7,9 @@ venv
 test_files
 user_files
 
-# Statistics
+# Production
 /shared/statistics.json
+.htaccess
 
 # Junk
 *.md
