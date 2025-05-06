@@ -59,14 +59,14 @@ def cleanup_old_sessions() -> None:
                 print(f"[DEBUG] [API] cleanup_old_sessions: {session_id}")
 
 def run_cleanup() -> None:
-    """Run cleanup function every hour.
+    """Run cleanup function every SESSION_LIFETIME.
 
     This function is intended to be run in a separate thread to
     periodically clean up old session directories.
     """
     while True:
         cleanup_old_sessions()
-        time.sleep(3600)
+        time.sleep(SESSION_LIFETIME)
 
 app = FastAPI(lifespan=lifespan)
 
@@ -82,7 +82,12 @@ app.add_middleware(
 # Service endpoints
 @app.get("/ping")
 def ping():
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "DEBUG": DEBUG,
+        "FRONTEND_URL": FRONTEND_URL,
+        "USER_FILES_DIR": USER_FILES_DIR
+    }
 
 @app.post("/get-session")
 async def get_session() -> Dict[str, str]:
