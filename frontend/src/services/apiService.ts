@@ -10,7 +10,7 @@ if (DEBUG) {
 export const apiService = {
     // Session management
     getSession: async (): Promise<string> => {
-        const response = await fetch(`${API_BASE_URL}/get-session/`, {
+        const response = await fetch(`${API_BASE_URL}/get-session`, {
             method: "POST",
         });
 
@@ -31,7 +31,7 @@ export const apiService = {
         formData.append("file", file);
         formData.append("session_id", sessionId);
 
-        const response = await fetch(`${API_BASE_URL}/upload/`, {
+        const response = await fetch(`${API_BASE_URL}/upload`, {
             method: "POST",
             body: formData,
         });
@@ -50,7 +50,7 @@ export const apiService = {
     },
 
     downloadFile: (sessionId: string, filename: string): string => {
-        return `${API_BASE_URL}/download/?session_id=${sessionId}&filename=${filename}`;
+        return `${API_BASE_URL}/download?session_id=${sessionId}&filename=${filename}`;
     },
 
     // Subtitle operations
@@ -65,7 +65,7 @@ export const apiService = {
         language: string;
         eta: number;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/info/`, {
+        const response = await fetch(`${API_BASE_URL}/info`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -98,7 +98,7 @@ export const apiService = {
         status: string;
         processed_filename?: string;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/task-status/`, {
+        const response = await fetch(`${API_BASE_URL}/task-status`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -129,7 +129,7 @@ export const apiService = {
         status: string;
         eta: number;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/shift/`, {
+        const response = await fetch(`${API_BASE_URL}/shift`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -164,7 +164,7 @@ export const apiService = {
         status: string;
         eta: number;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/align/`, {
+        const response = await fetch(`${API_BASE_URL}/align`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -205,7 +205,7 @@ export const apiService = {
         status: string;
         eta: number;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/clean/`, {
+        const response = await fetch(`${API_BASE_URL}/clean`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -242,7 +242,7 @@ export const apiService = {
         status: string;
         eta: number;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/translate/`, {
+        const response = await fetch(`${API_BASE_URL}/translate`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
