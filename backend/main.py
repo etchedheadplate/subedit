@@ -19,9 +19,9 @@ load_dotenv()
 
 # Constants
 DEBUG = False
+RELATIVE_USER_FILES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "user_files")
 FRONTEND_URL: str = "http://localhost:5173" if DEBUG else os.getenv('FRONTEND_URL', "http://localhost:5173")
-PARENT_DIR = os.path.dirname(os.path.abspath(__file__))
-USER_FILES_DIR = os.path.join(PARENT_DIR, "..", "user_files")
+USER_FILES_DIR = RELATIVE_USER_FILES_DIR if DEBUG else os.getenv('USER_FILES_PATH', RELATIVE_USER_FILES_DIR)
 SESSION_LIFETIME = 3600  # 1 hour in seconds
 MAX_FILE_SIZE = 1 * 1024 * 1024  # 1 MB in bytes
 ALLOWED_EXTENSIONS = {".srt"}  # Allowed file extensions
