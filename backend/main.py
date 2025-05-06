@@ -73,10 +73,12 @@ app = FastAPI(lifespan=lifespan)
 # Cross-Origin Resource Sharing
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],  # Frontend URL
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "X-Requested-With", "Accept", "Origin", "Authorization"],
+    expose_headers=["Content-Disposition"],
+    max_age=86400,  # Cache preflight requests for 24 hours
 )
 
 # Service endpoints
@@ -84,9 +86,7 @@ app.add_middleware(
 def ping():
     return {
         "status": "ok",
-        "DEBUG": DEBUG,
-        "FRONTEND_URL": FRONTEND_URL,
-        "USER_FILES_DIR": USER_FILES_DIR
+        "debug": DEBUG
     }
 
 @app.post("/get-session")
