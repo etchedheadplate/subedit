@@ -1,7 +1,4 @@
-import sys
-import os
-
-# Add the current directory to sys.path
-sys.path.insert(0, os.path.dirname(__file__))
-
-from main import app as application  # FastAPI or ASGI application
+# Dummy file to run uvicorn server
+def application(environ, start_response):
+    start_response('200 OK', [('Content-Type', 'text/plain')])
+    return [b"Uvicorn is running. This endpoint is unused."]

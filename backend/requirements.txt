@@ -1,3 +1,4 @@
+chardet==5.2.0
 fastapi==0.115.8
 langdetect==1.0.9
 python-dotenv==1.1.0
