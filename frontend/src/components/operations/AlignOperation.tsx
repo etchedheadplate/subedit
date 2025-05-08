@@ -13,7 +13,7 @@ interface AlignOperationProps {
     ) => Promise<{ eta: number } | null | undefined>;
     sessionId: string | null;
     onDownload: () => void;
-    sourceFile: SubtitleFile;
+    sourceFile: SubtitleFile | null;
     hasProcessedFile: boolean;
     processedFile: SubtitleFile | null;
     resetResults: () => void;
@@ -86,7 +86,9 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         const sourceRange: [number, number] = [sourceStart, sourceEnd];
         const exampleRange: [number, number] = [exampleStart, exampleEnd];
 
-        await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
+        if (sourceFile !== null) {
+            await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
+        }
     };
 
     // Preview of the source file
@@ -133,169 +135,205 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 onFileUpload={handleFileUpload}
                 isLoading={isExampleFileUploading}
                 uploadedFile={exampleFile}
-                preUploadInstructionText="Upload example subtitles, fren!"
+                preUploadInstructionText={sourceFile ? "Upload example subtitles, fren!" : "Source file required first"}
+                preUploadSubInstructionText={sourceFile ? "Drag & drop .srt file or click anywhere in this area" : "Upload source file before adding example file"}
                 postUploadIntroFileText="Uploaded example file:"
                 postUploadSubInstructionText="Tweak alignment option below or upload new file"
                 className={!exampleFile ? "blinking" : ""}
+                disabled={!sourceFile}
             />
 
             {/* If Example file uploaded */}
-            {exampleFile && (
+            {/* Align controls section */}
+            <div className="operation-controls-container">
                 <>
-                    {/* Align controls section */}
-                    <div className="operation-controls-container">
-                        <>
-                            {/* Description of Align controls */}
-                            <div className="operation-controls-description">
-                                <p>Select source and example subtitles to align. Text of first and last source subtitles should correspond to text of first and last selected example subtitles.</p>
-                            </div>
-
-                            {/* Align controls block */}
-                            <div className="operation-controls-items">
-
-                                {/* Controls for Source file */}
-                                <div className="control-item">
-                                    <p className="control-title">align source subtitles</p>
-
-                                    {/* Select Source file range */}
-                                    <div className="select-range-items">
-                                        <label className="range-text" htmlFor="source-start">from</label>
-                                        <input
-                                            className="range-form"
-                                            id="source-start"
-                                            type="number"
-                                            min={1}
-                                            max={sourceSubtitleCnt > 0 ? sourceEnd - 1 : 1}
-                                            value={sourceStart}
-                                            onChange={(e) => setSourceStart(Number(e.target.value))}
-                                            onBlur={(e) => {
-                                                let newValue = Number(e.target.value);
-                                                // Enforce minimum value of 1
-                                                if (newValue < 1) newValue = 1;
-                                                // Enforce maximum value of sourceEnd - 1
-                                                if (newValue >= sourceEnd) newValue = sourceEnd - 1;
-                                                setSourceStart(newValue);
-                                            }}
-                                        />
-                                        <label className="range-text" htmlFor="source-end">to</label>
-                                        <input
-                                            className="range-form"
-                                            id="source-end"
-                                            type="number"
-                                            min={sourceStart + 1}
-                                            max={sourceSubtitleCnt}
-                                            value={sourceEnd}
-                                            onChange={(e) => setSourceEnd(Number(e.target.value))}
-                                            onBlur={(e) => {
-                                                let newValue = Number(e.target.value);
-                                                // Enforce minimum value of sourceStart + 1
-                                                if (newValue <= sourceStart) newValue = sourceStart + 1;
-                                                // Enforce maximum value of sourceSubtitleCnt
-                                                if (newValue > sourceSubtitleCnt) newValue = sourceSubtitleCnt;
-                                                setSourceEnd(newValue);
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-
-                                {/* Controls for Example file */}
-                                <div className="control-item">
-                                    <p className="control-title">by example subtitles</p>
-
-                                    {/* Select Example file range */}
-                                    <div className="select-range-items">
-                                        {/* 'from' label */}
-                                        <label className="range-text" htmlFor="example-start">from</label>
-
-                                        {/* Start input */}
-                                        <input
-                                            className="range-form"
-                                            id="example-start"
-                                            type="number"
-                                            min={1}
-                                            max={exampleSubtitleCnt > 0 ? exampleEnd - 1 : 1}
-                                            value={exampleStart}
-                                            onChange={(e) => setExampleStart(Number(e.target.value))}
-                                            onBlur={(e) => {
-                                                let newValue = Number(e.target.value);
-                                                // Enforce minimum value of 1
-                                                if (newValue < 1) newValue = 1;
-                                                // Enforce maximum value of exampleEnd - 1
-                                                if (newValue >= exampleEnd) newValue = exampleEnd - 1;
-                                                setExampleStart(newValue);
-                                            }}
-                                        />
-
-                                        {/* 'to' label */}
-                                        <label className="range-text" htmlFor="example-end">to</label>
-
-                                        {/* End input */}
-                                        <input
-                                            className="range-form"
-                                            id="example-end"
-                                            type="number"
-                                            min={exampleStart + 1}
-                                            max={exampleSubtitleCnt}
-                                            value={exampleEnd}
-                                            onChange={(e) => setExampleEnd(Number(e.target.value))}
-                                            onBlur={(e) => {
-                                                let newValue = Number(e.target.value);
-                                                // Enforce minimum value of exampleStart + 1
-                                                if (newValue <= exampleStart) newValue = exampleStart + 1;
-                                                // Enforce maximum value of exampleSubtitleCnt
-                                                if (newValue > exampleSubtitleCnt) newValue = exampleSubtitleCnt;
-                                                setExampleEnd(newValue);
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                        </>
+                    {/* Description of Align controls */}
+                    <div className="operation-controls-description">
+                        <p>Select source and example subtitles to align. Text of first and last source subtitles should correspond to text of first and last selected example subtitles.</p>
                     </div>
 
-                    {/* File preview section */}
-                    <div className="file-preview-section">
+                    {/* Align controls block */}
+                    <div className="operation-controls-items">
 
-                        <div className="files-container">
+                        {/* Controls for Source file */}
+                        <div className="control-item">
+                            <p className="control-title">align source subtitles</p>
 
-                            {/* Align button */}
-                            <div className="operation-controls-buttons">
-                                <button
-                                    className="operation-button"
-                                    onClick={handleAlign}
-                                >
-                                    Align
-                                </button>
-                            </div>
-                            <div className="uploaded-files-preview-container">
-                                {/* Source file preview + Align button */}
-                                <div className="source-file-preview-container">
-                                    {sourceFilePreview}
-                                </div>
-
-                                {/* Example file preview (no buttons) */}
-                                <div className="modified-file-preview-container">
-                                    {exampleFilePreview}
-                                </div>
+                            {/* Select Source file range */}
+                            <div className="select-range-items">
+                                <label className="range-text" htmlFor="source-start">from</label>
+                                <input
+                                    className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    id="source-start"
+                                    type="number"
+                                    min={1}
+                                    max={sourceSubtitleCnt > 0 ? sourceEnd - 1 : 1}
+                                    value={sourceStart}
+                                    onChange={(e) => setSourceStart(Number(e.target.value))}
+                                    onBlur={(e) => {
+                                        let newValue = Number(e.target.value);
+                                        // Enforce minimum value of 1
+                                        if (newValue < 1) newValue = 1;
+                                        // Enforce maximum value of sourceEnd - 1
+                                        if (newValue >= sourceEnd) newValue = sourceEnd - 1;
+                                        setSourceStart(newValue);
+                                    }}
+                                    disabled={!sourceFile || !exampleFile}
+                                />
+                                <label className="range-text" htmlFor="source-end">to</label>
+                                <input
+                                    className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    id="source-end"
+                                    type="number"
+                                    min={sourceStart + 1}
+                                    max={sourceSubtitleCnt}
+                                    value={sourceEnd}
+                                    onChange={(e) => setSourceEnd(Number(e.target.value))}
+                                    onBlur={(e) => {
+                                        let newValue = Number(e.target.value);
+                                        // Enforce minimum value of sourceStart + 1
+                                        if (newValue <= sourceStart) newValue = sourceStart + 1;
+                                        // Enforce maximum value of sourceSubtitleCnt
+                                        if (newValue > sourceSubtitleCnt) newValue = sourceSubtitleCnt;
+                                        setSourceEnd(newValue);
+                                    }}
+                                    disabled={!sourceFile || !exampleFile}
+                                />
                             </div>
                         </div>
 
-                        <div className="files-container">
-                            {/* Aligned file preview + Download button */}
-                            {processedFile && (
-                                <div className="modified-file-preview-container">
-                                    {/* Download button */}
-                                    <div className="operation-controls-buttons">
-                                        <button className="download-button" onClick={onDownload}>Download</button>
-                                    </div>
+                        {/* Controls for Example file */}
+                        <div className="control-item">
+                            <p className="control-title">by example subtitles</p>
 
-                                    {alignedFilePreview}
-                                </div>
-                            )}
+                            {/* Select Example file range */}
+                            <div className="select-range-items">
+                                {/* 'from' label */}
+                                <label className="range-text" htmlFor="example-start">from</label>
+
+                                {/* Start input */}
+                                <input
+                                    className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    id="example-start"
+                                    type="number"
+                                    min={1}
+                                    max={exampleSubtitleCnt > 0 ? exampleEnd - 1 : 1}
+                                    value={exampleStart}
+                                    onChange={(e) => setExampleStart(Number(e.target.value))}
+                                    onBlur={(e) => {
+                                        let newValue = Number(e.target.value);
+                                        // Enforce minimum value of 1
+                                        if (newValue < 1) newValue = 1;
+                                        // Enforce maximum value of exampleEnd - 1
+                                        if (newValue >= exampleEnd) newValue = exampleEnd - 1;
+                                        setExampleStart(newValue);
+                                    }}
+                                    disabled={!sourceFile || !exampleFile}
+                                />
+
+                                {/* 'to' label */}
+                                <label className="range-text" htmlFor="example-end">to</label>
+
+                                {/* End input */}
+                                <input
+                                    className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    id="example-end"
+                                    type="number"
+                                    min={exampleStart + 1}
+                                    max={exampleSubtitleCnt}
+                                    value={exampleEnd}
+                                    onChange={(e) => setExampleEnd(Number(e.target.value))}
+                                    onBlur={(e) => {
+                                        let newValue = Number(e.target.value);
+                                        // Enforce minimum value of exampleStart + 1
+                                        if (newValue <= exampleStart) newValue = exampleStart + 1;
+                                        // Enforce maximum value of exampleSubtitleCnt
+                                        if (newValue > exampleSubtitleCnt) newValue = exampleSubtitleCnt;
+                                        setExampleEnd(newValue);
+                                    }}
+                                    disabled={!sourceFile || !exampleFile}
+                                />
+                            </div>
                         </div>
                     </div>
                 </>
-            )}
+            </div>
+
+            {/* File preview section */}
+            <div className="file-preview-section">
+
+                {/* If only Source file uploaded: Source file preview + Align button */}
+                {!sourceFile && !exampleFile && (
+                    <div className="source-file-preview-container" style={{ flex: 1 }}>
+                        {/* Align Button */}
+                        <div className="operation-controls-buttons">
+                            <button
+                                className={`operation-button ${" disabled"}`}
+                                onClick={handleAlign}
+                                disabled={true}
+                            >
+                                Align
+                            </button>
+                        </div>
+                    </div>
+                )}
+                {/* If only Source file uploaded: Source file preview + Align button */}
+                {sourceFile && !exampleFile && (
+                    <div className="source-file-preview-container" style={{ flex: 1 }}>
+                        {/* Align Button */}
+                        <div className="operation-controls-buttons">
+                            <button
+                                className={`operation-button ${" disabled"}`}
+                                onClick={handleAlign}
+                                disabled={true}
+                            >
+                                Align
+                            </button>
+                        </div>
+                        {/* Source file preview */}
+                        {sourceFilePreview}
+                    </div>
+                )}
+                {/* If Source and Example files uploaded */}
+                {sourceFile && exampleFile && (
+                    <div className="files-container">
+                        {/* Align button */}
+                        <div className="operation-controls-buttons">
+                            <button
+                                className="operation-button"
+                                onClick={handleAlign}
+                                disabled={false}
+                            >
+                                Align
+                            </button>
+                        </div>
+                        <div className="uploaded-files-preview-container">
+                            {/* Source file preview + Align button */}
+                            <div className="source-file-preview-container">
+                                {sourceFilePreview}
+                            </div>
+                            {/* Example file preview (no buttons) */}
+                            <div className="modified-file-preview-container">
+                                {exampleFilePreview}
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="files-container">
+                    {/* Aligned file preview + Download button */}
+                    {processedFile && (
+                        <div className="modified-file-preview-container">
+                            {/* Download button */}
+                            <div className="operation-controls-buttons">
+                                <button className="download-button" onClick={onDownload}>Download</button>
+                            </div>
+
+                            {alignedFilePreview}
+                        </div>
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

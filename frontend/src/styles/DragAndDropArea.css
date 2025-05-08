@@ -45,3 +45,11 @@
 .drag-and-drop-area.blinking {
     animation: blink-border 2s ease-in-out infinite;
 }
+
+.drag-and-drop-area.disabled {
+    color: #ADB5BD;
+    border-color: #6C757D;
+    cursor: not-allowed;
+    animation: none;
+    opacity: 0.7;
+}

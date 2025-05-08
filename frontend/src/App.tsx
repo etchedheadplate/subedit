@@ -49,7 +49,9 @@ function App() {
     // Handle return to initial state when new file uploaded
     const handleFileUpload = async (file: File) => {
         await uploadFile(file);
-        setActiveOption(null); // After upload completes, reset the active option
+
+        // Reset App to option choosing state, currently disabled
+        // setActiveOption(null); // After upload completes, reset the active option
     };
 
     // Handle option selection
@@ -89,7 +91,7 @@ function App() {
                             className={`main-option-button${activeOption === option ? " active" : ""}`}
                             key={option}
                             onClick={() => handleOptionSelect(option as OperationType)}
-                            disabled={!uploadedFile || isLoading}
+                            disabled={isLoading}
                         >
                             <strong>
                                 {option.charAt(0).toUpperCase() + option.slice(1)}
@@ -107,7 +109,7 @@ function App() {
             )}
 
             {/* Active option content */}
-            {activeOption === "shift" && uploadedFile && (
+            {activeOption === "shift" && (
                 <ShiftOperation
                     onShift={shiftSubtitles}
                     sessionId={sessionId}
@@ -118,7 +120,7 @@ function App() {
                 />
             )}
 
-            {activeOption === "align" && uploadedFile && (
+            {activeOption === "align" && (
                 <AlignOperation
                     onAlign={alignSubtitles}
                     sessionId={sessionId}
@@ -130,7 +132,7 @@ function App() {
                 />
             )}
 
-            {activeOption === "clean" && uploadedFile && (
+            {activeOption === "clean" && (
                 <CleanOperation
                     onClean={cleanSubtitles}
                     sessionId={sessionId}
@@ -141,7 +143,7 @@ function App() {
                 />
             )}
 
-            {activeOption === "translate" && uploadedFile && (
+            {activeOption === "translate" && (
                 <TranslateOperation
                     onTranslate={translateSubtitles}
                     sessionId={sessionId}

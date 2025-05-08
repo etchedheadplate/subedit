@@ -9,6 +9,7 @@ interface DragAndDropAreaProps {
     postUploadIntroFileText?: string;
     postUploadSubInstructionText?: string;
     className?: string;
+    disabled?: boolean;
 }
 
 const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
@@ -20,6 +21,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
     postUploadIntroFileText = "Uploaded source file:",
     postUploadSubInstructionText = "Select option below or upload new file",
     className = "",
+    disabled = false,
 }) => {
     const [dragActive, setDragActive] = useState<boolean>(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -29,12 +31,14 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
         e.preventDefault();
         e.stopPropagation();
 
+        if (disabled) return;
+
         if (e.type === "dragenter" || e.type === "dragover") {
             setDragActive(true);
         } else if (e.type === "dragleave") {
             setDragActive(false);
         }
-    }, []);
+    }, [disabled]);
 
     // Handle drop event
     const handleDrop = useCallback(
@@ -42,6 +46,8 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
             e.preventDefault();
             e.stopPropagation();
             setDragActive(false);
+
+            if (disabled) return;
 
             if (e.dataTransfer.files && e.dataTransfer.files[0]) {
                 const file = e.dataTransfer.files[0];
@@ -52,12 +58,12 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
                 }
             }
         },
-        [onFileUpload]
+        [onFileUpload, disabled]
     );
 
     // Handle click on the area
     const handleClick = () => {
-        if (!isLoading && fileInputRef.current) {
+        if (!isLoading && !disabled && fileInputRef.current) {
             fileInputRef.current.click();
         }
     };
@@ -84,7 +90,7 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
 
             {/* Drag and Drop Zone */}
             <div
-                className={`drag-and-drop-area ${dragActive ? 'drag-active' : ''} ${isLoading ? 'loading' : ''} ${className}`}
+                className={`drag-and-drop-area ${dragActive ? 'drag-active' : ''} ${isLoading ? 'loading' : ''} ${disabled ? 'disabled' : ''} ${className}`}
                 onClick={handleClick}
                 onDragEnter={handleDrag}
                 onDragLeave={handleDrag}

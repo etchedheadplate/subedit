@@ -36,6 +36,11 @@
     text-align: left;
 }
 
+.options-checkboxes.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 .control-item {
     margin-bottom: 30px;
 }
@@ -46,6 +51,11 @@
     align-items: center;
     gap: 12px;
     padding: 10px;
+}
+
+.drop-down-items.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .select-range-items {
@@ -67,11 +77,21 @@
     width: 60px;
 }
 
+.range-form.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
 .slider {
     flex-grow: 1;
     height: 5px;
     width: auto;
     background: #d3d3d3;
+}
+
+.slider.disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
 }
 
 .slider-info-row {

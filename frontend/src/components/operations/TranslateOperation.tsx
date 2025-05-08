@@ -229,11 +229,12 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
                         <div className="select-drop-down-items">
                             <select
+                                className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="languages-list"
                                 name="languages"
                                 value={originalLanguage || ""}
                                 onChange={handleOriginalLanguageChange}
-                                disabled={isTranslating}
+                                disabled={!sourceFile || isTranslating}
                             >
                                 <option value="">Select a language</option>
                                 {Object.entries(translationData.codes)
@@ -253,11 +254,12 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
                         <div className="select-drop-down-items">
                             <select
+                                className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="languages-list"
                                 name="languages"
                                 value={targetLanguage}
                                 onChange={handleTargetLanguageChange}
-                                disabled={isTranslating}
+                                disabled={!sourceFile || isTranslating}
                             >
                                 <option value="">Select a language</option>
                                 {Object.entries(translationData.codes)
@@ -277,11 +279,12 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
 
                         <div className="select-drop-down-items">
                             <select
+                                className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="models-list"
                                 name="models"
                                 value={model}
                                 onChange={handleModelChange}
-                                disabled={isTranslating}
+                                disabled={!sourceFile || isTranslating}
                             >
                                 {Object.keys(translationData.models).map((modelKey) => (
                                     <option key={modelKey} value={modelKey}>
@@ -299,14 +302,14 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                         <div className="select-slider-items">
                             {/* Slider */}
                             <input
+                                className={`slider ${!sourceFile || isTranslating ? " disabled" : ""}`}
                                 type="range"
                                 min="0.01"
                                 max="0.99"
                                 step="0.01"
                                 defaultValue="0.50"
-                                className="slider"
                                 onChange={(e) => setThrottle(parseFloat(e.target.value))}
-                                disabled={isTranslating}
+                                disabled={!sourceFile || isTranslating}
                             />
 
                             {/* Bottom row: left label, value, right label */}
@@ -327,9 +330,9 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     {/* Translate Button */}
                     <div className="operation-controls-buttons">
                         <button
-                            className={`operation-button${(targetLanguage === "" || originalLanguage === "" || isTranslating) ? " disabled" : ""}`}
+                            className={`operation-button${(!sourceFile || targetLanguage === "" || originalLanguage === "" || isTranslating) ? " disabled" : ""}`}
                             onClick={handleTranslate}
-                            disabled={targetLanguage === "" || originalLanguage === "" || isTranslating}
+                            disabled={!sourceFile || targetLanguage === "" || originalLanguage === "" || isTranslating}
                         >
                             Translate
                         </button>

@@ -91,7 +91,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
                         <div className="select-range-items">
                             <input
-                                className="range-form"
+                                className={`range-form ${!sourceFile || delay == 0 ? " disabled" : ""}`}
                                 id="delay-input"
                                 type="number"
                                 step="1"
@@ -101,6 +101,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                     width: 100,
                                     color: delay === 0 ? '#F25C54' : 'inherit', // <-- dynamic text color
                                 }}
+                                disabled={!sourceFile}
                             />
                             <label className="range-text" htmlFor="delay-input">ms</label>
                         </div>
@@ -113,7 +114,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                         <div className="select-range-items">
                             <label className="range-text" htmlFor="range-start">number</label>
                             <input
-                                className="range-form"
+                                className={`range-form ${!sourceFile ? " disabled" : ""}`}
                                 id="range-start"
                                 type="number"
                                 min={1}
@@ -128,6 +129,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                     if (newValue >= rangeEnd) newValue = rangeEnd - 1;
                                     setRangeStart(newValue);
                                 }}
+                                disabled={!sourceFile}
                             />
                         </div>
                     </div>
@@ -139,7 +141,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                         <div className="select-range-items">
                             <label className="range-text" htmlFor="range-end">number</label>
                             <input
-                                className="range-form"
+                                className={`range-form ${!sourceFile ? " disabled" : ""}`}
                                 id="range-end"
                                 type="number"
                                 min={rangeStart + 1}
@@ -154,6 +156,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                     if (newValue > subtitleCount) newValue = subtitleCount;
                                     setRangeEnd(newValue);
                                 }}
+                                disabled={!sourceFile}
                             />
                         </div>
                     </div>
@@ -170,9 +173,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     {/* Shift Button */}
                     <div className="operation-controls-buttons">
                         <button
-                            className={`operation-button${delay == 0 ? " disabled" : ""}`}
+                            className={`operation-button${!sourceFile || delay == 0 ? " disabled" : ""}`}
                             onClick={handleShift}
-                            disabled={delay == 0}
+                            disabled={!sourceFile || delay == 0}
                         >
                             Shift
                         </button>

@@ -172,11 +172,13 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
 
                     {/* All checkbox first */}
                     <label className="control-item" style={getLabelStyle('all')}>
-                        <input className="options-checkboxes"
+                        <input
+                            className={`options-checkboxes ${!sourceFile ? " disabled" : ""}`}
                             type="checkbox"
                             checked={options.all}
                             onChange={() => handleOptionChange('all')}
                             style={{ marginRight: "8px" }}
+                            disabled={!sourceFile}
                         />
                         All
                     </label>
@@ -196,7 +198,8 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                                         justifyContent: 'flex-start'
                                     }}
                                 >
-                                    <input className="options-checkboxes"
+                                    <input
+                                        className={`options-checkboxes ${!sourceFile ? " disabled" : ""}`}
                                         type="checkbox"
                                         checked={value}
                                         onChange={() =>
@@ -205,6 +208,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                                             )
                                         }
                                         style={{ marginRight: "8px" }}
+                                        disabled={!sourceFile}
                                     />
                                     {key.charAt(0).toUpperCase() + key.slice(1)}
                                 </label>
@@ -222,8 +226,9 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                     {/* Clean Button */}
                     <div className="operation-controls-buttons">
                         <button
-                            className="operation-button"
+                            className={`operation-button ${(!sourceFile) ? " disabled" : ""}`}
                             onClick={handleClean}
+                            disabled={!sourceFile}
                         >
                             Clean
                         </button>
