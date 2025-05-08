@@ -18,7 +18,7 @@ from subedit import SubEdit
 load_dotenv()
 
 # Constants
-DEBUG = False
+DEBUG = bool(int(os.getenv('DEBUG', '1')))
 RELATIVE_USER_FILES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "user_files")
 FRONTEND_URL: str = "http://localhost:5173" if DEBUG else os.getenv('FRONTEND_URL', "http://localhost:5173")
 USER_FILES_DIR = RELATIVE_USER_FILES_DIR if DEBUG else os.getenv('USER_FILES_PATH', RELATIVE_USER_FILES_DIR)
