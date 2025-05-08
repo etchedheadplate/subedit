@@ -4,6 +4,7 @@
 venv
 
 # Testing
+*.srt
 test_files
 user_files
 
