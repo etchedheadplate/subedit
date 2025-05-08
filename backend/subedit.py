@@ -181,12 +181,13 @@ class SubEdit:
         self._create_file(self.shifted_file)
         self.processed_file = os.path.basename(self.shifted_file)
 
-    def align_timing(self, source_slice: Optional[List[int]] = None, example_slice: Optional[List[int]] = None) -> None:
+    def align_timing(self, source_slice: Optional[List[int]] = None, example_slice: Optional[List[int]] = None, trim: bool = False) -> None:
         """Aligns source subtitles timing to match example subtitles timing for the specified slices.
 
         Args:
             source_slice (list[int] or None): Indices of first and last subtitle to align. Defaults to None (all source subtitles are aligned)
             example_slice (list[int] or None): Indices of first and last subtitle to align by. Defaults to None (aligned by all example subtitles)
+            trim (bool): Flag to indicate if aligned file should include subtitles outside source slice. Defaults to False (all subtitles preserved)
         """
         if self.example_file is None:
             raise ValueError('Example file is required for alignment')
@@ -279,6 +280,14 @@ class SubEdit:
                     'start': subtitle['start'],
                     'end': subtitle['end']
                 })
+
+        if source_slice and trim:
+            start_index, end_index = source_slice
+            self.subtitles_data[self.aligned_file]['subtitles'] = {
+                new_index + 1: aligned_subtitles[old_index]
+                for new_index, old_index in enumerate(range(start_index, end_index + 1))
+                if old_index in aligned_subtitles
+            }
 
         self._create_file(self.aligned_file)
         self.processed_file = os.path.basename(self.aligned_file)
