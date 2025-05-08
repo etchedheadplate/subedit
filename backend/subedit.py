@@ -281,6 +281,7 @@ class SubEdit:
                     'end': subtitle['end']
                 })
 
+        # Trim subtitles outside source slice if needed
         if source_slice and trim:
             start_index, end_index = source_slice
             self.subtitles_data[self.aligned_file]['subtitles'] = {
