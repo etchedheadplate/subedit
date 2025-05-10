@@ -181,7 +181,13 @@ class SubEdit:
         self._create_file(self.shifted_file)
         self.processed_file = os.path.basename(self.shifted_file)
 
-    def align_timing(self, source_slice: Optional[List[int]] = None, example_slice: Optional[List[int]] = None, trim: bool = False) -> None:
+    def align_timing(
+        self,
+        source_slice: Optional[List[int]] = None,
+        example_slice: Optional[List[int]] = None,
+        trim_start: bool = False,
+        trim_end: bool = False
+    ) -> None:
         """Aligns source subtitles timing to match example subtitles timing for the specified slices.
 
         Args:
@@ -223,14 +229,30 @@ class SubEdit:
         # Set indices ranges
         source_slice_range = range(source_slice[0], source_slice[1] + 1)
         example_slice_range = range(example_slice[0], example_slice[1] + 1)
+
+        # Set flag if source and example ranges are exactly the same
         exact_match = (len(source_slice_range) == len(example_slice_range) and
                       source_slice[0] == example_slice[0] and
                       source_slice[1] == example_slice[1])
 
+        # Get source and example timing points
+        time_format = '%H:%M:%S,%f'
+        source_start_time = datetime.strptime(parsed_source[source_slice[0]]['start'], time_format)
+        source_end_time = datetime.strptime(parsed_source[source_slice[1]]['end'], time_format)
+        example_start_time = datetime.strptime(parsed_example[example_slice[0]]['start'], time_format)
+        example_end_time = datetime.strptime(parsed_example[example_slice[1]]['end'], time_format)
+
+        # Calculate total durations
+        source_duration = (source_end_time - source_start_time).total_seconds()
+        example_duration = (example_end_time - example_start_time).total_seconds()
+
+        if source_duration == 0:
+            raise ValueError('Source duration is zero, cannot calculate scaling factor.')
+
         # Update processed file dictionary with aligned timing
         subtitle_indices = sorted(parsed_source.keys())
-        time_format = '%H:%M:%S,%f'
         for index in subtitle_indices:
+            # Copy source subtitles to aligned dictionary
             subtitle = parsed_source[index]
             aligned_subtitles[index] = subtitle
 
@@ -242,19 +264,6 @@ class SubEdit:
                         'end': parsed_example[index]['end']
                     })
                 else:
-                    # Get source and example timing points
-                    source_start_time = datetime.strptime(parsed_source[source_slice[0]]['start'], time_format)
-                    source_end_time = datetime.strptime(parsed_source[source_slice[1]]['end'], time_format)
-                    example_start_time = datetime.strptime(parsed_example[example_slice[0]]['start'], time_format)
-                    example_end_time = datetime.strptime(parsed_example[example_slice[1]]['end'], time_format)
-
-                    # Calculate total durations
-                    source_duration = (source_end_time - source_start_time).total_seconds()
-                    example_duration = (example_end_time - example_start_time).total_seconds()
-
-                    if source_duration == 0:
-                        raise ValueError('Source duration is zero, cannot calculate scaling factor.')
-
                     # Get original timing
                     original_start = datetime.strptime(subtitle['start'], time_format)
                     original_end = datetime.strptime(subtitle['end'], time_format)
@@ -282,13 +291,13 @@ class SubEdit:
                 })
 
         # Trim subtitles outside source slice if needed
-        if source_slice and trim:
-            start_index, end_index = source_slice
-            self.subtitles_data[self.aligned_file]['subtitles'] = {
-                new_index + 1: aligned_subtitles[old_index]
-                for new_index, old_index in enumerate(range(start_index, end_index + 1))
-                if old_index in aligned_subtitles
-            }
+        start_index = source_slice[0] if trim_start else sorted(parsed_source.keys())[0]
+        end_index = source_slice[1] if trim_end else sorted(parsed_source.keys())[-1]
+        self.subtitles_data[self.aligned_file]['subtitles'] = {
+            new_index + 1: aligned_subtitles[old_index]
+            for new_index, old_index in enumerate(range(start_index, end_index + 1))
+            if old_index in aligned_subtitles
+        }
 
         self._create_file(self.aligned_file)
         self.processed_file = os.path.basename(self.aligned_file)
