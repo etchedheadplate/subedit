@@ -174,7 +174,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
             <div className="operation-controls-container">
 
                 {/* Clean controls block */}
-                <div className="operation-controls-items">
+                <div className="operation-controls-items" title={!sourceFile ? 'Upload source file' : ''}>
 
                     {/* All checkbox first */}
                     <label className="control-item" style={getLabelStyle('all')}>
@@ -230,7 +230,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
 
                     {/* Clean Button */}
-                    <div className="operation-controls-buttons">
+                    <div className="operation-controls-buttons" title={!sourceFile ? 'Upload source file' : ''}>
                         <button
                             className={`operation-button ${(!sourceFile) ? " disabled" : ""}`}
                             onClick={handleClean}

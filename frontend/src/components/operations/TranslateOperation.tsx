@@ -227,7 +227,16 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">translate from</p>
 
-                        <div className="select-drop-down-items">
+                        <div
+                            className="select-drop-down-items"
+                            title={
+                                !sourceFile
+                                    ? "Upload source file"
+                                    : isTranslating
+                                        ? "Wait for translation to finish"
+                                        : ""
+                            }
+                        >
                             <select
                                 className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="languages-list"
@@ -252,7 +261,16 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">translate to</p>
 
-                        <div className="select-drop-down-items">
+                        <div
+                            className="select-drop-down-items"
+                            title={
+                                !sourceFile
+                                    ? "Upload source file"
+                                    : isTranslating
+                                        ? "Wait for translation to finish"
+                                        : ""
+                            }
+                        >
                             <select
                                 className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="languages-list"
@@ -277,7 +295,16 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">with model</p>
 
-                        <div className="select-drop-down-items">
+                        <div
+                            className="select-drop-down-items"
+                            title={
+                                !sourceFile
+                                    ? "Upload source file"
+                                    : isTranslating
+                                        ? "Wait for translation to finish"
+                                        : ""
+                            }
+                        >
                             <select
                                 className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="models-list"
@@ -299,7 +326,16 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">adjusted by</p>
 
-                        <div className="select-slider-items">
+                        <div
+                            className="select-slider-items"
+                            title={
+                                !sourceFile
+                                    ? "Upload source file"
+                                    : isTranslating
+                                        ? "Wait for translation to finish"
+                                        : ""
+                            }
+                        >
                             {/* Slider */}
                             <input
                                 className={`slider ${!sourceFile || isTranslating ? " disabled" : ""}`}
@@ -328,7 +364,20 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                 {/* Source file preview + Translate button */}
                 <div className="source-file-preview-container" style={{ flex: (processedFile || isTranslating) ? 1 : 2 }}>
                     {/* Translate Button */}
-                    <div className="operation-controls-buttons">
+                    <div
+                        className="operation-controls-buttons"
+                        title={
+                            !sourceFile
+                                ? "Upload source file"
+                                : originalLanguage === ""
+                                    ? "Select 'from' language"
+                                    : targetLanguage === ""
+                                        ? "Select 'to' language"
+                                        : isTranslating
+                                            ? "Wait for translation to finish"
+                                            : ""
+                        }
+                    >
                         <button
                             className={`operation-button${(!sourceFile || targetLanguage === "" || originalLanguage === "" || isTranslating) ? " disabled" : ""}`}
                             onClick={handleTranslate}

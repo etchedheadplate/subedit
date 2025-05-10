@@ -186,6 +186,13 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 <label className="range-text" htmlFor="source-start">from</label>
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    title={
+                                        !sourceFile
+                                            ? "Upload source file"
+                                            : !exampleFile
+                                                ? "Upload example file"
+                                                : ""
+                                    }
                                     id="source-start"
                                     type="number"
                                     min={1}
@@ -205,6 +212,13 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 <label className="range-text" htmlFor="source-end">to</label>
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    title={
+                                        !sourceFile
+                                            ? "Upload source file"
+                                            : !exampleFile
+                                                ? "Upload example file"
+                                                : ""
+                                    }
                                     id="source-end"
                                     type="number"
                                     min={sourceStart + 1}
@@ -236,6 +250,13 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 {/* Start input */}
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    title={
+                                        !sourceFile
+                                            ? "Upload source file"
+                                            : !exampleFile
+                                                ? "Upload example file"
+                                                : ""
+                                    }
                                     id="example-start"
                                     type="number"
                                     min={1}
@@ -259,6 +280,13 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 {/* End input */}
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                    title={
+                                        !sourceFile
+                                            ? "Upload source file"
+                                            : !exampleFile
+                                                ? "Upload example file"
+                                                : ""
+                                    }
                                     id="example-end"
                                     type="number"
                                     min={exampleStart + 1}
@@ -283,7 +311,18 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                             <p className="control-title">trim aligned subtitles</p>
 
                             <div className="select-checkboxes">
-                                <label className="range-text">
+                                <label
+                                    className="range-text"
+                                    title={
+                                        !sourceFile
+                                            ? "Upload source file"
+                                            : !exampleFile
+                                                ? "Upload example file"
+                                                : sourceStart === 1
+                                                    ? "Change source 'from'"
+                                                    : ""
+                                    }
+                                >
                                     <input
                                         className={`options-checkboxes${!sourceFile || !exampleFile || sourceStart === 1 ? " disabled" : ""}`}
                                         type="checkbox"
@@ -299,7 +338,18 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     }
                                 </label>
 
-                                <label className="range-text">
+                                <label
+                                    className="range-text"
+                                    title={
+                                        !sourceFile
+                                            ? "Upload source file"
+                                            : !exampleFile
+                                                ? "Upload example file"
+                                                : sourceEnd == sourceSubtitleCnt
+                                                    ? "Change source 'to'"
+                                                    : ""
+                                    }
+                                >
                                     <input
                                         className={`options-checkboxes ${!sourceFile || !exampleFile || sourceEnd == sourceSubtitleCnt ? " disabled" : ""}`}
                                         type="checkbox"
@@ -327,7 +377,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 {!sourceFile && !exampleFile && (
                     <div className="source-file-preview-container" style={{ flex: 1 }}>
                         {/* Align Button */}
-                        <div className="operation-controls-buttons">
+                        <div className="operation-controls-buttons" title='Upload source file'>
                             <button
                                 className={`operation-button ${" disabled"}`}
                                 onClick={handleAlign}
@@ -340,7 +390,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 )}
                 {/* If only Source file uploaded: Source file preview + Align button */}
                 {sourceFile && !exampleFile && (
-                    <div className="source-file-preview-container" style={{ flex: 1 }}>
+                    <div className="source-file-preview-container" title='Upload example file' style={{ flex: 1 }}>
                         {/* Align Button */}
                         <div className="operation-controls-buttons">
                             <button

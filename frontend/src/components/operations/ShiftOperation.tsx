@@ -95,7 +95,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">shift timing by</p>
 
-                        <div className="select-range-items">
+                        <div className="select-range-items" title={!sourceFile ? 'Upload source file' : ''}>
                             <input
                                 className={`range-form ${!sourceFile ? " disabled" : ""}`}
                                 id="delay-input"
@@ -121,7 +121,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">from subtitle</p>
 
-                        <div className="select-range-items">
+                        <div className="select-range-items" title={!sourceFile ? 'Upload source file' : ''}>
                             <label className="range-text" htmlFor="range-start">number</label>
                             <input
                                 className={`range-form ${!sourceFile ? " disabled" : ""}`}
@@ -148,7 +148,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     <div className="control-item">
                         <p className="control-title">to subtitle</p>
 
-                        <div className="select-range-items">
+                        <div className="select-range-items" title={!sourceFile ? 'Upload source file' : ''}>
                             <label className="range-text" htmlFor="range-end">number</label>
                             <input
                                 className={`range-form ${!sourceFile ? " disabled" : ""}`}
@@ -181,7 +181,16 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
 
                     {/* Shift Button */}
-                    <div className="operation-controls-buttons">
+                    <div
+                        className="operation-controls-buttons"
+                        title={
+                            !sourceFile
+                                ? "Upload source file"
+                                : delay === 0
+                                    ? "Delay can't be 0"
+                                    : ""
+                        }
+                    >
                         <button
                             className={`operation-button${!sourceFile || delay == 0 ? " disabled" : ""}`}
                             onClick={handleShift}
