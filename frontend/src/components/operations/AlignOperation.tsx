@@ -9,7 +9,9 @@ interface AlignOperationProps {
         sourceFile: SubtitleFile,
         exampleFile: SubtitleFile,
         sourceRange: [number, number],
-        exampleRange: [number, number]
+        exampleRange: [number, number],
+        trimStart: boolean,
+        trimEnd: boolean,
     ) => Promise<{ eta: number } | null | undefined>;
     sessionId: string | null;
     onDownload: () => void;
@@ -43,6 +45,10 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     const [sourceEnd, setSourceEnd] = useState<number>(sourceSubtitleCnt > 0 ? sourceSubtitleCnt : 1);
     const [exampleStart, setExampleStart] = useState<number>(1);
     const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCnt > 0 ? exampleSubtitleCnt : 2);
+
+    // State for trim flags:
+    const [trimStart, setTrimStart] = useState<boolean>(true);
+    const [trimEnd, setTrimEnd] = useState<boolean>(true);
 
     // Handle file upload
     const handleFileUpload = async (file: File) => {
@@ -78,6 +84,16 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         setExampleSubtitleCnt(exampleCount);
     };
 
+    // Handle trim options change
+    const handleTrimChange = (flag: string) => {
+        if (flag === 'start') {
+            setTrimStart(!trimStart);
+        }
+        if (flag === 'end') {
+            setTrimEnd(!trimEnd);
+        }
+    };
+
     // Handle align operation
     const handleAlign = async () => {
         if (!exampleFile) return;
@@ -87,7 +103,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         const exampleRange: [number, number] = [exampleStart, exampleEnd];
 
         if (sourceFile !== null) {
-            await onAlign(sourceFile, exampleFile, sourceRange, exampleRange);
+            await onAlign(sourceFile, exampleFile, sourceRange, exampleRange, trimStart, trimEnd);
         }
     };
 
@@ -253,6 +269,37 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     }}
                                     disabled={!sourceFile || !exampleFile}
                                 />
+                            </div>
+                        </div>
+
+                        {/* Controls for Trim flags */}
+                        <div className="control-item">
+                            <p className="control-title">trim aligned subtitles</p>
+
+                            <div className="select-range-items">
+                                <label className="range-text">
+                                    <input
+                                        className={`options-checkboxes ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                        type="checkbox"
+                                        checked={trimStart}
+                                        onChange={() => handleTrimChange('start')}
+                                        style={{ marginRight: "8px" }}
+                                        disabled={!sourceFile || !exampleFile}
+                                    />
+                                    trim start
+                                </label>
+
+                                <label className="range-text">
+                                    <input
+                                        className={`options-checkboxes ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                        type="checkbox"
+                                        checked={trimEnd}
+                                        onChange={() => handleTrimChange('end')}
+                                        style={{ marginRight: "8px" }}
+                                        disabled={!sourceFile || !exampleFile}
+                                    />
+                                    trim end
+                                </label>
                             </div>
                         </div>
                     </div>
