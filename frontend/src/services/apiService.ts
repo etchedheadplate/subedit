@@ -159,6 +159,8 @@ export const apiService = {
         exampleFilename: string,
         sourceSlice?: number[],
         exampleSlice?: number[],
+        trimStart?: boolean,
+        trimEnd?: boolean,
     ): Promise<{
         sourceFilename: string;
         status: string;
@@ -173,6 +175,8 @@ export const apiService = {
                 example_filename: exampleFilename,
                 source_slice: sourceSlice,
                 example_slice: exampleSlice,
+                trim_start: trimStart,
+                trim_end: trimEnd,
             }),
         });
 

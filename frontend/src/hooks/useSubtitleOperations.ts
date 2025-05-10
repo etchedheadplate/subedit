@@ -86,6 +86,8 @@ export const useSubtitleOperations = (
         exampleFile: SubtitleFile,
         sourceRange: [number, number],
         exampleRange: [number, number],
+        trimStart: boolean,
+        trimEnd: boolean,
     ) => {
         if (!uploadedFile || !sessionId) return;
 
@@ -100,6 +102,8 @@ export const useSubtitleOperations = (
                 exampleFile.filename,
                 sourceRange,
                 exampleRange,
+                trimStart,
+                trimEnd,
             );
 
             // Start polling for task completion
