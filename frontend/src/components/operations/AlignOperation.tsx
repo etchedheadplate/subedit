@@ -90,10 +90,10 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
     // Handle trim options change
     const handleTrimChange = (flag: string) => {
-        if (flag === 'start') {
+        if (flag == 'start') {
             setTrimStart(!trimStart);
         }
-        if (flag === 'end') {
+        if (flag == 'end') {
             setTrimEnd(!trimEnd);
         }
     };
@@ -318,23 +318,27 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                             ? "Upload source file"
                                             : !exampleFile
                                                 ? "Upload example file"
-                                                : sourceStart === 1
+                                                : sourceStart == 1
                                                     ? "Change source 'from'"
                                                     : ""
                                     }
                                 >
                                     <input
-                                        className={`options-checkboxes${!sourceFile || !exampleFile || sourceStart === 1 ? " disabled" : ""}`}
+                                        className={`options-checkboxes${!sourceFile || !exampleFile || sourceStart == 1 ? " disabled" : ""}`}
                                         type="checkbox"
                                         checked={trimStart}
                                         onChange={() => handleTrimChange('start')}
                                         style={{ marginRight: "8px" }}
-                                        disabled={!sourceFile || !exampleFile || sourceStart === 1}
+                                        disabled={!sourceFile || !exampleFile || sourceStart == 1}
                                     />
                                     {
-                                        (!sourceFile || !exampleFile || sourceStart === 1)
+                                        (!sourceFile || !exampleFile || sourceStart == 1)
                                             ? "before source 'from'"
-                                            : `from 1 to ${sourceStart}`
+                                            : sourceStart == 2
+                                                ? "first subtitle"
+                                                : sourceStart > 2
+                                                    ? `from 1 to ${sourceStart - 1}`
+                                                    : ""
                                     }
                                 </label>
 
@@ -361,7 +365,11 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     {
                                         (!sourceFile || !exampleFile || sourceEnd == sourceSubtitleCnt)
                                             ? "after source 'to'"
-                                            : `from ${sourceEnd} to ${sourceSubtitleCnt}`
+                                            : sourceEnd == sourceSubtitleCnt - 1
+                                                ? "last subtitle"
+                                                : sourceEnd < sourceSubtitleCnt - 1
+                                                    ? `from ${sourceEnd + 1} to ${sourceSubtitleCnt}`
+                                                    : ""
                                     }
                                 </label>
                             </div>
