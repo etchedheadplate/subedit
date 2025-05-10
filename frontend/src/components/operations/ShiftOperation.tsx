@@ -91,7 +91,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
                         <div className="select-range-items">
                             <input
-                                className={`range-form ${!sourceFile || delay == 0 ? " disabled" : ""}`}
+                                className={`range-form ${!sourceFile ? " disabled" : ""}`}
                                 id="delay-input"
                                 type="number"
                                 step="1"
@@ -99,7 +99,11 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                 onChange={(e) => setDelay(Math.floor(Number(e.target.value)))}
                                 style={{
                                     width: 100,
-                                    color: delay === 0 ? '#F25C54' : 'inherit', // <-- dynamic text color
+                                    color: !sourceFile
+                                        ? '#6C757D'               // Gray if sourceFile is missing
+                                        : delay === 0
+                                            ? '#F25C54'           // Red if delay is 0
+                                            : 'inherit',          // Default otherwise
                                 }}
                                 disabled={!sourceFile}
                             />
