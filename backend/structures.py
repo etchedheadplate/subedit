@@ -65,6 +65,8 @@ class AlignRequest(BaseModel):
     example_filename: Optional[str] = None
     source_slice: Optional[List[int]] = None
     example_slice: Optional[List[int]] = None
+    trim_start: bool = True
+    trim_end: bool = True
 
 class CleanRequest(BaseModel):
     session_id: str

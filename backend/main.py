@@ -349,6 +349,7 @@ async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
         source_slice, example_slice = request.source_slice, request.example_slice
+        trim_start, trim_end = request.trim_start, request.trim_end
 
         # Check if example file is provided
         if not request.example_filename:
@@ -368,7 +369,7 @@ async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
         # Create task using asyncio
         TaskManager.create_task(
             session_id,
-            perform_align_task(subedit, source_slice, example_slice)
+            perform_align_task(subedit, source_slice, example_slice, trim_start, trim_end)
         )
 
         # Return immediate response with status
@@ -386,12 +387,14 @@ async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
 async def perform_align_task(
     subedit: SubEdit,
     source_slice: Optional[List[int]],
-    example_slice: Optional[List[int]]
+    example_slice: Optional[List[int]],
+    trim_start: bool,
+    trim_end: bool
 ) -> None:
     """Perform the subtitle alignment task in the background."""
     try:
         # Apply alignment in the background
-        subedit.align_timing(source_slice=source_slice, example_slice=example_slice)
+        subedit.align_timing(source_slice=source_slice, example_slice=example_slice, trim_start=trim_start, trim_end=trim_end)
         print("[DEBUG] [BACKGROUND] Alignment completed successfully")
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Alignment error: {str(e)}")
