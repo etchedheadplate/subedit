@@ -3,6 +3,7 @@ import DragAndDropArea from "../../components/DragAndDropArea";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
+import loadingAnimation from "../../assets/loading.gif";
 
 interface AlignOperationProps {
     onAlign: (
@@ -49,6 +50,9 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     // State for trim flags:
     const [trimStart, setTrimStart] = useState<boolean>(true);
     const [trimEnd, setTrimEnd] = useState<boolean>(true);
+
+    // Loading state to show animation while processing
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // Handle file upload
     const handleFileUpload = async (file: File) => {
@@ -97,6 +101,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     // Handle align operation
     const handleAlign = async () => {
         if (!exampleFile) return;
+        setIsLoading(true);
 
         // Properly declare the ranges
         const sourceRange: [number, number] = [sourceStart, sourceEnd];
@@ -105,6 +110,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         if (sourceFile !== null) {
             await onAlign(sourceFile, exampleFile, sourceRange, exampleRange, trimStart, trimEnd);
         }
+        setIsLoading(false);
     };
 
     // Preview of the source file
@@ -377,7 +383,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                 <div className="files-container">
                     {/* Aligned file preview + Download button */}
-                    {processedFile && (
+                    {processedFile ? (
                         <div className="modified-file-preview-container">
                             {/* Download button */}
                             <div className="operation-controls-buttons">
@@ -386,7 +392,22 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                             {alignedFilePreview}
                         </div>
-                    )}
+                    ) : isLoading ? (
+                        <>
+                            <div className="modified-file-preview-container" style={{ flex: 1 }}>
+
+                                {/* Invisible spacer to match Align/Download buttons */}
+                                <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
+                                    <button className="operation-button">Invisible spacer</button>
+                                </div>
+
+                                {/* Loading animation */}
+                                <div className="loading-animation">
+                                    <img src={loadingAnimation} alt="Loading..." />
+                                </div>
+                            </div>
+                        </>
+                    ) : null}
                 </div>
             </div>
         </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile, SubtitleMetadata } from "../../types";
 import translationData from "../../../../shared/translate.json";
-import translatingGif from "../../assets/translating.gif";
+import loadingAnimation from "../../assets/loading.gif";
 
 interface TranslateResult {
     eta: number;
@@ -192,7 +192,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     // Translation timer component with GIF image and approximate time
     const translationTimer = (
         <div className="translation-progress">
-            <img src={translatingGif} alt="Translation in progress" />
+            <img src={loadingAnimation} alt="Translation in progress" />
             <p className="translation-progress-eta">ETA: {formatTime(remainingTime)}</p>
             <p className="translation-progress-text">This may take longer for Claude and Mistral.</p>
         </div>
@@ -350,7 +350,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                             <>
                                 {/* Invisible spacer to match Translate/Download buttons */}
                                 <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
-                                    <button className="operation-button">Align</button>
+                                    <button className="operation-button">Invisible spacer</button>
                                 </div>
 
                                 {/* Timer */}

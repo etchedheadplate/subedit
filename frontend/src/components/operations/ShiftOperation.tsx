@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
+import loadingAnimation from "../../assets/loading.gif";
 
 interface ShiftOperationProps {
     onShift: (delay: number, items?: number[]) => Promise<{ eta: number } | null | undefined>;
@@ -28,6 +29,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     const [rangeStart, setRangeStart] = useState<number>(1);
     const [rangeEnd, setRangeEnd] = useState<number>(subtitleCount > 1 ? subtitleCount : 2,);
 
+    // Loading state to show animation while processing
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
     // Update range end when subtitle count changes
     useEffect(() => {
         if (subtitleCount > 0) {
@@ -41,10 +45,12 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
         setSubtitleCount(count);
     };
 
-    // Handler to store sfifting results
+    // Handler to store shifting results
     const handleShift = async () => {
+        setIsLoading(true);
         const items = [rangeStart, rangeEnd];
         await onShift(delay, items);
+        setIsLoading(false);
     };
 
     // Preview of the source file
@@ -190,7 +196,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                 </div>
 
                 {/* Shifted file preview + Download button */}
-                {processedFile && (
+                {processedFile ? (
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
                         {/* Download Button */}
                         <div className="operation-controls-buttons">
@@ -200,7 +206,22 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                         {/* Shifted file preview */}
                         {shiftedFilePreview}
                     </div>
-                )}
+                ) : isLoading ? (
+                    <>
+                        <div className="modified-file-preview-container" style={{ flex: 1 }}>
+
+                            {/* Invisible spacer to match Shift/Download buttons */}
+                            <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
+                                <button className="operation-button">Invisible spacer</button>
+                            </div>
+
+                            {/* Loading animation */}
+                            <div className="loading-animation">
+                                <img src={loadingAnimation} alt="Loading..." />
+                            </div>
+                        </div>
+                    </>
+                ) : null}
             </div>
         </div >
     );

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
+import loadingAnimation from "../../assets/loading.gif";
 
 interface CleanOperationProps {
     onClean: (options: {
@@ -35,6 +36,9 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
         font: false,
         underline: false,
     });
+
+    // Loading state to show animation while processing
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     // Handle options change
     const handleOptionChange = (option: keyof typeof options) => {
@@ -93,7 +97,9 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
 
     // Handle clean operation
     const handleClean = async () => {
+        setIsLoading(true);
         await onClean(options);
+        setIsLoading(false);
     };
 
     // Get style for option label based on state
@@ -238,18 +244,33 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                     {sourceFilePreview}
                 </div>
 
-                {/* Shifted file preview + Download button */}
-                {processedFile && (
+                {/* Cleaned file preview + Download button */}
+                {processedFile ? (
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
                         {/* Download Button */}
                         <div className="operation-controls-buttons">
                             <button className="download-button" onClick={onDownload}>Download</button>
                         </div>
 
-                        {/* Shifted file preview */}
+                        {/* Cleaned file preview */}
                         {cleanedFilePreview}
                     </div>
-                )}
+                ) : isLoading ? (
+                    <>
+                        <div className="modified-file-preview-container" style={{ flex: 1 }}>
+
+                            {/* Invisible spacer to match Clean/Download buttons */}
+                            <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
+                                <button className="operation-button">Invisible spacer</button>
+                            </div>
+
+                            {/* Loading animation */}
+                            <div className="loading-animation">
+                                <img src={loadingAnimation} alt="Loading..." />
+                            </div>
+                        </div>
+                    </>
+                ) : null}
             </div>
         </div>
     );
