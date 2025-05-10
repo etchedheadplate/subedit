@@ -185,15 +185,16 @@ class SubEdit:
         self,
         source_slice: Optional[List[int]] = None,
         example_slice: Optional[List[int]] = None,
-        trim_start: bool = False,
-        trim_end: bool = False
+        trim_start: bool = True,
+        trim_end: bool = True
     ) -> None:
         """Aligns source subtitles timing to match example subtitles timing for the specified slices.
 
         Args:
             source_slice (list[int] or None): Indices of first and last subtitle to align. Defaults to None (all source subtitles are aligned)
             example_slice (list[int] or None): Indices of first and last subtitle to align by. Defaults to None (aligned by all example subtitles)
-            trim (bool): Flag to indicate if aligned file should include subtitles outside source slice. Defaults to False (all subtitles preserved)
+            trim_start (bool): Flag to indicate if aligned file should include subtitles before source slice. Defaults to True (subtitles removed)
+            trim_end (bool): Flag to indicate if aligned file should include subtitles after source slice. Defaults to True (subtitles removed)
         """
         if self.example_file is None:
             raise ValueError('Example file is required for alignment')
