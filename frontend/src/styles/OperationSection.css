@@ -20,11 +20,18 @@
     flex-wrap: wrap;
     gap: 60px;
     justify-content: center;
-    align-items: flex-end;
+    align-items: flex-start;
     text-align: center;
     max-width: 100%;
     overflow-x: hidden;
     padding: 10px;
+}
+
+.select-checkboxes {
+    display: grid;
+    text-align: left;
+    gap: 5px;
+    margin-left: 5px
 }
 
 /* Grid layout for the other checkboxes */

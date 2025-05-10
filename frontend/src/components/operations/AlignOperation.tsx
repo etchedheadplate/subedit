@@ -276,29 +276,37 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                         <div className="control-item">
                             <p className="control-title">trim aligned subtitles</p>
 
-                            <div className="select-range-items">
+                            <div className="select-checkboxes">
                                 <label className="range-text">
                                     <input
-                                        className={`options-checkboxes ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                        className={`options-checkboxes${!sourceFile || !exampleFile || sourceStart === 1 ? " disabled" : ""}`}
                                         type="checkbox"
                                         checked={trimStart}
                                         onChange={() => handleTrimChange('start')}
                                         style={{ marginRight: "8px" }}
-                                        disabled={!sourceFile || !exampleFile}
+                                        disabled={!sourceFile || !exampleFile || sourceStart === 1}
                                     />
-                                    trim start
+                                    {
+                                        (!sourceFile || !exampleFile || sourceStart === 1)
+                                            ? "before source 'from'"
+                                            : `from 1 to ${sourceStart}`
+                                    }
                                 </label>
 
                                 <label className="range-text">
                                     <input
-                                        className={`options-checkboxes ${!sourceFile || !exampleFile ? " disabled" : ""}`}
+                                        className={`options-checkboxes ${!sourceFile || !exampleFile || sourceEnd == sourceSubtitleCnt ? " disabled" : ""}`}
                                         type="checkbox"
                                         checked={trimEnd}
                                         onChange={() => handleTrimChange('end')}
                                         style={{ marginRight: "8px" }}
-                                        disabled={!sourceFile || !exampleFile}
+                                        disabled={!sourceFile || !exampleFile || sourceEnd == sourceSubtitleCnt}
                                     />
-                                    trim end
+                                    {
+                                        (!sourceFile || !exampleFile || sourceEnd == sourceSubtitleCnt)
+                                            ? "after source 'to'"
+                                            : `from ${sourceEnd} to ${sourceSubtitleCnt}`
+                                    }
                                 </label>
                             </div>
                         </div>
