@@ -414,7 +414,7 @@ class SubEdit:
             }
 
             # Get formated values from shared translation JSON
-            with open(Path(__file__).parent / '../shared/translate.json', 'r') as file:
+            with open(Path(__file__).parent / '../shared/duck.json', 'r') as file:
                 data: TranslateData = json.load(file)
                 translate_from: str = data['codes'][original_language]
                 translate_to: str = data['codes'][target_language]

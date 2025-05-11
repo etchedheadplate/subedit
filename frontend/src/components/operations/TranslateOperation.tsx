@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile, SubtitleMetadata } from "../../types";
-import translationData from "../../../../shared/translate.json";
+import translationData from "../../../../shared/duck.json";
 import loadingAnimation from "../../assets/loading.gif";
 
 interface TranslateResult {
