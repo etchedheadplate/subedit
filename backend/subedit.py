@@ -5,10 +5,13 @@ import json
 import props
 import asyncio
 from pathlib import Path
-#from duckai import DuckAI # type: ignore
+from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import List, Dict, Union, Optional
 from structures import SubtitleMetadata, SubtitleEntry, SubtitlesDataDict, TranslateData
+
+load_dotenv()
+DEBUG = bool(int(os.getenv('DEBUG', '1')))
 
 class SubEdit:
     def __init__(self, file_list: List[str]) -> None:
@@ -370,114 +373,117 @@ class SubEdit:
         self._create_file(self.cleaned_file)
         self.processed_file = os.path.basename(self.cleaned_file)
 
-    async def translate_text(
-        self,
-        target_language: str,
-        original_language: Optional[str] = None,
-        file_path: Optional[str] = None,
-        model_name: str = 'gpt-4o-mini',
-        model_throttle: float = 0.5,
-        request_timeout: int = 10,
-        response_timeout: int = 45
-        ) -> None:
-        """Translates subtitles using LLM provided by DuckDuckGo.
+    # Method accesible only on localhost
+    if DEBUG:
+        async def duck_translate(
+            self,
+            target_language: str,
+            original_language: Optional[str] = None,
+            file_path: Optional[str] = None,
+            model_name: str = 'gpt-4o-mini',
+            model_throttle: float = 0.5,
+            request_timeout: int = 10,
+            response_timeout: int = 45
+            ) -> None:
+            """Translates subtitles using LLM provided by DuckDuckGo.
 
-        Args:
-            target_language (str): Target language.
-            original_language (str): Original file language.
-            file_path (str): String with relative path to file.
-            model_name (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
-            model_throttle (float): Coefficient by which the model's token window is reduced.
-                Slows translation time, increases accuracy. Must be between 0 and 1. Defaults to 0.5.
-            request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 10.
-            response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 45.
-        """
-        file_path = self.source_file if file_path is None else file_path
-        original_language = self.subtitles_data[file_path]['metadata']['language'] if original_language is None else original_language
+            Args:
+                target_language (str): Target language.
+                original_language (str): Original file language.
+                file_path (str): String with relative path to file.
+                model_name (str): Translator LLM. Defaults to GPT-4o-mini by OpenAI.
+                model_throttle (float): Coefficient by which the model's token window is reduced.
+                    Slows translation time, increases accuracy. Must be between 0 and 1. Defaults to 0.5.
+                request_timeout (int): Seconds between sending requests to Duck.ai. Defaults to 10.
+                response_timeout (int): Seconds after which Duck.ai response considered lost. Defaults to 45.
+            """
+            from duckai import DuckAI
 
-        # Set filename for processed subtitles
-        source_name, source_ext = os.path.splitext(self.source_file)
-        self.translated_file = f'{source_name}-translated-to-{target_language}-with-{model_name}{source_ext}'
+            file_path = self.source_file if file_path is None else file_path
+            original_language = self.subtitles_data[file_path]['metadata']['language'] if original_language is None else original_language
 
-        # Create processed file dictionary and copy metadata and subtitles from source file
-        self.subtitles_data[self.translated_file] = {
-            'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
-            'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
-            'eta': 0
-        }
+            # Set filename for processed subtitles
+            source_name, source_ext = os.path.splitext(self.source_file)
+            self.translated_file = f'{source_name}-translated-to-{target_language}-with-{model_name}{source_ext}'
 
-        # Get formated values from shared translation JSON
-        with open(Path(__file__).parent / '../shared/translate.json', 'r') as file:
-            data: TranslateData = json.load(file)
-            translate_from: str = data['codes'][original_language]
-            translate_to: str = data['codes'][target_language]
-            translator_model: str = data['models'][model_name]['name']
-            tokens_limit: float = data['models'][model_name]['tokens'] * model_throttle
+            # Create processed file dictionary and copy metadata and subtitles from source file
+            self.subtitles_data[self.translated_file] = {
+                'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
+                'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
+                'eta': 0
+            }
 
-        # Set operational variables
-        clean_subtitles = props.remove_all_markup(self.subtitles_data[file_path])
-        prompt_task = props.construct_prompt_task(translate_from, translate_to)
-        prompt_subtitles = props.inject_prompt_symbols(clean_subtitles)
-        prompts_count = props.calculate_prompts_count(prompt_task, prompt_subtitles, tokens_limit)
-        subtitles_per_prompt = props.calculate_prompt_length(prompts_count, clean_subtitles)
+            # Get formated values from shared translation JSON
+            with open(Path(__file__).parent / '../shared/translate.json', 'r') as file:
+                data: TranslateData = json.load(file)
+                translate_from: str = data['codes'][original_language]
+                translate_to: str = data['codes'][target_language]
+                translator_model: str = data['models'][model_name]['name']
+                tokens_limit: float = data['models'][model_name]['tokens'] * model_throttle
 
-        # Debug variables
-        prompt_number, tanslation_start_timestamp = 1, time.time()
-        translation_time: List[float] = []
+            # Set operational variables
+            clean_subtitles = props.remove_all_markup(self.subtitles_data[file_path])
+            prompt_task = props.construct_prompt_task(translate_from, translate_to)
+            prompt_subtitles = props.inject_prompt_symbols(clean_subtitles)
+            prompts_count = props.calculate_prompts_count(prompt_task, prompt_subtitles, tokens_limit)
+            subtitles_per_prompt = props.calculate_prompt_length(prompts_count, clean_subtitles)
 
-        # Break down subtitles to multiple prompts and calculate subtitle indices to be translated in current prompt
-        translated_text, current_index = '', 0
-        while current_index < len(clean_subtitles):
-            loop_start_timestamp = time.time()
-            indices_limit = current_index + subtitles_per_prompt
-            indices_subtitles = clean_subtitles[current_index:indices_limit]
-            indices_prompt = f' Your response MUST contain exactly {len(indices_subtitles)} lines.\n\n'
+            # Debug variables
+            prompt_number, tanslation_start_timestamp = 1, time.time()
+            translation_time: List[float] = []
 
-            # Format subtitles into `%number@ text` lines for later pasring and construct current prompt
-            prompt_text = props.inject_prompt_symbols(indices_subtitles, current_index + 1)
-            current_prompt = prompt_task + indices_prompt + prompt_text
+            # Break down subtitles to multiple prompts and calculate subtitle indices to be translated in current prompt
+            translated_text, current_index = '', 0
+            while current_index < len(clean_subtitles):
+                loop_start_timestamp = time.time()
+                indices_limit = current_index + subtitles_per_prompt
+                indices_subtitles = clean_subtitles[current_index:indices_limit]
+                indices_prompt = f' Your response MUST contain exactly {len(indices_subtitles)} lines.\n\n'
 
-            # Send request to Duck.ai and save response
-            request_timestamp = time.time()
+                # Format subtitles into `%number@ text` lines for later pasring and construct current prompt
+                prompt_text = props.inject_prompt_symbols(indices_subtitles, current_index + 1)
+                current_prompt = prompt_task + indices_prompt + prompt_text
 
-            # Temporaly disable Duck.ai translation
-            # translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
-            translated_chunk = prompt_text
+                # Send request to Duck.ai and save response
+                request_timestamp = time.time()
 
-            response_timestamp = time.time()
-            translation_time.append(response_timestamp - request_timestamp)
-            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Response received in {response_timestamp - request_timestamp:.2f}s")
-            translated_text += translated_chunk
+                # Temporaly disable Duck.ai translation
+                translated_chunk = DuckAI().chat(current_prompt, translator_model, timeout=response_timeout)
 
-            # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
-            current_index = indices_limit
-            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Waiting for {request_timeout}s timeout")
-            # Use async sleep instead of blocking sleep
-            await asyncio.sleep(request_timeout)
-            loop_end_timestamp = time.time()
-            print(f"[DEBUG] [TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
-            prompt_number += 1
+                response_timestamp = time.time()
+                translation_time.append(response_timestamp - request_timestamp)
+                print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Response received in {response_timestamp - request_timestamp:.2f}s")
+                translated_text += translated_chunk
 
-        translation_end_timestamp = time.time()
-        print(f"[DEBUG] [TRANSLATE] Translation completed in {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
-            f"(est: {self.subtitles_data[file_path]['eta']:.2f}, "\
-            f"dif: {self.subtitles_data[file_path]['eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}) "\
-            f"with avg {sum(translation_time)/len(translation_time):.2f}s response ")
+                # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
+                current_index = indices_limit
+                print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Waiting for {request_timeout}s timeout")
+                # Use async sleep instead of blocking sleep
+                await asyncio.sleep(request_timeout)
+                loop_end_timestamp = time.time()
+                print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
+                prompt_number += 1
 
-        props.update_estimated_response_time(sum(translation_time)/len(translation_time))
+            translation_end_timestamp = time.time()
+            print(f"[DEBUG] [DUCK TRANSLATE] Translation completed in {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
+                f"(est: {self.subtitles_data[file_path]['eta']:.2f}, "\
+                f"dif: {self.subtitles_data[file_path]['eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}) "\
+                f"with avg {sum(translation_time)/len(translation_time):.2f}s response ")
 
-        # Parse translated text from response and save it to file dictionary
-        response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
-        translated_subtitles = self.subtitles_data[self.translated_file]
-        for index in range(0, len(response_pattern), 2):
-            parsed = True if response_pattern[index].startswith('%') and response_pattern[index].endswith('@ ') else False
-            if parsed:
-                subtitle_number = int(''.join(filter(str.isdigit, response_pattern[index])))
-                subtitle_text = response_pattern[index + 1].strip()
-                translated_subtitles['metadata'].update({"language": target_language})
-                translated_subtitles['subtitles'][subtitle_number].update({"text": subtitle_text})
-            else:
-                raise ValueError(f'Bad response format: {response_pattern[index]}.')
+            props.update_estimated_response_time(sum(translation_time)/len(translation_time))
 
-        self._create_file(self.translated_file)
-        self.processed_file = os.path.basename(self.translated_file)
+            # Parse translated text from response and save it to file dictionary
+            response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
+            translated_subtitles = self.subtitles_data[self.translated_file]
+            for index in range(0, len(response_pattern), 2):
+                parsed = True if response_pattern[index].startswith('%') and response_pattern[index].endswith('@ ') else False
+                if parsed:
+                    subtitle_number = int(''.join(filter(str.isdigit, response_pattern[index])))
+                    subtitle_text = response_pattern[index + 1].strip()
+                    translated_subtitles['metadata'].update({"language": target_language})
+                    translated_subtitles['subtitles'][subtitle_number].update({"text": subtitle_text})
+                else:
+                    raise ValueError(f'Bad response format: {response_pattern[index]}.')
+
+            self._create_file(self.translated_file)
+            self.processed_file = os.path.basename(self.translated_file)

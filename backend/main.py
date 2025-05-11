@@ -465,77 +465,78 @@ async def perform_clean_task(
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Markup cleaning error: {str(e)}")
 
-@app.post("/translate")
-async def translate_subtitles(request: TranslateRequest) -> Dict[str, Any]:
-    """Translate subtitles to the specified target language."""
-    try:
-        print("[DEBUG] [API] /translate/ endpoint called")
+# Endpoint accesible only on localhost
+if DEBUG:
+    @app.post("/duck_translate")
+    async def translate_subtitles_with_ai(request: TranslateRequest) -> Dict[str, Any]:
+        """Translate subtitles to the specified target language using models provided by Duck.ai."""
+        try:
+            print("[DEBUG] [API] /duck_translate/ endpoint called")
 
-        # Load the session and file information
-        session_id, source_filename = request.session_id, request.source_filename
-        file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
+            # Load the session and file information
+            session_id, source_filename = request.session_id, request.source_filename
+            file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
 
-        # Initialize SubEdit object
-        subedit = SubEdit([file_path])
+            # Initialize SubEdit object
+            subedit = SubEdit([file_path])
 
-        # Calculate preliminary ETA for response
-        eta = subedit.subtitles_data[file_path]['eta']
+            # Calculate preliminary ETA for response
+            eta = subedit.subtitles_data[file_path]['eta']
 
-        # Create task using asyncio
-        TaskManager.create_task(
-            session_id,
-            perform_translation_task(
-                subedit,
-                request.target_language,
-                request.original_language,
-                request.model_name,
-                request.model_throttle,
-                request.request_timeout,
-                request.response_timeout
+            # Create task using asyncio
+            TaskManager.create_task(
+                session_id,
+                perform_duck_translate_task(
+                    subedit,
+                    request.target_language,
+                    request.original_language,
+                    request.model_name,
+                    request.model_throttle,
+                    request.request_timeout,
+                    request.response_timeout
+                )
             )
-        )
-        print("[DEBUG] [API] /translate/ task created")
+            print("[DEBUG] [API] /duck_translate/ task created")
 
-        # Return immediate response with status
-        return {
-            "session_id": session_id,
-            "source_filename": source_filename,
-            "message": f"Translation to {request.target_language} started in the background",
-            "eta": eta,
-            "status": "processing"
-        }
+            # Return immediate response with status
+            return {
+                "session_id": session_id,
+                "source_filename": source_filename,
+                "message": f"Duck Translation to {request.target_language} started in the background",
+                "eta": eta,
+                "status": "processing"
+            }
 
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
-async def perform_translation_task(
-    subedit: SubEdit,
-    target_language: str,
-    original_language: str,
-    model_name: str,
-    model_throttle: float,
-    request_timeout: int,
-    response_timeout: int
-) -> None:
-    """Perform the translation task in the background."""
-    try:
-        print("[DEBUG] [API] perform_translation_task started")
+    async def perform_duck_translate_task(
+        subedit: SubEdit,
+        target_language: str,
+        original_language: str,
+        model_name: str,
+        model_throttle: float,
+        request_timeout: int,
+        response_timeout: int
+    ) -> None:
+        """Perform the translation task using models provided by Duck.ai in the background."""
+        try:
+            print("[DEBUG] [API] perform_duck_translate_task started")
 
-        # No need for nested async function since we're already in an async function
-        await subedit.translate_text(
-            target_language=target_language,
-            original_language=original_language,
-            model_name=model_name,
-            model_throttle=model_throttle,
-            request_timeout=request_timeout,
-            response_timeout=response_timeout
-        )
+            await subedit.duck_translate(
+                target_language=target_language,
+                original_language=original_language,
+                model_name=model_name,
+                model_throttle=model_throttle,
+                request_timeout=request_timeout,
+                response_timeout=response_timeout
+            )
 
-        print(f"[DEBUG] [BACKGROUND] Translation to {target_language} completed successfully")
-    except asyncio.TimeoutError:
-        print(f"[DEBUG] [BACKGROUND] Translation timed out after {response_timeout * 10} seconds")
-    except Exception as e:
-        print(f"[DEBUG] [BACKGROUND] Translation error: {str(e)}")
+            print(f"[DEBUG] [BACKGROUND] Duck Translation to {target_language} completed successfully")
+        except asyncio.TimeoutError:
+            print(f"[DEBUG] [BACKGROUND] Duck Translation timed out after {response_timeout * 10} seconds")
+        except Exception as e:
+            print(f"[DEBUG] [BACKGROUND] Duck Translation error: {str(e)}")
 
 if __name__ == '__main__':
     run_cleanup()
