@@ -7,8 +7,8 @@ import asyncio
 from pathlib import Path
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
-from typing import List, Dict, Union, Optional
-from structures import SubtitleMetadata, SubtitleEntry, SubtitlesDataDict, TranslateData
+from typing import cast, List, Dict, Union, Optional
+from structures import SubtitleMetadata, SubtitleEntry, SubtitlesDataDict, TranslatorProtocol, DuckData
 
 load_dotenv()
 DEBUG = bool(int(os.getenv('DEBUG', '1')))
@@ -181,6 +181,7 @@ class SubEdit:
                 'text': subtitle['text']
             })
 
+        # Create output subtitle file and store path for reference
         self._create_file(self.shifted_file)
         self.processed_file = os.path.basename(self.shifted_file)
 
@@ -303,6 +304,7 @@ class SubEdit:
             if old_index in aligned_subtitles
         }
 
+    # Create output subtitle file and store path for reference
         self._create_file(self.aligned_file)
         self.processed_file = os.path.basename(self.aligned_file)
 
@@ -370,8 +372,120 @@ class SubEdit:
                 'text': new_text
             }
 
+        # Create output subtitle file and store path for reference
         self._create_file(self.cleaned_file)
         self.processed_file = os.path.basename(self.cleaned_file)
+
+    def engine_translate(
+            self,
+            target_language: str,
+            original_language: Optional[str] = None,
+            file_path: Optional[str] = None,
+            engine: str = 'Google',
+            clean_markup: bool = True
+        ) -> None:
+        """
+        Translates subtitles using the selected translation engine.
+
+        Args:
+            target_language (str): Language to translate to.
+            original_language (str): Language to translate from (autodetected if not provided).
+            file_path (str): Path to subtitle file to translate (defaults to current source file).
+            engine (str): Translation engine to use. Defaults to 'Google'.
+            chunk_size (int): Number of subtitles to send in each translation request. Defaults to 100.
+        """
+        if engine == 'Linguee':
+            from deep_translator import LingueeTranslator as TranslateEngine  # type: ignore
+        elif engine == 'MyMemory':
+            from deep_translator import MyMemoryTranslator as TranslateEngine  # type: ignore
+        else:
+            engine = 'Google'
+            from deep_translator import GoogleTranslator as TranslateEngine  # type: ignore
+
+        # Determine which file to translate and source language to use
+        file_path = self.source_file if file_path is None else file_path
+        original_language = (
+            self.subtitles_data[file_path]['metadata']['language']
+            if original_language is None else original_language
+        )
+
+        # Generate a filename for the translated subtitles
+        source_name, source_ext = os.path.splitext(self.source_file)
+        self.translated_file = f'{source_name}-translated-to-{target_language}-with-{engine}{source_ext}'
+
+        # Initialize translated file structure by copying source metadata and subtitle content
+        self.subtitles_data[self.translated_file] = {
+            'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
+            'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
+            'eta': 0
+        }
+
+        # Load formatted language codes from engines.json for selected engine
+        with open(Path(__file__).parent / '../shared/engines.json', 'r') as file:
+            data = json.load(file)
+            langdetect_source = data['codes'][original_language]
+            langdetect_target = data['codes'][target_language]
+            engine_source = data['engines'][engine]['languages'][langdetect_source]
+            engine_target = data['engines'][engine]['languages'][langdetect_target]
+            engine_limit = data['engines'][engine]['limit']
+
+        # Make a list of subtitles to translate
+        if clean_markup:
+            # Remove all markup from subtitles using props helper
+            prepared_subtitles = props.remove_all_markup(self.subtitles_data[file_path])
+        else:
+            # Keep original subtitle formatting
+            source = self.subtitles_data[self.source_file]['subtitles']
+            prepared_subtitles = [source[i]['text'] for i in sorted(source)]
+
+        # Replace line breaks with spaces to increase translation accuracy
+        prepared_subtitles: List[str] = props.process_newlines(prepared_subtitles)
+
+        translated_subtitles: List[str] = []
+        index_current = 0
+        index_total = len(prepared_subtitles)
+
+        while index_current < index_total:
+            chunk_lines: List[str] = []
+            chunk_length = 0
+
+            # Collect lines into a chunk without exceeding engine_limit
+            while index_current < index_total:
+                line = prepared_subtitles[index_current]
+                line_length = len(line) + 2  # add 2 for the "\n\n" that will be inserted
+
+                if chunk_length + line_length > engine_limit:
+                    print('chunk_length + line_length > engine_limit')
+                    break
+
+                chunk_lines.append(line)
+                chunk_length += line_length
+                index_current += 1
+
+            # Join the chunk and translate
+            chunk = "\n\n".join(chunk_lines)
+            engine_instance = TranslateEngine(source=engine_source, target=engine_target)
+            typed_engine = cast(TranslatorProtocol, engine_instance)
+            translated_text = typed_engine.translate(chunk)
+
+            # Try splitting back the same number of segments
+            translated_list = translated_text.strip().split("\n\n")
+
+            # If translation output doesn't match input size, raise warning or fallback
+            if len(translated_list) != len(chunk_lines):
+                raise ValueError("Mismatch in translated segment count. Check translation formatting.")
+
+            translated_subtitles.extend(translated_list)
+
+        # Assign each translated text back to corresponding subtitle object
+        translated = self.subtitles_data[self.translated_file]['subtitles']
+        for key, subtitle in zip(translated.keys(), translated_subtitles):
+            translated[key]['text'] = subtitle
+
+
+        # Create output subtitle file and store path for reference# Create output subtitle file and store path for reference
+        self._create_file(self.translated_file)
+        self.processed_file = os.path.basename(self.translated_file)
 
     # Method accesible only on localhost
     if DEBUG:
@@ -413,9 +527,9 @@ class SubEdit:
                 'eta': 0
             }
 
-            # Get formated values from shared translation JSON
+            # Get formated values from shared Duck.ai JSON
             with open(Path(__file__).parent / '../shared/duck.json', 'r') as file:
-                data: TranslateData = json.load(file)
+                data: DuckData = json.load(file)
                 translate_from: str = data['codes'][original_language]
                 translate_to: str = data['codes'][target_language]
                 translator_model: str = data['models'][model_name]['name']
@@ -485,5 +599,6 @@ class SubEdit:
                 else:
                     raise ValueError(f'Bad response format: {response_pattern[index]}.')
 
+                # Create output subtitle file and store path for reference
             self._create_file(self.translated_file)
             self.processed_file = os.path.basename(self.translated_file)
