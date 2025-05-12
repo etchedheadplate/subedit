@@ -5,8 +5,9 @@ import math
 import json
 import chardet
 import langdetect # type: ignore
+from typing import List
 from pathlib import Path
-from structures import SubtitleMetadata, SubtitleData, TranslationData
+from structures import SubtitleMetadata, SubtitleData, StatisticsData
 
 def extract_metadata(file_path: str) -> SubtitleMetadata:
     """Detects encoding of subtitles file and returns metadata.
@@ -178,7 +179,7 @@ def update_estimated_response_time(new_response_time: float) -> None:
             "clean": 1,
             "translate": 1
         },
-        "translation_time": {
+        "duck_statistics": {
             "total_count_of_responses": 1,
             "total_responses_duration": new_response_time,
             "average_response_duration": new_response_time
@@ -197,17 +198,17 @@ def update_estimated_response_time(new_response_time: float) -> None:
     with open(statistics_file, 'r') as file:
         data = json.load(file)
 
-    total_count_of_responses = data['translation_time']['total_count_of_responses']
-    average_response_duration = data['translation_time']['average_response_duration']
+    total_count_of_responses = data['duck_statistics']['total_count_of_responses']
+    average_response_duration = data['duck_statistics']['average_response_duration']
 
     # Calculate the updated average response duration
     updated_average_response_duration = (average_response_duration * total_count_of_responses + new_response_time) / (total_count_of_responses + 1)
 
     # Update the data structure with the new average
     data['last_update'] = current_timestamp
-    data['translation_time']['average_response_duration'] = updated_average_response_duration
-    data['translation_time']['total_count_of_responses'] += 1  # Increment the count of responses
-    data['translation_time']['total_responses_duration'] += new_response_time  # Update the total duration
+    data['duck_statistics']['average_response_duration'] = updated_average_response_duration
+    data['duck_statistics']['total_count_of_responses'] += 1  # Increment the count of responses
+    data['duck_statistics']['total_responses_duration'] += new_response_time  # Update the total duration
 
     # Write the updated data back to the JSON file
     with open(statistics_file, 'w') as file:
@@ -239,8 +240,8 @@ def calculate_translation_eta(
         int: Estimated time in seconds for the complete translation of all prompts.
     """
     with open(Path(__file__).parent / '../shared/statistics.json', 'r') as file:
-        data: TranslationData = json.load(file)
-        average_response_duration: float = data['translation_time']['average_response_duration']
+        data: StatisticsData = json.load(file)
+        average_response_duration: float = data['duck_statistics']['average_response_duration']
 
     cleaned_subtitles = remove_all_markup(subtitle_data)
     prompt_task = construct_prompt_task(translate_from, translate_to)
@@ -249,3 +250,36 @@ def calculate_translation_eta(
     translation_eta = prompts_count * (request_timeout + int(average_response_duration))
 
     return translation_eta
+
+def process_newlines(subtitles: List[str]) -> List[str]:
+    """
+    Processes subtitle strings to preserve line breaks in dialogues and
+    replace them with spaces otherwise.
+
+    A line is considered dialogue if it starts (optionally after whitespace)
+    with one of the dash characters: '-', '–', or '—'.
+
+    Args:
+        subtitles (List[str]): List of subtitle strings.
+
+    Returns:
+        List[str]: Processed list of subtitle strings.
+    """
+    # Match line starting with optional whitespace + dash character
+    dialogue_pattern = re.compile(r"^\s*[-–—]")
+
+    result: List[str] = []
+    for text in subtitles:
+        lines = text.split('\n')
+
+        # Count lines that look like dialogue (start with dash after optional space)
+        dialogue_count = sum(bool(dialogue_pattern.match(line)) for line in lines)
+
+        if dialogue_count >= 2:
+            # Likely a conversation — preserve newlines
+            result.append('\n'.join(lines))
+        else:
+            # Likely a single sentence broken for readability — join with space
+            result.append(' '.join(lines))
+
+    return result
