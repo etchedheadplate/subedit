@@ -2,7 +2,8 @@ import { useState } from "react";
 import ShiftOperation from "./components/operations/ShiftOperation";
 import AlignOperation from "./components/operations/AlignOperation";
 import CleanOperation from "./components/operations/CleanOperation";
-import TranslateOperation from "./components/operations/DuckTranslateOperation";
+import EngineTranslateOperation from "./components/operations/EngineTranslateOperation";
+import DuckTranslateOperation from "./components/operations/DuckTranslateOperation";
 import DragAndDropArea from "./components/DragAndDropArea";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
@@ -34,6 +35,7 @@ function App() {
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
+        engineTranslateSubtitles,
         duckTranslateSubtitles,
         getDownloadLink,
         resetResults,
@@ -149,8 +151,19 @@ function App() {
                 />
             )}
 
+            {activeOption === "enginetranslate" && (
+                <EngineTranslateOperation
+                    onEngineTranslate={engineTranslateSubtitles}
+                    sessionId={sessionId}
+                    onDownload={handleDownload}
+                    sourceFile={uploadedFile}
+                    hasProcessedFile={!!processedFile}
+                    processedFile={processedFile}
+                />
+            )}
+
             {activeOption === "ducktranslate" && (
-                <TranslateOperation
+                <DuckTranslateOperation
                     onDuckTranslate={duckTranslateSubtitles}
                     sessionId={sessionId}
                     onDownload={handleDownload}
