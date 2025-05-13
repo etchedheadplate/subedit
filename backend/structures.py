@@ -56,7 +56,16 @@ class CleanRequest(BaseModel):
     color: bool = False
     font: bool = False
 
-class TranslateRequest(BaseModel):
+class EngineRequest(BaseModel):
+    session_id: str
+    source_filename: str
+    target_language: str
+    original_language: Optional[str]
+    file_path: Optional[str]
+    engine: str
+    clean_markup: bool = True
+
+class DuckRequest(BaseModel):
     session_id: str
     source_filename: str
     target_language: str
