@@ -232,7 +232,7 @@ export const apiService = {
         };
     },
 
-    translateSubtitles: async (
+    duckTranslateSubtitles: async (
         sessionId: string,
         sourceFilename: string,
         targetLanguage: string,
@@ -246,7 +246,7 @@ export const apiService = {
         status: string;
         eta: number;
     }> => {
-        const response = await fetch(`${API_BASE_URL}/translate`, {
+        const response = await fetch(`${API_BASE_URL}/duck`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -264,7 +264,7 @@ export const apiService = {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.detail || "Translation operation failed");
+            throw new Error(data.detail || "Duck translation operation failed");
         }
 
         return {

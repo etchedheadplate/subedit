@@ -2,7 +2,7 @@ import { useState } from "react";
 import ShiftOperation from "./components/operations/ShiftOperation";
 import AlignOperation from "./components/operations/AlignOperation";
 import CleanOperation from "./components/operations/CleanOperation";
-import TranslateOperation from "./components/operations/TranslateOperation";
+import TranslateOperation from "./components/operations/DuckTranslateOperation";
 import DragAndDropArea from "./components/DragAndDropArea";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
@@ -34,7 +34,7 @@ function App() {
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
-        translateSubtitles,
+        duckTranslateSubtitles,
         getDownloadLink,
         resetResults,
     } = useSubtitleOperations(sessionId, uploadedFile);
@@ -67,6 +67,13 @@ function App() {
         }
     };
 
+    const optionLabels: { label: string; key: keyof ProcessingOptions }[] = [
+        { label: "Shift", key: "shift" },
+        { label: "Align", key: "align" },
+        { label: "Clean", key: "clean" },
+        { label: "Duck Translate", key: "ducktranslate" },
+    ];
+
     return (
         <div className="main-app">
 
@@ -86,16 +93,14 @@ function App() {
 
                 {/* Options Buttons */}
                 <div className="main-options">
-                    {["shift", "align", "clean", "translate"].map((option) => (
+                    {optionLabels.map(({ label, key }) => (
                         <button
-                            className={`main-option-button${activeOption === option ? " active" : ""}`}
-                            key={option}
-                            onClick={() => handleOptionSelect(option as OperationType)}
+                            className={`main-option-button${activeOption === key ? " active" : ""}`}
+                            key={key}
+                            onClick={() => handleOptionSelect(key)}
                             disabled={isLoading}
                         >
-                            <strong>
-                                {option.charAt(0).toUpperCase() + option.slice(1)}
-                            </strong>
+                            <strong>{label}</strong>
                         </button>
                     ))}
                 </div>
@@ -143,9 +148,9 @@ function App() {
                 />
             )}
 
-            {activeOption === "translate" && (
+            {activeOption === "ducktranslate" && (
                 <TranslateOperation
-                    onTranslate={translateSubtitles}
+                    onDuckTranslate={duckTranslateSubtitles}
                     sessionId={sessionId}
                     onDownload={handleDownload}
                     sourceFile={uploadedFile}

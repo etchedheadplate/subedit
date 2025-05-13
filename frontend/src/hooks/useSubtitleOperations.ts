@@ -236,7 +236,7 @@ export const useSubtitleOperations = (
     };
 
     // Translate operation
-    const translateSubtitles = async (
+    const duckTranslateSubtitles = async (
         targetLanguage: string,
         originalLanguage: string,
         modelName: string,
@@ -249,7 +249,7 @@ export const useSubtitleOperations = (
 
         try {
             // Start the background task
-            const result = await apiService.translateSubtitles(
+            const result = await apiService.duckTranslateSubtitles(
                 sessionId,
                 uploadedFile.filename,
                 targetLanguage,
@@ -338,7 +338,7 @@ export const useSubtitleOperations = (
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
-        translateSubtitles,
+        duckTranslateSubtitles,
         getDownloadLink,
         resetResults,
     };

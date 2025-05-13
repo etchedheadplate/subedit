@@ -28,7 +28,7 @@ export interface ProcessingOptions {
     };
     align: null;
     clean: null;
-    translate: {
+    ducktranslate: {
         targetLanguage?: string;
     };
 }

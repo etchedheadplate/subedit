@@ -1,20 +1,20 @@
 import React, { useState, useEffect } from "react";
-import UniversalSubtitlePreview from "../../components/SubtitlePreview";
+import UniversalSubtitlePreview from "../SubtitlePreview";
 import { SubtitleFile, SubtitleMetadata } from "../../types";
-import translationData from "../../../../shared/duck.json";
+import duckTranslationData from "../../../../shared/duck.json";
 import loadingAnimation from "../../assets/loading.gif";
 
-interface TranslateResult {
+interface DuckTranslateResult {
     eta: number;
 }
 
-interface TranslateOperationProps {
-    onTranslate: (
+interface DuckTranslateOperationProps {
+    onDuckTranslate: (
         targetLanguage: string,
         originalLanguage: string,
         modelName: string,
         modelThrottle: number
-    ) => Promise<TranslateResult | null | undefined>;
+    ) => Promise<DuckTranslateResult | null | undefined>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
@@ -22,8 +22,8 @@ interface TranslateOperationProps {
     processedFile: SubtitleFile | null;
 }
 
-const TranslateOperation: React.FC<TranslateOperationProps> = ({
-    onTranslate,
+const TranslateOperation: React.FC<DuckTranslateOperationProps> = ({
+    onDuckTranslate,
     sessionId,
     onDownload,
     sourceFile,
@@ -39,7 +39,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     const [detectedLanguage,] = useState<string | null>(null);
 
     // Get first model key for default selection
-    const defaultModel = Object.keys(translationData.models)[0];
+    const defaultModel = Object.keys(duckTranslationData.models)[0];
 
     // State for setting up model
     const [model, setModel] = useState<string>(defaultModel);
@@ -60,7 +60,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     useEffect(() => {
         if (detectedLanguage &&
             detectedLanguage !== originalLanguage &&
-            Object.keys(translationData.codes).includes(detectedLanguage)) {
+            Object.keys(duckTranslationData.codes).includes(detectedLanguage)) {
             setOriginalLanguage(detectedLanguage);
         }
     }, [detectedLanguage, originalLanguage]);
@@ -93,13 +93,13 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     };
 
     // Handler to store translation results
-    const handleTranslate = async () => {
+    const handleDuckTranslate = async () => {
         // Set translation in progress
         setIsTranslating(true);
 
         try {
             // Start the translation and get ETA
-            const result = await onTranslate(targetLanguage, originalLanguage, model, throttle);
+            const result = await onDuckTranslate(targetLanguage, originalLanguage, model, throttle);
 
             // If we got a result with ETA, use it for countdown
             if (result && result.eta) {
@@ -199,7 +199,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
     );
 
     return (
-        <div className="translate-operation-section">
+        <div className="duck-translate-operation-section">
 
             {/* Description of Translate Operation */}
             <div className="operation-description">
@@ -246,7 +246,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                                 disabled={!sourceFile || isTranslating}
                             >
                                 <option value="">Select a language</option>
-                                {Object.entries(translationData.codes)
+                                {Object.entries(duckTranslationData.codes)
                                     .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
                                     .map(([code, name]) => (
                                         <option key={code} value={code}>
@@ -280,7 +280,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                                 disabled={!sourceFile || isTranslating}
                             >
                                 <option value="">Select a language</option>
-                                {Object.entries(translationData.codes)
+                                {Object.entries(duckTranslationData.codes)
                                     .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
                                     .map(([code, name]) => (
                                         <option key={code} value={code}>
@@ -313,7 +313,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                                 onChange={handleModelChange}
                                 disabled={!sourceFile || isTranslating}
                             >
-                                {Object.keys(translationData.models).map((modelKey) => (
+                                {Object.keys(duckTranslationData.models).map((modelKey) => (
                                     <option key={modelKey} value={modelKey}>
                                         {modelKey}
                                     </option>
@@ -380,7 +380,7 @@ const TranslateOperation: React.FC<TranslateOperationProps> = ({
                     >
                         <button
                             className={`operation-button${(!sourceFile || targetLanguage === "" || originalLanguage === "" || isTranslating) ? " disabled" : ""}`}
-                            onClick={handleTranslate}
+                            onClick={handleDuckTranslate}
                             disabled={!sourceFile || targetLanguage === "" || originalLanguage === "" || isTranslating}
                         >
                             Translate
