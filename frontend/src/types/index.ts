@@ -23,14 +23,11 @@ export interface SubtitlePreview {
 }
 
 export interface ProcessingOptions {
-    shift: {
-        delay: number;
-    };
+    shift: null;
     align: null;
     clean: null;
-    ducktranslate: {
-        targetLanguage?: string;
-    };
+    translate: null;
+    ducktranslate: null
 }
 
 export type OperationType = keyof ProcessingOptions;
