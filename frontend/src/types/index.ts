@@ -26,7 +26,7 @@ export interface ProcessingOptions {
     shift: null;
     align: null;
     clean: null;
-    translate: null;
+    enginetranslate: null;
     ducktranslate: null
 }
 

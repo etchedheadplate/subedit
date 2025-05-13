@@ -71,7 +71,7 @@ function App() {
         { label: "Shift", key: "shift" },
         { label: "Align", key: "align" },
         { label: "Clean", key: "clean" },
-        { label: "Translate", key: "translate" },
+        { label: "Translate", key: "enginetranslate" },
         { label: "Duck Translate", key: "ducktranslate" },
     ];
 
