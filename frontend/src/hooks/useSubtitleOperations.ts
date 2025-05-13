@@ -235,7 +235,83 @@ export const useSubtitleOperations = (
         }
     };
 
-    // Translate operation
+    // Engine Translate operation
+    const engineTranslateSubtitles = async (
+        targetLanguage: string,
+        originalLanguage: string,
+        engine: string,
+        cleanMarkup: boolean,
+    ) => {
+        if (!uploadedFile || !sessionId) return;
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+            // Start the background task
+            const result = await apiService.engineTranslateSubtitles(
+                sessionId,
+                uploadedFile.filename,
+                targetLanguage,
+                originalLanguage,
+                engine,
+                cleanMarkup,
+            );
+
+            // Start polling for task completion
+            setIsPolling(true);
+            const interval = setInterval(async () => {
+                try {
+                    const status = await apiService.checkTaskStatus(
+                        sessionId,
+                        uploadedFile.filename
+                    );
+
+                    if (status.status === "completed" && status.processed_filename) {
+                        // Task completed, clear polling
+                        clearInterval(interval);
+                        setIsPolling(false);
+
+                        // Set processed file
+                        setProcessedFile({
+                            filename: status.processed_filename,
+                            session_id: sessionId,
+                            file_path: uploadedFile.file_path,
+                        });
+
+                        setIsLoading(false);
+                    }
+                } catch (err: unknown) {
+                    clearInterval(interval);
+                    setIsPolling(false);
+
+                    if (err instanceof Error) {
+                        setError(err.message);
+                    } else {
+                        setError("An unexpected error occurred.");
+                    }
+
+                    setIsLoading(false);
+                }
+            }, 3000); // Poll every 3 seconds
+
+            setPollInterval(interval);
+
+            return {
+                eta: result.eta,
+            };
+        } catch (err: unknown) {
+            if (err instanceof Error) {
+                setError(err.message);
+            } else {
+                setError("An unexpected error occurred.");
+            }
+            setIsLoading(false);
+            return null;
+        }
+    };
+
+    // Duck Translate operation
     const duckTranslateSubtitles = async (
         targetLanguage: string,
         originalLanguage: string,
@@ -338,6 +414,7 @@ export const useSubtitleOperations = (
         shiftSubtitles,
         alignSubtitles,
         cleanSubtitles,
+        engineTranslateSubtitles,
         duckTranslateSubtitles,
         getDownloadLink,
         resetResults,
