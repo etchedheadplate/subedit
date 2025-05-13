@@ -482,13 +482,13 @@ async def engine_translate_subtitles(request: EngineRequest) -> Dict[str, Any]:
         TaskManager.create_task(
             session_id,
             perform_engine_task(
-                subedit,
-                source_filename,
-                request.source_filename,
-                request.target_language,
-                request.original_language,
-                request.engine,
-                request.clean_markup,
+                subedit=subedit,
+                source_filename=source_filename,
+                target_language=request.target_language,
+                original_language=request.original_language,
+                file_path=file_path,
+                engine=request.engine,
+                clean_markup=request.clean_markup
             )
         )
 
