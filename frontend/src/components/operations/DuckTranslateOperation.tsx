@@ -22,7 +22,7 @@ interface DuckTranslateOperationProps {
     processedFile: SubtitleFile | null;
 }
 
-const TranslateOperation: React.FC<DuckTranslateOperationProps> = ({
+const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
     onDuckTranslate,
     sessionId,
     onDownload,
@@ -423,4 +423,4 @@ const TranslateOperation: React.FC<DuckTranslateOperationProps> = ({
     );
 };
 
-export default TranslateOperation;
+export default DuckTranslateOperation;
