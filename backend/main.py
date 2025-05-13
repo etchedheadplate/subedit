@@ -11,7 +11,7 @@ from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from structures import StatusRequest, ShowRequest, ShiftRequest, AlignRequest, CleanRequest, TranslateRequest
+from structures import StatusRequest, ShowRequest, ShiftRequest, AlignRequest, CleanRequest, EngineRequest, DuckRequest
 from subedit import SubEdit
 
 # Load environment variables from .env file
@@ -102,7 +102,7 @@ async def get_session() -> Dict[str, str]:
     session_id = str(uuid.uuid4())
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
-    print("[DEBUG] [API] /get-session/ endpoint called:", session_id)
+    print("[DEBUG] [API] /get-session endpoint called:", session_id)
     return {"session_id": session_id}
 
 @app.post("/upload")
@@ -227,7 +227,7 @@ async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
     try:
         # Load the session and file
         session_id, filename = request.session_id, request.filename
-        print(f"[DEBUG] [API] /info/ endpoint called: session_id={session_id}, filename={filename}")
+        print(f"[DEBUG] [API] /info endpoint called: session_id={session_id}, filename={filename}")
 
         # Initialize SubEdit object
         file_path = os.path.join(USER_FILES_DIR, session_id, filename)
@@ -297,7 +297,7 @@ class TaskManager:
 async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
     """Shift the timing of subtitles by a specified delay."""
     try:
-        print("[DEBUG] [API] /shift/ endpoint called")
+        print("[DEBUG] [API] /shift endpoint called")
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -344,7 +344,7 @@ async def perform_shift_task(
 async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
     """Align subtitles timing based on an example file."""
     try:
-        print("[DEBUG] [API] /align/ endpoint called")
+        print("[DEBUG] [API] /align endpoint called")
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -403,7 +403,7 @@ async def perform_align_task(
 async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
     """Clean markup from subtitles based on specified options."""
     try:
-        print("[DEBUG] [API] /clean/ endpoint called")
+        print("[DEBUG] [API] /clean endpoint called")
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -465,13 +465,74 @@ async def perform_clean_task(
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Markup cleaning error: {str(e)}")
 
+@app.post("/engine")
+async def engine_translate_subtitles(request: EngineRequest) -> Dict[str, Any]:
+    """Translates subtitles using the selected translation engine."""
+    try:
+        print("[DEBUG] [API] /engine endpoint called")
+
+        # Load the session and file
+        session_id, source_filename = request.session_id, request.source_filename
+
+        # Initialize SubEdit object
+        file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
+        subedit = SubEdit([file_path])
+
+        # Create task using asyncio
+        TaskManager.create_task(
+            session_id,
+            perform_engine_task(
+                subedit,
+                source_filename,
+                request.source_filename,
+                request.target_language,
+                request.original_language,
+                request.engine,
+                request.clean_markup,
+            )
+        )
+
+        # Return immediate response with status
+        return {
+            "session_id": session_id,
+            "source_filename": source_filename,
+            "message": "Engine translation started in the background",
+            "status": "processing"
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+async def perform_engine_task(
+    subedit: SubEdit,
+    source_filename: str,
+    target_language: str,
+    original_language: Optional[str],
+    file_path: Optional[str],
+    engine: str,
+    clean_markup: bool = True
+) -> None:
+    """Perform the engine translation task in the background."""
+    try:
+        # Apply engine translation in the background
+        subedit.engine_translate(
+            target_language=target_language,
+            original_language=original_language,
+            file_path=file_path,
+            engine=engine,
+            clean_markup=clean_markup
+        )
+        print(f"[DEBUG] [BACKGROUND] Engine translation for {source_filename} completed successfully")
+    except Exception as e:
+        print(f"[DEBUG] [BACKGROUND] Engine translation error: {str(e)}")
+
 # Endpoint accesible only on localhost
 if DEBUG:
-    @app.post("/duck_translate")
-    async def translate_subtitles_with_ai(request: TranslateRequest) -> Dict[str, Any]:
-        """Translate subtitles to the specified target language using models provided by Duck.ai."""
+    @app.post("/duck")
+    async def duck_translate_subtitles(request: DuckRequest) -> Dict[str, Any]:
+        """Translates subtitles using the selected LLM provided by Duck.ai."""
         try:
-            print("[DEBUG] [API] /duck_translate/ endpoint called")
+            print("[DEBUG] [API] /duck endpoint called")
 
             # Load the session and file information
             session_id, source_filename = request.session_id, request.source_filename
@@ -486,7 +547,7 @@ if DEBUG:
             # Create task using asyncio
             TaskManager.create_task(
                 session_id,
-                perform_duck_translate_task(
+                perform_duck_task(
                     subedit,
                     request.target_language,
                     request.original_language,
@@ -496,7 +557,7 @@ if DEBUG:
                     request.response_timeout
                 )
             )
-            print("[DEBUG] [API] /duck_translate/ task created")
+            print("[DEBUG] [API] /duck task created")
 
             # Return immediate response with status
             return {
@@ -510,7 +571,7 @@ if DEBUG:
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def perform_duck_translate_task(
+    async def perform_duck_task(
         subedit: SubEdit,
         target_language: str,
         original_language: str,
@@ -519,9 +580,9 @@ if DEBUG:
         request_timeout: int,
         response_timeout: int
     ) -> None:
-        """Perform the translation task using models provided by Duck.ai in the background."""
+        """Perform the duck translation task in the background."""
         try:
-            print("[DEBUG] [API] perform_duck_translate_task started")
+            print("[DEBUG] [API] perform_duck_task started")
 
             await subedit.duck_translate(
                 target_language=target_language,
