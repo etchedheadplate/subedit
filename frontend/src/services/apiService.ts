@@ -232,6 +232,44 @@ export const apiService = {
         };
     },
 
+    engineTranslateSubtitles: async (
+        sessionId: string,
+        sourceFilename: string,
+        targetLanguage: string,
+        originalLanguage: string,
+        engine: string,
+        cleanMarkup: boolean,
+    ): Promise<{
+        sourceFilename: string;
+        status: string;
+        eta: number;
+    }> => {
+        const response = await fetch(`${API_BASE_URL}/engine`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                session_id: sessionId,
+                source_filename: sourceFilename,
+                target_language: targetLanguage,
+                original_language: originalLanguage,
+                engine: engine,
+                cleanMarkup: cleanMarkup,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.detail || "Engine translation operation failed");
+        }
+
+        return {
+            sourceFilename: data.source_filename,
+            status: data.status,
+            eta: data.eta,
+        };
+    },
+
     duckTranslateSubtitles: async (
         sessionId: string,
         sourceFilename: string,
