@@ -312,28 +312,29 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                     {/* Controls for Markup flag */}
                     <div className="control-item">
                         <p className="control-title">markup</p>
-
-                        <div className="select-checkboxes">
-                            <label
-                                className="range-text"
-                                title={
-                                    !sourceFile
-                                        ? "Upload source file"
-                                        : isTranslating
-                                            ? "Wait for translation to finish"
-                                            : ""
-                                }
-                            >
-                                <input
-                                    className={`options-checkboxes${!sourceFile || isTranslating ? " disabled" : ""}`}
-                                    type="checkbox"
-                                    checked={cleanMarkup}
-                                    onChange={handleCleanMarkup}
-                                    style={{ marginRight: "8px" }}
-                                    disabled={!sourceFile || isTranslating}
-                                />
-                                clean
-                            </label>
+                        <div className="select-drop-down-items">
+                            <div className="select-checkboxes">
+                                <label
+                                    className="range-text"
+                                    title={
+                                        !sourceFile
+                                            ? "Upload source file"
+                                            : isTranslating
+                                                ? "Wait for translation to finish"
+                                                : ""
+                                    }
+                                >
+                                    <input
+                                        className={`checkbox ${!sourceFile || isTranslating ? " disabled" : ""}`}
+                                        type="checkbox"
+                                        checked={cleanMarkup}
+                                        onChange={handleCleanMarkup}
+                                        style={{ marginRight: "8px" }}
+                                        disabled={!sourceFile || isTranslating}
+                                    />
+                                    clean
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
