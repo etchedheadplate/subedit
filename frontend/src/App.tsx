@@ -9,11 +9,14 @@ import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { OperationType } from "./types";
+import { ProcessingOptions } from "./types";
 import "./styles/OperationSection.css";
 import "./styles/SubtitlePreview.css";
 import "./styles/DragAndDropArea.css";
 import "./styles/ErrorMessage.css";
 import "./styles/App.css";
+
+const DEBUG: boolean = import.meta.env.VITE_DEBUG === "true";
 
 function App() {
     // Session hook
@@ -74,7 +77,11 @@ function App() {
         { label: "Align", key: "align" },
         { label: "Clean", key: "clean" },
         { label: "Translate", key: "enginetranslate" },
-        { label: "Duck Translate", key: "ducktranslate" },
+        ...(DEBUG
+            ? ([
+                { label: "Duck Translate", key: "ducktranslate" },
+            ] as { label: string; key: keyof ProcessingOptions }[])
+            : []),
     ];
 
     return (
