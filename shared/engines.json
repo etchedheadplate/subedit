@@ -178,7 +178,7 @@
             }
         }
     },
-    "depricated": {
+    "deprecated": {
         "Linguee": {
             "limit": 50,
             "languages": {
