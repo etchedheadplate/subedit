@@ -117,32 +117,6 @@
                 "Welsh": "cy"
             }
         },
-        "Linguee": {
-            "limit": 50,
-            "languages": {
-                "English": "english",
-                "German": "german",
-                "Bulgarian": "bulgarian",
-                "Polish": "polish",
-                "Portuguese": "portuguese",
-                "Hungarian": "hungarian",
-                "Romanian": "romanian",
-                "Russian": "russian",
-                "Dutch": "dutch",
-                "Greek": "greek",
-                "Slovenian": "slovenian",
-                "Danish": "danish",
-                "Italian": "italian",
-                "Spanish": "spanish",
-                "Finnish": "finnish",
-                "French": "french",
-                "Czech": "czech",
-                "Swedish": "swedish",
-                "Latvian": "latvian",
-                "Estonian": "estonian",
-                "Japanese": "japanese"
-            }
-        },
         "MyMemory": {
             "limit": 500,
             "languages": {
@@ -201,6 +175,34 @@
                 "Ukrainian": "uk-UA",
                 "Vietnamese": "vi-VN",
                 "Welsh": "cy-GB"
+            }
+        }
+    },
+    "depricated": {
+        "Linguee": {
+            "limit": 50,
+            "languages": {
+                "English": "english",
+                "German": "german",
+                "Bulgarian": "bulgarian",
+                "Polish": "polish",
+                "Portuguese": "portuguese",
+                "Hungarian": "hungarian",
+                "Romanian": "romanian",
+                "Russian": "russian",
+                "Dutch": "dutch",
+                "Greek": "greek",
+                "Slovenian": "slovenian",
+                "Danish": "danish",
+                "Italian": "italian",
+                "Spanish": "spanish",
+                "Finnish": "finnish",
+                "French": "french",
+                "Czech": "czech",
+                "Swedish": "swedish",
+                "Latvian": "latvian",
+                "Estonian": "estonian",
+                "Japanese": "japanese"
             }
         }
     }
