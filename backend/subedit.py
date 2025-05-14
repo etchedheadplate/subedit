@@ -394,13 +394,22 @@ class SubEdit:
             engine (str): Translation engine to use. Defaults to 'Google'.
             chunk_size (int): Number of subtitles to send in each translation request. Defaults to 100.
         """
-        if engine == 'Linguee':
-            from deep_translator import LingueeTranslator as TranslateEngine  # type: ignore
-        elif engine == 'MyMemory':
-            from deep_translator import MyMemoryTranslator as TranslateEngine  # type: ignore
-        else:
-            engine = 'Google'
-            from deep_translator import GoogleTranslator as TranslateEngine  # type: ignore
+        print(engine)
+
+        from deep_translator import ( # type: ignore
+            LingueeTranslator,
+            MyMemoryTranslator,
+            GoogleTranslator,
+        )
+
+        # Mapping of engine name to corresponding class
+        TRANSLATOR_ENGINES = {
+            'Linguee': LingueeTranslator,
+            'MyMemory': MyMemoryTranslator,
+            'Google': GoogleTranslator,  # Default engine
+        }
+
+        TranslateEngine = TRANSLATOR_ENGINES.get(engine, GoogleTranslator)
 
         # Determine which file to translate and source language to use
         file_path = self.source_file if file_path is None else file_path
@@ -441,10 +450,13 @@ class SubEdit:
         # Replace line breaks with spaces to increase translation accuracy
         prepared_subtitles: List[str] = props.process_newlines(prepared_subtitles)
 
+        # Lists with translated subtitles and indices of translation errors
         translated_subtitles: List[str] = []
+        not_translated: List[int] = []
+
+        # Translate subtitles
         index_current = 0
         index_total = len(prepared_subtitles)
-
         while index_current < index_total:
             chunk_lines: List[str] = []
             chunk_length = 0
@@ -455,8 +467,8 @@ class SubEdit:
                 line_length = len(line) + 2  # add 2 for the "\n\n" that will be inserted
 
                 if chunk_length + line_length > engine_limit:
-                    print('chunk_length + line_length > engine_limit')
-                    break
+                    not_translated.append(index_current)
+                    line = 'empty line'
 
                 chunk_lines.append(line)
                 chunk_length += line_length
@@ -473,9 +485,15 @@ class SubEdit:
 
             # If translation output doesn't match input size, raise warning or fallback
             if len(translated_list) != len(chunk_lines):
+                print(translated_list)
                 raise ValueError("Mismatch in translated segment count. Check translation formatting.")
 
             translated_subtitles.extend(translated_list)
+
+        # Replace too long lines with error message
+        if len(not_translated) > 0:
+            for error in not_translated:
+                translated_subtitles[error] = '<b><font color="#F25C54">TRANSLATION ERROR: Line was too long.</font></b>'
 
         # Assign each translated text back to corresponding subtitle object
         translated = self.subtitles_data[self.translated_file]['subtitles']
