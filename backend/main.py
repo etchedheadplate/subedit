@@ -486,7 +486,6 @@ async def engine_translate_subtitles(request: EngineRequest) -> Dict[str, Any]:
                 source_filename=source_filename,
                 target_language=request.target_language,
                 original_language=request.original_language,
-                file_path=file_path,
                 engine=request.engine,
                 clean_markup=request.clean_markup
             )
@@ -508,9 +507,8 @@ async def perform_engine_task(
     source_filename: str,
     target_language: str,
     original_language: Optional[str],
-    file_path: Optional[str],
     engine: str,
-    clean_markup: bool = True
+    clean_markup: bool
 ) -> None:
     """Perform the engine translation task in the background."""
     try:
@@ -518,7 +516,6 @@ async def perform_engine_task(
         subedit.engine_translate(
             target_language=target_language,
             original_language=original_language,
-            file_path=file_path,
             engine=engine,
             clean_markup=clean_markup
         )

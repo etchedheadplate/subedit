@@ -44,8 +44,8 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
     // State for setting up engine
     const [engine, setEngine] = useState<string>(defaultEngine);
 
-    // State for setting up markup
-    const [markup, setMarkup] = useState<boolean>(true);
+    // State for setting up cleanMarkup
+    const [cleanMarkup, setCleanMarkup] = useState<boolean>(true);
 
     // State for tracking if translation is in progress
     const [isTranslating, setIsTranslating] = useState<boolean>(false);
@@ -92,9 +92,9 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
         setEngine(e.target.value);
     };
 
-    // Handle markup flag
-    const handleMarkupFlag = () => {
-        setMarkup(prev => !prev);
+    // Handle cleanMarkup flag
+    const handleCleanMarkup = () => {
+        setCleanMarkup(prevMarkup => !prevMarkup);
     };
 
     // Handler to store translation results
@@ -104,8 +104,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
 
         try {
             // Start the translation and get ETA
-            const result = await onEngineTranslate(targetLanguage, originalLanguage, engine, markup);
-            console.log(targetLanguage, originalLanguage, engine, markup)
+            const result = await onEngineTranslate(targetLanguage, originalLanguage, engine, cleanMarkup);
 
             // If we got a result with ETA, use it for countdown
             if (result && result.eta) {
@@ -328,8 +327,8 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                                 <input
                                     className={`options-checkboxes${!sourceFile || isTranslating ? " disabled" : ""}`}
                                     type="checkbox"
-                                    checked={markup}
-                                    onChange={handleMarkupFlag}
+                                    checked={cleanMarkup}
+                                    onChange={handleCleanMarkup}
                                     style={{ marginRight: "8px" }}
                                     disabled={!sourceFile || isTranslating}
                                 />

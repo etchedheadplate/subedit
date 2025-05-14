@@ -253,7 +253,7 @@ export const apiService = {
                 target_language: targetLanguage,
                 original_language: originalLanguage,
                 engine: engine,
-                cleanMarkup: cleanMarkup,
+                clean_markup: cleanMarkup,
             }),
         });
 

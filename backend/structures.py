@@ -61,9 +61,8 @@ class EngineRequest(BaseModel):
     source_filename: str
     target_language: str
     original_language: Optional[str]
-    file_path: Optional[str] = None
     engine: str
-    clean_markup: bool = True
+    clean_markup: bool
 
 class DuckRequest(BaseModel):
     session_id: str
