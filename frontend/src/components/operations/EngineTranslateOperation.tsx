@@ -97,6 +97,27 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
         setCleanMarkup(prevMarkup => !prevMarkup);
     };
 
+    // Helper function to get compatible engines for the selected languages
+    const getCompatibleEngines = (originalLang: string, targetLang: string): string[] => {
+        return Object.keys(engineTranslationData.engines).filter(engineKey => {
+            // Type assertion to tell TypeScript that engineKey is a valid key
+            const engine = engineTranslationData.engines[engineKey as keyof typeof engineTranslationData.engines];
+            const engineLanguages = engine.languages;
+
+            // Get the original language name from the code
+            const originalLanguageName = engineTranslationData.codes[originalLang as keyof typeof engineTranslationData.codes];
+
+            // Get the target language name from the code
+            const targetLanguageName = engineTranslationData.codes[targetLang as keyof typeof engineTranslationData.codes];
+
+            // Check if both language names exist and are supported by this engine
+            return originalLanguageName &&
+                targetLanguageName &&
+                Object.prototype.hasOwnProperty.call(engineLanguages, originalLanguageName) &&
+                Object.prototype.hasOwnProperty.call(engineLanguages, targetLanguageName);
+        });
+    };
+
     // Handler to store translation results
     const handleEngineTranslate = async () => {
         // Set translation in progress
@@ -300,11 +321,19 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                                 onChange={handleEngineChange}
                                 disabled={!sourceFile || isTranslating}
                             >
-                                {Object.keys(engineTranslationData.engines).map((engineKey) => (
-                                    <option key={engineKey} value={engineKey}>
-                                        {engineKey}
-                                    </option>
-                                ))}
+                                {originalLanguage && targetLanguage ? (
+                                    getCompatibleEngines(originalLanguage, targetLanguage).map((engineKey) => (
+                                        <option key={engineKey} value={engineKey}>
+                                            {engineKey}
+                                        </option>
+                                    ))
+                                ) : (
+                                    Object.keys(engineTranslationData.engines).map((engineKey) => (
+                                        <option key={engineKey} value={engineKey}>
+                                            {engineKey}
+                                        </option>
+                                    ))
+                                )}
                             </select>
                         </div>
                     </div>
