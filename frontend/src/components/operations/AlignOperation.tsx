@@ -4,6 +4,7 @@ import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
 import loadingAnimation from "../../assets/loading.gif";
+import alignHint from "../AlignHint"
 
 interface AlignOperationProps {
     onAlign: (
@@ -51,6 +52,9 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     const [trimStart, setTrimStart] = useState<boolean>(true);
     const [trimEnd, setTrimEnd] = useState<boolean>(true);
 
+    // State to show hint
+    const [showHint, setShowHint] = useState<boolean>(true);
+
     // Loading state to show animation while processing
     const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -96,6 +100,11 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         if (flag == 'end') {
             setTrimEnd(!trimEnd);
         }
+    };
+
+    // Handle cleanMarkup flag
+    const handleShowHint = () => {
+        setShowHint(prevMarkup => !prevMarkup);
     };
 
     // Handle align operation
@@ -150,7 +159,17 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
             {/* Description of Align operation */}
             <div className="operation-description">
-                <p>You can align timing of your subtitles by example file. This might be needed if you have rip with subtitles in another language, and subtitles in desired language for other rip.</p>
+                <p>
+                    You can align the timing of your subtitles using an example file. This can be useful if you have a video
+                    rip with subtitles in another language, and the subtitles in your language are for a different rip — or
+                    if your rip and subtitles were created for different framerates. <span
+                        className="hint-button"
+                        onClick={handleShowHint}
+                    >
+                        {showHint ? 'Hide hint' : 'Show hint'}
+                    </span>
+                </p>
+                {showHint && alignHint}
             </div>
 
             <DragAndDropArea
@@ -165,15 +184,9 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 disabled={!sourceFile}
             />
 
-            {/* If Example file uploaded */}
             {/* Align controls section */}
             <div className="operation-controls-container">
                 <>
-                    {/* Description of Align controls */}
-                    <div className="operation-controls-description">
-                        <p>Select source and example subtitles to align. Text of first and last source subtitles should correspond to text of first and last selected example subtitles.</p>
-                    </div>
-
                     {/* Align controls block */}
                     <div className="operation-controls-items">
 

@@ -1,0 +1,64 @@
+.hint-button {
+    cursor: pointer;
+    color: #110e1b;
+    border: transparent 1px;
+    border-radius: 4px;
+    background-color: #DEE2E6;
+    font-size: 0.8em;
+    padding: 3px;
+}
+
+.example-hint {
+    border: #161522 solid 1px;
+    border-radius: 10px;
+    background-color: #161522;
+    padding: 15px;
+}
+
+.example-table {
+    display: flex;
+    justify-content: center;
+}
+
+.example-table table {
+    border-collapse: collapse;
+    /* Collapse adjacent borders into one */
+    border-spacing: 0;
+    /* Remove default space between cells */
+}
+
+th {
+    text-align: center;
+}
+
+td {
+    border: #6C757D dashed 1px;
+    padding: 8px;
+    white-space: nowrap;
+    overflow-wrap: break-word;
+    vertical-align: top;
+    font-size: 0.8em;
+    color: #6C757D;
+}
+
+.skip-subtitle {}
+
+.source-index {
+    color: #5784FF;
+}
+
+.example-index {
+    color: #6BBC5A;
+}
+
+.example-timing {
+    color: #977DE3;
+}
+
+.matching-text {
+    color: #FED82E;
+}
+
+.wrong-timing {
+    color: #F25C54;
+}
