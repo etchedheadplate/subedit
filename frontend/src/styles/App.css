@@ -24,6 +24,13 @@
     gap: 20px;
 }
 
+.option-icon {
+    width: 1.5em;
+    height: 1.5em;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
 .main-option-button {
     padding: 10px 15px;
     color: #DEE2E6;

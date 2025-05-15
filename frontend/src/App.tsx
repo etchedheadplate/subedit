@@ -10,6 +10,7 @@ import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { OperationType } from "./types";
 import { ProcessingOptions } from "./types";
+import ddgLogo from "./assets/ddg_logo.png";
 import "./styles/OperationSection.css";
 import "./styles/SubtitlePreview.css";
 import "./styles/DragAndDropArea.css";
@@ -72,15 +73,19 @@ function App() {
         }
     };
 
-    const optionLabels: { label: string; key: keyof ProcessingOptions }[] = [
+    const optionLabels: { label: string; key: keyof ProcessingOptions; icon?: string }[] = [
         { label: "Shift", key: "shift" },
         { label: "Align", key: "align" },
         { label: "Clean", key: "clean" },
         { label: "Translate", key: "enginetranslate" },
         ...(DEBUG
             ? ([
-                { label: "Duck Translate", key: "ducktranslate" },
-            ] as { label: string; key: keyof ProcessingOptions }[])
+                {
+                    label: "Translate",
+                    key: "ducktranslate",
+                    icon: ddgLogo, // Add the ddgLogo reference here
+                },
+            ] as { label: string; key: keyof ProcessingOptions; icon?: string }[])
             : []),
     ];
 
@@ -103,13 +108,20 @@ function App() {
 
                 {/* Options Buttons */}
                 <div className="main-options">
-                    {optionLabels.map(({ label, key }) => (
+                    {optionLabels.map(({ label, key, icon }) => (
                         <button
                             className={`main-option-button${activeOption === key ? " active" : ""}`}
                             key={key}
                             onClick={() => handleOptionSelect(key)}
                             disabled={isLoading}
                         >
+                            {icon && (
+                                <img
+                                    src={icon}
+                                    alt={`${label} icon`}
+                                    className="option-icon"
+                                />
+                            )}
                             <strong>{label}</strong>
                         </button>
                     ))}
