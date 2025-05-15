@@ -207,7 +207,8 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
             <div className="operation-description">
                 {!DEBUG && (
                     <p className="debug-message">
-                        This feature is available only when <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer">self-hosting</a>
+                        This feature is available only when{' '}
+                        <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer">self-hosting</a>
                     </p>
                 )}
 
@@ -215,13 +216,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                 <div className={!DEBUG ? 'muted-text' : ''}>
                     <p>
                         You can translate subtitles using AI models provided by{' '}
-                        <a
-                            href="https://duckduckgo.com/duckduckgo-help-pages/duckai"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                        >
-                            Duck.ai
-                        </a>.
+                        <a href="https://duckduckgo.com/duckduckgo-help-pages/duckai" target="_blank" rel="noopener noreferrer">Duck.ai</a>.
                     </p>
 
                     <p>

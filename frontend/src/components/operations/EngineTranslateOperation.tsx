@@ -213,7 +213,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
         <div className="translation-progress">
             <img src={loadingAnimation} alt="Translation in progress" />
             <p className="translation-progress-eta">ETA: {formatTime(remainingTime)}</p>
-            <p className="translation-progress-text">This may take longer for Claude and Mistral.</p>
+            <p className="translation-progress-text"></p>
         </div>
     );
 
@@ -222,7 +222,21 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
 
             {/* Description of Translate Operation */}
             <div className="operation-description">
-                <p>You can translate subtitles using translator engine.</p>
+                <p>
+                    You can translate subtitles using translator engine provided by{' '}
+                    <a href="https://support.google.com/translate/" target="_blank" rel="noopener noreferrer">Google</a> or{' '}
+                    <a href="https://mymemory.translated.net/doc/" target="_blank" rel="noopener noreferrer">MyMemory</a>.
+                </p>
+
+                <p>
+                    Both engines have limits on the number of characters they can translate at once — 5000 for Google and 500 for MyMemory.
+                    Because of this, your subtitles are usually divided into multiple parts and translated one at a time. To comply with
+                    usage limits and respect the engine providers free services, a 2-second delay is added between each request.
+                </p>
+
+                <p>
+                    You can also remove markup tags if they interfere with translation.
+                </p>
             </div>
 
             {/* Translate controls section */}
