@@ -376,7 +376,7 @@ class SubEdit:
         self._create_file(self.cleaned_file)
         self.processed_file = os.path.basename(self.cleaned_file)
 
-    def engine_translate(
+    async def engine_translate(
             self,
             target_language: str,
             original_language: Optional[str] = None,
@@ -394,8 +394,6 @@ class SubEdit:
             engine (str): Translation engine to use. Defaults to 'Google'.
             chunk_size (int): Number of subtitles to send in each translation request. Defaults to 100.
         """
-        print(engine)
-
         from deep_translator import ( # type: ignore
             LingueeTranslator,
             MyMemoryTranslator,
@@ -455,20 +453,23 @@ class SubEdit:
         not_translated: List[int] = []
 
         # Translate subtitles
+        empty_line = 'empty line'
         index_current = 0
         index_total = len(prepared_subtitles)
         while index_current < index_total:
             chunk_lines: List[str] = []
             chunk_length = 0
 
-            # Collect lines into a chunk without exceeding engine_limit
-            while index_current < index_total:
+            # Collect lines into a chunk without exceeding engine limit and prepared subtitles length
+            while chunk_length < engine_limit and index_current < index_total:
                 line = prepared_subtitles[index_current]
                 line_length = len(line) + 2  # add 2 for the "\n\n" that will be inserted
+                chunk_length += line_length
 
-                if chunk_length + line_length > engine_limit:
+                # Replace line with empty line if engine limit exceeded
+                if chunk_length + len(empty_line) >= engine_limit:
                     not_translated.append(index_current)
-                    line = 'empty line'
+                    line = empty_line
 
                 chunk_lines.append(line)
                 chunk_length += line_length
@@ -485,7 +486,6 @@ class SubEdit:
 
             # If translation output doesn't match input size, raise warning or fallback
             if len(translated_list) != len(chunk_lines):
-                print(translated_list)
                 raise ValueError("Mismatch in translated segment count. Check translation formatting.")
 
             translated_subtitles.extend(translated_list)
