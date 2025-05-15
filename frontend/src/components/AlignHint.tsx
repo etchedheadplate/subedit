@@ -146,7 +146,7 @@ const alignHint = (
             After uploading both files, look for <span className="matching-text">matching lines</span> at the beginning and end. It can also help to
             review the neighboring lines — in the case above the line <i>Any idea what they are?</i> increases confidence in the match. Next, enter the
             corresponding <span className="source-index">source indices</span> and <span className="example-index">example indices</span> into
-            the form fields below, then press the Align button. You’ll see that the <span className="example-timing">example timing</span> is
+            the form fields below, then press the <b>Align</b> button. You’ll see that the <span className="example-timing">example timing</span> is
             correctly mapped to the source. Optionally, you can trim subtitles that fall outside the source range, as they are
             likely to have <span className="wrong-timing">incorrect timing</span> now.
         </p>

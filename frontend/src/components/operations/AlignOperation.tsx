@@ -52,7 +52,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     const [trimEnd, setTrimEnd] = useState<boolean>(true);
 
     // State to show hint
-    const [showHint, setShowHint] = useState<boolean>(true);
+    const [showHint, setShowHint] = useState<boolean>(false);
 
     // Loading state to show animation while processing
     const [isLoading, setIsLoading] = useState<boolean>(false);
