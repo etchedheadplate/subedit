@@ -44,7 +44,8 @@ class SubEdit:
         self.subtitles_data[file_path] = {
             'metadata': extracted_metadata,
             'subtitles': {},
-            'eta': 0
+            'engine_eta': 0,
+            'duck_eta': 0
         }
 
         # Open subtitles file using encoding from metadata
@@ -89,8 +90,10 @@ class SubEdit:
             self.subtitles_data[file_path]['metadata'].update({'language': subtitles_language})
 
             # Calculate and save ETA for translation
-            translation_eta = props.calculate_translation_eta(self.subtitles_data[file_path])
-            self.subtitles_data[file_path]['eta'] = translation_eta
+            engine_eta = props.calculate_engine_translation_eta(self.subtitles_data[file_path])
+            duck_eta = props.calculate_duck_translation_eta(self.subtitles_data[file_path])
+            self.subtitles_data[file_path]['engine_eta'] = engine_eta
+            self.subtitles_data[file_path]['duck_eta'] = duck_eta
 
     def _create_file(self, file_path: str) -> None:
         """Writes subtitles into .srt file in UTF-8 encoding.
@@ -153,7 +156,8 @@ class SubEdit:
         self.subtitles_data[self.shifted_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {},
-            'eta': 0
+            'engine_eta': 0,
+            'duck_eta': 0
         }
         shifted_subtitles = self.subtitles_data[self.shifted_file]['subtitles']
         shifted_subtitles.update(parsed_subtitles)
@@ -214,7 +218,8 @@ class SubEdit:
         self.subtitles_data[self.aligned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {},
-            'eta': 0
+            'engine_eta': 0,
+            'duck_eta': 0
         }
 
         parsed_source = self.subtitles_data[self.source_file]['subtitles']
@@ -337,7 +342,8 @@ class SubEdit:
         self.subtitles_data[self.cleaned_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': {},
-            'eta': 0
+            'engine_eta': 0,
+            'duck_eta': 0
         }
 
         parsed_subtitles = self.subtitles_data[self.source_file]['subtitles']
@@ -424,7 +430,8 @@ class SubEdit:
         self.subtitles_data[self.translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
-            'eta': 0
+            'engine_eta': 0,
+            'duck_eta': 0
         }
 
         # Load formatted language codes from engines.json for selected engine
@@ -542,7 +549,8 @@ class SubEdit:
             self.subtitles_data[self.translated_file] = {
                 'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
                 'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
-                'eta': 0
+                'engine_eta': 0,
+                'duck_eta': 0
             }
 
             # Get formated values from shared Duck.ai JSON
@@ -598,8 +606,8 @@ class SubEdit:
 
             translation_end_timestamp = time.time()
             print(f"[DEBUG] [DUCK TRANSLATE] Translation completed in {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
-                f"(est: {self.subtitles_data[file_path]['eta']:.2f}, "\
-                f"dif: {self.subtitles_data[file_path]['eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}) "\
+                f"(est: {self.subtitles_data[file_path]['duck_eta']:.2f}, "\
+                f"dif: {self.subtitles_data[file_path]['duck_eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}) "\
                 f"with avg {sum(translation_time)/len(translation_time):.2f}s response ")
 
             props.update_estimated_response_time(sum(translation_time)/len(translation_time))

@@ -214,7 +214,7 @@ def update_estimated_response_time(new_response_time: float) -> None:
     with open(statistics_file, 'w') as file:
         json.dump(data, file, indent=4)
 
-def calculate_translation_eta(
+def calculate_duck_translation_eta(
     subtitle_data: SubtitleData,
     translate_from: str = 'Chinese Simplified',
     translate_to: str = 'Chinese Traditional',
@@ -248,6 +248,28 @@ def calculate_translation_eta(
     injected_subtitles = inject_prompt_symbols(cleaned_subtitles)
     prompts_count = calculate_prompts_count(prompt_task, injected_subtitles, model_limit * model_throttle)
     translation_eta = prompts_count * (request_timeout + int(average_response_duration))
+
+    return translation_eta
+
+def calculate_engine_translation_eta(
+    subtitle_data: SubtitleData,
+    engine_limit: float = 5000,
+    request_timeout: int = 2
+) -> int:
+    """Estimates the time required to translate all subtitles based on subtitle data and engine parameters.
+
+    Args:
+        subtitle_data (SubtitleData): Dictionary containing subtitle data, including the text to be translated.
+        engine_limit (float, optional): The character limit of the engine. Defaults to 5000 (Google).
+        request_timeout (int, optional): Timeout per request in seconds. Defaults to 2.
+
+    Returns:
+        int: Estimated time in seconds for the complete translation of all subtitles.
+    """
+    cleaned_subtitles = remove_all_markup(subtitle_data)
+    subtitles_length = len('\n\n'.join(cleaned_subtitles))
+    chunk_count =  subtitles_length / engine_limit
+    translation_eta = math.ceil(chunk_count * request_timeout)
 
     return translation_eta
 
