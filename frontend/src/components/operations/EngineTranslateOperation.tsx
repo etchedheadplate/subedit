@@ -213,7 +213,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
         <div className="translation-progress">
             <img src={loadingAnimation} alt="Translation in progress" />
             <p className="translation-progress-eta">ETA: {formatTime(remainingTime)}</p>
-            <p className="translation-progress-text"></p>
+            <p className="translation-progress-text">This may take longer for MyMemory.</p>
         </div>
     );
 
