@@ -168,8 +168,6 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                                         {" | "}{subtitleMeta.language || "? lang"} {subtitleMeta.confidence || ""}%
                                         {" | "}{subtitleMeta.encoding || "? encoding"}
                                         {" | "}{subtitleCount || "? num of"} subtitles
-                                        {" | "}{subtitleMeta.engine_eta || "? engine_eta"}
-                                        {" | "}{subtitleMeta.duck_eta || "? duck_eta"}
                                     </p>
                                     <p>
                                         {subtitleMeta.filename || "Unknown Filename"}
