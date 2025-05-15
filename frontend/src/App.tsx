@@ -157,7 +157,10 @@ function App() {
             {/* Errors, if any */}
             {errorMessage && (
                 <div className="error-message">
-                    {errorMessage}
+                    <p>
+                        <strong>Error:</strong>{" "}
+                        {errorMessage || "Unknown error"}
+                    </p>
                 </div>
             )}
 
