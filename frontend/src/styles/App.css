@@ -56,9 +56,12 @@
 }
 
 .error-message {
-    background-color: #6C757D;
-    color: #cc0000;
+    max-width: 50vw;
+    text-align: center;
+    margin: 0 auto 30px;
+    color: #F25C54;
     padding: 10px;
+    border: #F25C54 solid 2px;
     border-radius: 5px;
     margin-bottom: 20px;
 }
