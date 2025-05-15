@@ -110,7 +110,8 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                     encoding: result.encoding,
                     confidence: result.confidence * 100, // Probability -> Percentage
                     language: result.language,
-                    eta: result.eta,
+                    engine_eta: result.engine_eta,
+                    duck_eta: result.duck_eta,
                     filename: subtitleFile.filename,
                 }
                 setSubtitleMeta(meta);
@@ -167,6 +168,8 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                                         {" | "}{subtitleMeta.language || "? lang"} {subtitleMeta.confidence || ""}%
                                         {" | "}{subtitleMeta.encoding || "? encoding"}
                                         {" | "}{subtitleCount || "? num of"} subtitles
+                                        {" | "}{subtitleMeta.engine_eta || "? engine_eta"}
+                                        {" | "}{subtitleMeta.duck_eta || "? duck_eta"}
                                     </p>
                                     <p>
                                         {subtitleMeta.filename || "Unknown Filename"}
@@ -205,7 +208,7 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                     </div>
                 </div>
             ) : (
-                <div className="error-content">
+                <div className="error-message">
                     <p>
                         <strong>Error:</strong>{" "}
                         {error || "Unknown error"}
