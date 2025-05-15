@@ -72,8 +72,8 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
         }
 
         // Store the ETA for use when translation starts
-        if (metadata && metadata.eta) {
-            setTranslationEta(metadata.eta);
+        if (metadata && metadata.engine_eta) {
+            setTranslationEta(metadata.engine_eta);
         }
     };
 

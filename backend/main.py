@@ -247,7 +247,8 @@ async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
             "encoding": subtitles_data['metadata']['encoding'],
             "confidence": subtitles_data['metadata']['confidence'],
             "language": subtitles_data['metadata']['language'],
-            "eta": subtitles_data['eta'],
+            "engine_eta": subtitles_data['engine_eta'],
+            "duck_eta": subtitles_data['duck_eta'],
         }
 
     except Exception as e:
@@ -363,9 +364,6 @@ async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
         # Initialize SubEdit object
         subedit = SubEdit(file_list)
 
-        # Calculate preliminary ETA for response
-        eta = subedit.subtitles_data[file_list[0]]['eta']
-
         # Create task using asyncio
         TaskManager.create_task(
             session_id,
@@ -377,7 +375,6 @@ async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
             "session_id": session_id,
             "source_filename": source_filename,
             "message": "Subtitle alignment started in the background",
-            "eta": eta,
             "status": "processing"
         }
 
@@ -412,9 +409,6 @@ async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
         # Initialize SubEdit object
         subedit = SubEdit([file_path])
 
-        # Calculate preliminary ETA for response
-        eta = subedit.subtitles_data[file_path]['eta']
-
         # Create task using asyncio
         TaskManager.create_task(
             session_id,
@@ -434,7 +428,6 @@ async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
             "session_id": session_id,
             "source_filename": source_filename,
             "message": "Markup cleaning started in the background",
-            "eta": eta,
             "status": "processing"
         }
 
@@ -542,9 +535,6 @@ if DEBUG:
             # Initialize SubEdit object
             subedit = SubEdit([file_path])
 
-            # Calculate preliminary ETA for response
-            eta = subedit.subtitles_data[file_path]['eta']
-
             # Create task using asyncio
             TaskManager.create_task(
                 session_id,
@@ -565,7 +555,6 @@ if DEBUG:
                 "session_id": session_id,
                 "source_filename": source_filename,
                 "message": f"Duck Translation to {request.target_language} started in the background",
-                "eta": eta,
                 "status": "processing"
             }
 

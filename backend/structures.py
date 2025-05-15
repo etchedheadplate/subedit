@@ -15,7 +15,8 @@ class SubtitleEntry(TypedDict):
 class SubtitleData(TypedDict):
     metadata: SubtitleMetadata
     subtitles: Dict[int, SubtitleEntry]
-    eta: int
+    engine_eta: int
+    duck_eta: int
 
 SubtitlesDataDict = Dict[str, SubtitleData]
 

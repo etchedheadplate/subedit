@@ -74,8 +74,8 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
         }
 
         // Store the ETA for use when translation starts
-        if (metadata && metadata.eta) {
-            setTranslationEta(metadata.eta);
+        if (metadata && metadata.duck_eta) {
+            setTranslationEta(metadata.duck_eta);
         }
     };
 
