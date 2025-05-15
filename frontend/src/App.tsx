@@ -9,6 +9,7 @@ import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { OperationType, TranslateType } from "./types";
+import engineLogo from "./assets/engine_logo.png";
 import ddgLogo from "./assets/ddg_logo.png";
 import "./styles/OperationSection.css";
 import "./styles/SubtitlePreview.css";
@@ -85,12 +86,8 @@ function App() {
     ];
 
     const translateOptionLabels: { label: string; key: TranslateType; icon?: string }[] = [
-        { label: "Engine", key: "enginetranslate" },
-        {
-            label: "Duck",
-            key: "ducktranslate",
-            icon: ddgLogo,
-        },
+        { label: "Engine", key: "enginetranslate", icon: engineLogo, },
+        { label: "Duck", key: "ducktranslate", icon: ddgLogo, },
     ];
 
     // Is any translation option active
