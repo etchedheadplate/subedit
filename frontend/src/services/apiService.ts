@@ -63,7 +63,8 @@ export const apiService = {
         encoding: string;
         confidence: number;
         language: string;
-        eta: number;
+        engine_eta: number;
+        duck_eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/info`, {
             method: "POST",
@@ -86,7 +87,8 @@ export const apiService = {
             encoding: data.encoding,
             confidence: data.confidence,
             language: data.language,
-            eta: data.eta,
+            engine_eta: data.engine_eta,
+            duck_eta: data.duck_eta,
         };
     },
 
@@ -127,7 +129,6 @@ export const apiService = {
     ): Promise<{
         sourceFilename: string;
         status: string;
-        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/shift`, {
             method: "POST",
@@ -149,7 +150,6 @@ export const apiService = {
         return {
             sourceFilename: data.source_filename || data.filename,
             status: data.status,
-            eta: data.eta,
         };
     },
 
@@ -164,7 +164,6 @@ export const apiService = {
     ): Promise<{
         sourceFilename: string;
         status: string;
-        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/align`, {
             method: "POST",
@@ -189,7 +188,6 @@ export const apiService = {
         return {
             sourceFilename: data.filename || data.source_filename,
             status: data.status,
-            eta: data.eta,
         };
     },
 
@@ -207,7 +205,6 @@ export const apiService = {
     ): Promise<{
         sourceFilename: string;
         status: string;
-        eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/clean`, {
             method: "POST",
@@ -228,7 +225,6 @@ export const apiService = {
         return {
             sourceFilename: data.filename || data.source_filename,
             status: data.status,
-            eta: data.eta,
         };
     },
 
@@ -242,7 +238,7 @@ export const apiService = {
     ): Promise<{
         sourceFilename: string;
         status: string;
-        eta: number;
+        engine_eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/engine`, {
             method: "POST",
@@ -266,7 +262,7 @@ export const apiService = {
         return {
             sourceFilename: data.source_filename,
             status: data.status,
-            eta: data.eta,
+            engine_eta: data.engine_eta,
         };
     },
 
@@ -282,7 +278,7 @@ export const apiService = {
     ): Promise<{
         sourceFilename: string;
         status: string;
-        eta: number;
+        duck_eta: number;
     }> => {
         const response = await fetch(`${API_BASE_URL}/duck`, {
             method: "POST",
@@ -308,7 +304,7 @@ export const apiService = {
         return {
             sourceFilename: data.source_filename,
             status: data.status,
-            eta: data.eta,
+            duck_eta: data.duck_eta,
         };
     },
 };
