@@ -8,16 +8,13 @@ import DragAndDropArea from "./components/DragAndDropArea";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
-import { OperationType } from "./types";
-import { ProcessingOptions } from "./types";
+import { OperationType, TranslateType } from "./types";
 import ddgLogo from "./assets/ddg_logo.png";
 import "./styles/OperationSection.css";
 import "./styles/SubtitlePreview.css";
 import "./styles/DragAndDropArea.css";
 import "./styles/ErrorMessage.css";
 import "./styles/App.css";
-
-const DEBUG: boolean = import.meta.env.VITE_DEBUG === "true";
 
 function App() {
     // Session hook
@@ -46,7 +43,8 @@ function App() {
     } = useSubtitleOperations(sessionId, uploadedFile);
 
     // Local state
-    const [activeOption, setActiveOption] = useState<OperationType | null>(null,);
+    const [activeOption, setActiveOption] = useState<OperationType | null>(null);
+    const [activeTranslateType, setActiveTranslateType] = useState<TranslateType>("enginetranslate");
 
     // Combine errors for display
     const errorMessage = sessionError || uploadError || processingError;
@@ -66,6 +64,12 @@ function App() {
         resetResults();
     };
 
+    // Handle translate type selection
+    const handleTranslateTypeSelect = (type: TranslateType) => {
+        setActiveTranslateType(type);
+        resetResults();
+    };
+
     // Handle download
     const handleDownload = () => {
         if (processedFile && sessionId) {
@@ -73,21 +77,24 @@ function App() {
         }
     };
 
-    const optionLabels: { label: string; key: keyof ProcessingOptions; icon?: string }[] = [
+    const optionLabels: { label: string; key: OperationType; icon?: string }[] = [
         { label: "Shift", key: "shift" },
         { label: "Align", key: "align" },
         { label: "Clean", key: "clean" },
-        { label: "Translate", key: "enginetranslate" },
-        ...(DEBUG
-            ? ([
-                {
-                    label: "Translate",
-                    key: "ducktranslate",
-                    icon: ddgLogo, // Add the ddgLogo reference here
-                },
-            ] as { label: string; key: keyof ProcessingOptions; icon?: string }[])
-            : []),
+        { label: "Translate", key: "translate" },
     ];
+
+    const translateOptionLabels: { label: string; key: TranslateType; icon?: string }[] = [
+        { label: "Engine", key: "enginetranslate" },
+        {
+            label: "Duck",
+            key: "ducktranslate",
+            icon: ddgLogo,
+        },
+    ];
+
+    // Is any translation option active
+    const isTranslateActive = activeOption === "translate";
 
     return (
         <div className="main-app">
@@ -126,6 +133,29 @@ function App() {
                         </button>
                     ))}
                 </div>
+
+                {/* Translation Submenu */}
+                {isTranslateActive && (
+                    <div className="main-options">
+                        {translateOptionLabels.map(({ label, key, icon }) => (
+                            <button
+                                className={`main-option-button${activeTranslateType === key ? " active" : ""}`}
+                                key={key}
+                                onClick={() => handleTranslateTypeSelect(key)}
+                                disabled={isLoading}
+                            >
+                                {icon && (
+                                    <img
+                                        src={icon}
+                                        alt={`${label} icon`}
+                                        className="option-icon"
+                                    />
+                                )}
+                                <strong>{label}</strong>
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Errors, if any */}
@@ -170,7 +200,7 @@ function App() {
                 />
             )}
 
-            {activeOption === "enginetranslate" && (
+            {isTranslateActive && activeTranslateType === "enginetranslate" && (
                 <EngineTranslateOperation
                     onEngineTranslate={engineTranslateSubtitles}
                     sessionId={sessionId}
@@ -181,7 +211,7 @@ function App() {
                 />
             )}
 
-            {activeOption === "ducktranslate" && (
+            {isTranslateActive && activeTranslateType === "ducktranslate" && (
                 <DuckTranslateOperation
                     onDuckTranslate={duckTranslateSubtitles}
                     sessionId={sessionId}

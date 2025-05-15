@@ -228,3 +228,14 @@ input {
     font-size: 0.8em;
     color: #ADB5BD;
 }
+
+.debug-message {
+    text-align: center;
+    color: #F25C54;
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.muted-text {
+    color: #6C757D;
+}

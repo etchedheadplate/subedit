@@ -4,6 +4,8 @@ import { SubtitleFile, SubtitleMetadata } from "../../types";
 import duckTranslationData from "../../../../shared/duck.json";
 import loadingAnimation from "../../assets/loading.gif";
 
+const DEBUG: boolean = import.meta.env.VITE_DEBUG === "true";
+
 interface DuckTranslateResult {
     eta: number;
 }
@@ -203,18 +205,45 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
 
             {/* Description of Translate Operation */}
             <div className="operation-description">
-                <p>You can translate subtitles using AI models provided by <a href="https://duckduckgo.com/duckduckgo-help-pages/duckai" target="_blank" rel="noopener noreferrer">Duck.ai</a>.</p>
+                {!DEBUG && (
+                    <p className="debug-message">
+                        This feature is available only when <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer">self-hosting</a>
+                    </p>
+                )}
 
-                <p>Since most models have limited context windows, your subtitles will usually be divided into multiple parts and translated one part
-                    at a time. The size of the context window varies by model: GPT-4o mini, o3-mini, and Llama 3.3 70B support up to 2048 tokens, while Claude 3 Haiku is
-                    estimated to handle around 1024, and Mistral Small 3 24B only 256.</p>
+                {/* Conditionally apply muted styling */}
+                <div className={!DEBUG ? 'muted-text' : ''}>
+                    <p>
+                        You can translate subtitles using AI models provided by{' '}
+                        <a
+                            href="https://duckduckgo.com/duckduckgo-help-pages/duckai"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Duck.ai
+                        </a>.
+                    </p>
 
-                <p>To comply with usage limits and respect DuckDuckGo's free service, there is a 15-second delay between each request to translate a
-                    part of the subtitles. You can try to speed up the process by adjusting the <i>adjusted by</i> slider. This slider controls how many
-                    subtitle lines are packed into each request sent to the model.</p>
+                    <p>
+                        Since most models have limited context windows, your subtitles will usually be divided into multiple parts and translated one part
+                        at a time. The size of the context window varies by model: GPT-4o mini, o3-mini, and Llama 3.3 70B support up to 2048 tokens, while
+                        Claude 3 Haiku is estimated to handle around 1024, and Mistral Small 3 24B only 256.
+                    </p>
 
-                <p><b>For the safest and most reliable option, use GPT-4o. Try to avoid Claude and Mistral, as they are more prone to errors due to their limited context.
-                    If you encounter errors during the translation process, try adjusting the slider toward the <i>accuracy</i> side for smaller, more manageable chunks.</b></p>
+                    <p>
+                        To comply with usage limits and respect DuckDuckGo's free service, there is a 15-second delay between each request to translate a
+                        part of the subtitles. You can try to speed up the process by adjusting the <i>adjusted by</i> slider. This slider controls how many
+                        subtitle lines are packed into each request sent to the model.
+                    </p>
+
+                    <p>
+                        <b>
+                            For the safest and most reliable option, use GPT-4o. Try to avoid Claude and Mistral, as they are more prone to errors due to their
+                            limited context. If you encounter errors during the translation process, try adjusting the slider toward the <i>accuracy</i> side
+                            for smaller, more manageable chunks.
+                        </b>
+                    </p>
+                </div>
             </div>
 
             {/* Translate controls section */}
@@ -230,20 +259,22 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                         <div
                             className="select-drop-down-items"
                             title={
-                                !sourceFile
-                                    ? "Upload source file"
-                                    : isTranslating
-                                        ? "Wait for translation to finish"
-                                        : ""
+                                !DEBUG
+                                    ? "Available only when self-hosting"
+                                    : !sourceFile
+                                        ? "Upload source file"
+                                        : isTranslating
+                                            ? "Wait for translation to finish"
+                                            : ""
                             }
                         >
                             <select
-                                className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
+                                className={`drop-down-items ${!DEBUG || !sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="languages-list"
                                 name="languages"
                                 value={originalLanguage || ""}
                                 onChange={handleOriginalLanguageChange}
-                                disabled={!sourceFile || isTranslating}
+                                disabled={!DEBUG || !sourceFile || isTranslating}
                             >
                                 <option value="">Select a language</option>
                                 {Object.entries(duckTranslationData.codes)
@@ -264,20 +295,22 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                         <div
                             className="select-drop-down-items"
                             title={
-                                !sourceFile
-                                    ? "Upload source file"
-                                    : isTranslating
-                                        ? "Wait for translation to finish"
-                                        : ""
+                                !DEBUG
+                                    ? "Available only when self-hosting"
+                                    : !sourceFile
+                                        ? "Upload source file"
+                                        : isTranslating
+                                            ? "Wait for translation to finish"
+                                            : ""
                             }
                         >
                             <select
-                                className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
+                                className={`drop-down-items ${!DEBUG || !sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="languages-list"
                                 name="languages"
                                 value={targetLanguage}
                                 onChange={handleTargetLanguageChange}
-                                disabled={!sourceFile || isTranslating}
+                                disabled={!DEBUG || !sourceFile || isTranslating}
                             >
                                 <option value="">Select a language</option>
                                 {Object.entries(duckTranslationData.codes)
@@ -298,20 +331,22 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                         <div
                             className="select-drop-down-items"
                             title={
-                                !sourceFile
-                                    ? "Upload source file"
-                                    : isTranslating
-                                        ? "Wait for translation to finish"
-                                        : ""
+                                !DEBUG
+                                    ? "Available only when self-hosting"
+                                    : !sourceFile
+                                        ? "Upload source file"
+                                        : isTranslating
+                                            ? "Wait for translation to finish"
+                                            : ""
                             }
                         >
                             <select
-                                className={`drop-down-items ${!sourceFile || isTranslating ? " disabled" : ""}`}
+                                className={`drop-down-items ${!DEBUG || !sourceFile || isTranslating ? " disabled" : ""}`}
                                 id="models-list"
                                 name="models"
                                 value={model}
                                 onChange={handleModelChange}
-                                disabled={!sourceFile || isTranslating}
+                                disabled={!DEBUG || !sourceFile || isTranslating}
                             >
                                 {Object.keys(duckTranslationData.models).map((modelKey) => (
                                     <option key={modelKey} value={modelKey}>
@@ -329,23 +364,25 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                         <div
                             className="select-slider-items"
                             title={
-                                !sourceFile
-                                    ? "Upload source file"
-                                    : isTranslating
-                                        ? "Wait for translation to finish"
-                                        : ""
+                                !DEBUG
+                                    ? "Available only when self-hosting"
+                                    : !sourceFile
+                                        ? "Upload source file"
+                                        : isTranslating
+                                            ? "Wait for translation to finish"
+                                            : ""
                             }
                         >
                             {/* Slider */}
                             <input
-                                className={`slider ${!sourceFile || isTranslating ? " disabled" : ""}`}
+                                className={`slider ${!DEBUG || !sourceFile || isTranslating ? " disabled" : ""}`}
                                 type="range"
                                 min="0.01"
                                 max="0.99"
                                 step="0.01"
                                 defaultValue="0.50"
                                 onChange={(e) => setThrottle(parseFloat(e.target.value))}
-                                disabled={!sourceFile || isTranslating}
+                                disabled={!DEBUG || !sourceFile || isTranslating}
                             />
 
                             {/* Bottom row: left label, value, right label */}

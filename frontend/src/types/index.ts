@@ -26,8 +26,11 @@ export interface ProcessingOptions {
     shift: null;
     align: null;
     clean: null;
+    translate: null;
     enginetranslate: null;
-    ducktranslate: null
+    ducktranslate: null;
 }
 
-export type OperationType = keyof ProcessingOptions;
+export type TranslateType = "enginetranslate" | "ducktranslate";
+
+export type OperationType = "shift" | "align" | "clean" | "translate" | "enginetranslate" | "ducktranslate" | null;
