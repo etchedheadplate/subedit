@@ -512,14 +512,18 @@ async def perform_engine_task(
 ) -> None:
     """Perform the engine translation task in the background."""
     try:
-        # Apply engine translation in the background
-        subedit.engine_translate(
+        print("[DEBUG] [API] perform_engine_task started")
+
+        await subedit.engine_translate(
             target_language=target_language,
             original_language=original_language,
             engine=engine,
             clean_markup=clean_markup
         )
+
         print(f"[DEBUG] [BACKGROUND] Engine translation for {source_filename} completed successfully")
+    except asyncio.TimeoutError:
+        print("[DEBUG] [BACKGROUND] Engine translation timed out")
     except Exception as e:
         print(f"[DEBUG] [BACKGROUND] Engine translation error: {str(e)}")
 
