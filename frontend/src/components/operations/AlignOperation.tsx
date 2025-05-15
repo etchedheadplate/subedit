@@ -3,7 +3,6 @@ import DragAndDropArea from "../../components/DragAndDropArea";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
-import loadingAnimation from "../../assets/loading.gif";
 import alignHint from "../AlignHint"
 
 interface AlignOperationProps {
@@ -465,18 +464,6 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                         </div>
                     ) : isLoading ? (
                         <>
-                            <div className="modified-file-preview-container" style={{ flex: 1 }}>
-
-                                {/* Invisible spacer to match Align/Download buttons */}
-                                <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
-                                    <button className="operation-button">Invisible spacer</button>
-                                </div>
-
-                                {/* Loading animation */}
-                                <div className="loading-animation">
-                                    <img src={loadingAnimation} alt="Loading..." />
-                                </div>
-                            </div>
                         </>
                     ) : null}
                 </div>

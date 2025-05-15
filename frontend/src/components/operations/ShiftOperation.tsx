@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
-import loadingAnimation from "../../assets/loading.gif";
 
 interface ShiftOperationProps {
     onShift: (delay: number, items?: number[]) => Promise<{ eta: number } | null | undefined>;
@@ -217,18 +216,6 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     </div>
                 ) : isLoading ? (
                     <>
-                        <div className="modified-file-preview-container" style={{ flex: 1 }}>
-
-                            {/* Invisible spacer to match Shift/Download buttons */}
-                            <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
-                                <button className="operation-button">Invisible spacer</button>
-                            </div>
-
-                            {/* Loading animation */}
-                            <div className="loading-animation">
-                                <img src={loadingAnimation} alt="Loading..." />
-                            </div>
-                        </div>
                     </>
                 ) : null}
             </div>

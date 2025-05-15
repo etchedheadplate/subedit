@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
-import loadingAnimation from "../../assets/loading.gif";
 
 interface CleanOperationProps {
     onClean: (options: {
@@ -257,18 +256,6 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                     </div>
                 ) : isLoading ? (
                     <>
-                        <div className="modified-file-preview-container" style={{ flex: 1 }}>
-
-                            {/* Invisible spacer to match Clean/Download buttons */}
-                            <div className="operation-controls-buttons" style={{ visibility: "hidden" }}>
-                                <button className="operation-button">Invisible spacer</button>
-                            </div>
-
-                            {/* Loading animation */}
-                            <div className="loading-animation">
-                                <img src={loadingAnimation} alt="Loading..." />
-                            </div>
-                        </div>
                     </>
                 ) : null}
             </div>
