@@ -14,7 +14,6 @@ import ddgLogo from "./assets/ddg_logo.png";
 import "./styles/OperationSection.css";
 import "./styles/SubtitlePreview.css";
 import "./styles/DragAndDropArea.css";
-import "./styles/ErrorMessage.css";
 import "./styles/App.css";
 
 function App() {
