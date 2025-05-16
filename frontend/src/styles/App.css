@@ -19,19 +19,16 @@ body {
 
 .background-container {
     position: fixed;
-    /* changed from absolute */
     top: 0;
     left: 0;
     width: 100%;
     height: 100vh;
-    /* fixed height = viewport height */
     overflow: hidden;
     z-index: -1;
 }
 
 .tile-layer {
     position: fixed;
-    /* changed from absolute */
     top: 0;
     left: 0;
     width: 100%;
@@ -39,7 +36,6 @@ body {
     background-image: url('/tile.gif');
     background-repeat: repeat;
     z-index: -2;
-    /* ensure it's behind everything, including overlay */
 }
 
 .overlay-image {
@@ -116,7 +112,7 @@ body {
     padding: 10px;
     border: #F25C54 solid 2px;
     border-radius: 5px;
-    margin-bottom: 20px;
+    margin-bottom: 50px;
 }
 
 .operations-container {}
