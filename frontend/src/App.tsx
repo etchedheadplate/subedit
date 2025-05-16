@@ -86,7 +86,7 @@ function App() {
 
     const translateOptionLabels: { label: string; key: TranslateType; icon?: string }[] = [
         { label: "Engine", key: "enginetranslate", icon: engineLogo, },
-        { label: "Duck", key: "ducktranslate", icon: ddgLogo, },
+        { label: "Duck AI", key: "ducktranslate", icon: ddgLogo, },
     ];
 
     // Is any translation option active
@@ -94,6 +94,11 @@ function App() {
 
     return (
         <div className="main-app">
+
+            <div className="background-container">
+                <div className="tile-layer" />
+                <div className="overlay-image" />
+            </div>
 
             {/* Header, always present */}
             <div className="main-header">

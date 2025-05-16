@@ -9,26 +9,35 @@
 }
 
 .example-hint {
-    border: #161522 solid 1px;
+    border: #ADB5BD solid 1px;
     border-radius: 10px;
-    background-color: #161522;
+    background-color: #0D0D0D80;
     padding: 15px;
 }
 
 .example-table {
-    display: flex;
-    justify-content: center;
+    width: 100%;
+    overflow-x: auto;
+    display: block;
 }
 
 .example-table table {
+    width: 100%;
     border-collapse: collapse;
-    /* Collapse adjacent borders into one */
     border-spacing: 0;
-    /* Remove default space between cells */
+    table-layout: auto;
+}
+
+@media (max-width: 600px) {
+    .example-table table {
+        font-size: 0.75em;
+    }
 }
 
 th {
     text-align: center;
+    white-space: nowrap;
+    padding: 8px;
 }
 
 td {

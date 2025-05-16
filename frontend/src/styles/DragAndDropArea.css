@@ -10,7 +10,7 @@
     justify-content: center;
     align-items: center;
     text-align: center;
-    background-color: transparent;
+    background-color: #0D0D0D80;
     transition: all 0.3s ease;
     margin-bottom: 30px;
     padding: 0 50px;
@@ -18,9 +18,15 @@
     cursor: pointer;
 }
 
+@media (max-width: 600px) {
+    .drag-and-drop-area {
+        font-size: 0.75em;
+    }
+}
+
 .drag-and-drop-area.drag-active {
-    border: 2px dashed #646cff;
-    background-color: rgba(222, 226, 230, 0.08);
+    border: 2px dashed #28BA15;
+    background-color: #04200580;
 }
 
 .drag-and-drop-area-sub-text {

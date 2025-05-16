@@ -39,6 +39,10 @@
     opacity: 75%;
 }
 
+input[type="checkbox"] {
+    accent-color: #157D07;
+}
+
 .select-checkboxes {
     display: grid;
     text-align: left;
@@ -148,7 +152,7 @@
 .operation-button {
     padding: 10px 15px;
     background-color: #DEE2E6;
-    color: #110E1B;
+    color: #0D0D0D;
     border: none;
     border-radius: 2px;
     cursor: pointer;
@@ -161,7 +165,7 @@
 
 .download-button {
     padding: 10px 15px;
-    background-color: #386641;
+    background-color: #157D07;
     color: #DEE2E6;
     border: none;
     border-radius: 2px;
@@ -170,7 +174,7 @@
 
 select,
 input {
-    background-color: transparent;
+    background-color: #0D0D0DF2;
     border: 1px solid #ADB5BD;
     font-family: "Source Code Pro", monospace;
     text-align: center;

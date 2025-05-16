@@ -1,9 +1,59 @@
+html,
+body {
+    min-height: 100%;
+    margin: 0;
+    overflow-x: hidden;
+    width: 100%;
+}
+
 .app-container {
     padding: 20px;
 }
 
 .main-app {
+    position: relative;
     padding: 20px;
+    z-index: 1;
+}
+
+
+.background-container {
+    position: fixed;
+    /* changed from absolute */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    /* fixed height = viewport height */
+    overflow: hidden;
+    z-index: -1;
+}
+
+.tile-layer {
+    position: fixed;
+    /* changed from absolute */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background-image: url('/tile.gif');
+    background-repeat: repeat;
+    z-index: -2;
+    /* ensure it's behind everything, including overlay */
+}
+
+.overlay-image {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: 60vh;
+    background-image: url('/overlay.gif');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: bottom left;
+    z-index: -1;
+    pointer-events: none;
 }
 
 .main-header {
@@ -16,10 +66,13 @@
     margin-bottom: 50px;
     letter-spacing: 25px;
     padding-left: 25px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
 }
 
 .main-options {
-    display: flex;
+    display: flexbox;
     justify-content: center;
     gap: 20px;
     margin-bottom: 10px;
@@ -67,3 +120,16 @@
 }
 
 .operations-container {}
+
+@media (max-width: 600px) {
+    .main-title {
+        letter-spacing: 5px;
+        padding-left: 10px;
+        font-size: 1.2rem;
+    }
+
+    .overlay-image {
+        width: 20vh;
+        height: 100%;
+    }
+}
