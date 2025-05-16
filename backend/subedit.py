@@ -458,10 +458,8 @@ class SubEdit:
 
         # Lists with translated subtitles and indices of translation errors
         translated_subtitles: List[str] = []
-        not_translated: List[int] = []
 
         # Translate subtitles
-        empty_line = 'empty line'
         index_current = 0
         index_total = len(prepared_subtitles)
         while index_current < index_total:
@@ -473,12 +471,6 @@ class SubEdit:
                 line = prepared_subtitles[index_current]
                 line_length = len(line) + 2  # add 2 for the "\n\n" that will be inserted
                 chunk_length += line_length
-
-                # Replace line with empty line if engine limit exceeded
-                if chunk_length + len(empty_line) >= engine_limit:
-                    not_translated.append(index_current)
-                    line = empty_line
-
                 chunk_lines.append(line)
                 chunk_length += line_length
                 index_current += 1
@@ -497,11 +489,6 @@ class SubEdit:
                 raise ValueError("Mismatch in translated segment count. Check translation formatting.")
 
             translated_subtitles.extend(translated_list)
-
-        # Replace too long lines with error message
-        if len(not_translated) > 0:
-            for error in not_translated:
-                translated_subtitles[error] = '<b><font color="#F25C54">TRANSLATION ERROR: Line was too long.</font></b>'
 
         # Assign each translated text back to corresponding subtitle object
         translated = self.subtitles_data[self.engine_translated_file]['subtitles']
