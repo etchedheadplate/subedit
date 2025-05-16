@@ -424,10 +424,11 @@ class SubEdit:
 
         # Generate a filename for the translated subtitles
         source_name, source_ext = os.path.splitext(self.source_file)
-        self.translated_file = f'{source_name}-translated-to-{target_language}-with-{engine}{source_ext}'
+        sanitized_enginename = props.sanitize_filename(engine)
+        self.engine_translated_file = f'{source_name}-translated-to-{target_language}-with-{sanitized_enginename}{source_ext}'
 
         # Initialize translated file structure by copying source metadata and subtitle content
-        self.subtitles_data[self.translated_file] = {
+        self.subtitles_data[self.engine_translated_file] = {
             'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
             'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
             'engine_eta': 0,
@@ -503,14 +504,14 @@ class SubEdit:
                 translated_subtitles[error] = '<b><font color="#F25C54">TRANSLATION ERROR: Line was too long.</font></b>'
 
         # Assign each translated text back to corresponding subtitle object
-        translated = self.subtitles_data[self.translated_file]['subtitles']
+        translated = self.subtitles_data[self.engine_translated_file]['subtitles']
         for key, subtitle in zip(translated.keys(), translated_subtitles):
             translated[key]['text'] = subtitle
 
 
         # Create output subtitle file and store path for reference# Create output subtitle file and store path for reference
-        self._create_file(self.translated_file)
-        self.processed_file = os.path.basename(self.translated_file)
+        self._create_file(self.engine_translated_file)
+        self.processed_file = os.path.basename(self.engine_translated_file)
 
     # Method accesible only on localhost
     if DEBUG:
@@ -543,10 +544,11 @@ class SubEdit:
 
             # Set filename for processed subtitles
             source_name, source_ext = os.path.splitext(self.source_file)
-            self.translated_file = f'{source_name}-translated-to-{target_language}-with-{model_name}{source_ext}'
+            sanitized_modelname = props.sanitize_filename(model_name)
+            self.duck_translated_file = f'{source_name}-translated-to-{target_language}-with-{sanitized_modelname}{source_ext}'
 
             # Create processed file dictionary and copy metadata and subtitles from source file
-            self.subtitles_data[self.translated_file] = {
+            self.subtitles_data[self.duck_translated_file] = {
                 'metadata': self.subtitles_data[self.source_file]['metadata'].copy(),
                 'subtitles': self.subtitles_data[self.source_file]['subtitles'].copy(),
                 'engine_eta': 0,
@@ -614,7 +616,7 @@ class SubEdit:
 
             # Parse translated text from response and save it to file dictionary
             response_pattern = re.split(r'(%\d+@\s)', translated_text)[1:]  # Split `%number@ ` and `text`
-            translated_subtitles = self.subtitles_data[self.translated_file]
+            translated_subtitles = self.subtitles_data[self.duck_translated_file]
             for index in range(0, len(response_pattern), 2):
                 parsed = True if response_pattern[index].startswith('%') and response_pattern[index].endswith('@ ') else False
                 if parsed:
@@ -626,5 +628,5 @@ class SubEdit:
                     raise ValueError(f'Bad response format: {response_pattern[index]}.')
 
                 # Create output subtitle file and store path for reference
-            self._create_file(self.translated_file)
-            self.processed_file = os.path.basename(self.translated_file)
+            self._create_file(self.duck_translated_file)
+            self.processed_file = os.path.basename(self.duck_translated_file)
