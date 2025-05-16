@@ -66,9 +66,7 @@ export const useSubtitleOperations = (
 
             setPollInterval(interval);
 
-            return {
-                result
-            };
+            return result;
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -146,9 +144,7 @@ export const useSubtitleOperations = (
 
             setPollInterval(interval);
 
-            return {
-                result
-            };
+            return result;
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -221,9 +217,7 @@ export const useSubtitleOperations = (
 
             setPollInterval(interval);
 
-            return {
-                result
-            };
+            return result;
         } catch (err: unknown) {
             if (err instanceof Error) {
                 setError(err.message);
@@ -298,7 +292,7 @@ export const useSubtitleOperations = (
             setPollInterval(interval);
 
             return {
-                result
+                eta: result.engine_eta,
             };
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -374,7 +368,7 @@ export const useSubtitleOperations = (
             setPollInterval(interval);
 
             return {
-                result
+                eta: result.duck_eta,
             };
         } catch (err: unknown) {
             if (err instanceof Error) {

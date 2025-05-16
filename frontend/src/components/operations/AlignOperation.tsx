@@ -13,7 +13,7 @@ interface AlignOperationProps {
         exampleRange: [number, number],
         trimStart: boolean,
         trimEnd: boolean,
-    ) => Promise<{ eta: number } | null | undefined>;
+    ) => Promise<{ sourceFilename: string; status: string; } | null | undefined>;
     sessionId: string | null;
     onDownload: () => void;
     sourceFile: SubtitleFile | null;
