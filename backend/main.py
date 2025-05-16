@@ -4,7 +4,7 @@ import shutil
 import uuid
 import threading
 import asyncio
-import re
+import props
 from dotenv import load_dotenv
 from typing import Dict, Any, AsyncGenerator, Optional, List, Coroutine
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
@@ -135,8 +135,7 @@ async def upload_file(
         raise HTTPException(status_code=400, detail="Only SubRip .srt files are allowed")
 
     # Sanitize filename (remove unsafe characters)
-    filename_to_sanitize = str(file.filename or "")
-    safe_filename = re.sub(r'[^a-zA-Z0-9.-]', '-', filename_to_sanitize)
+    safe_filename = props.sanitize_filename(str(file.filename or ""))
     assert isinstance(safe_filename, str)
     file_location = os.path.join(session_path, safe_filename)
 
