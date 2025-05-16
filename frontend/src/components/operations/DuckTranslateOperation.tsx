@@ -207,8 +207,9 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
             <div className="operation-description">
                 {!DEBUG && (
                     <p className="debug-message">
-                        This feature is available only when{' '}
-                        <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer">self-hosting</a>
+                        This feature is available only in{' '}
+                        <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer"><b>self-hosting</b></a>{' '}
+                        mode.
                     </p>
                 )}
 
