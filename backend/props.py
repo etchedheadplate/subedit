@@ -9,6 +9,10 @@ from typing import List
 from pathlib import Path
 from structures import SubtitleMetadata, SubtitleData, StatisticsData
 
+def sanitize_filename(filename_to_sanitize: str) -> str:
+    safe_filename = re.sub(r'[^a-zA-Z0-9.-]', '-', filename_to_sanitize)
+    return safe_filename
+
 def extract_metadata(file_path: str) -> SubtitleMetadata:
     """Detects encoding of subtitles file and returns metadata.
 
