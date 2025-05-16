@@ -390,6 +390,14 @@ export const useSubtitleOperations = (
     // Reset operation results
     const resetResults = () => {
         setProcessedFile(null);
+        setError(null);
+
+        // If there's an active polling interval, clear it
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            setPollInterval(null);
+            setIsPolling(false);
+        }
     };
 
     // Cleanup function for the polling
