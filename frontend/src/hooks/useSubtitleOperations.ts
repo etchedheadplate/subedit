@@ -67,7 +67,7 @@ export const useSubtitleOperations = (
             setPollInterval(interval);
 
             return {
-                eta: result.eta,
+                result
             };
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -147,7 +147,7 @@ export const useSubtitleOperations = (
             setPollInterval(interval);
 
             return {
-                eta: result.eta,
+                result
             };
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -222,7 +222,7 @@ export const useSubtitleOperations = (
             setPollInterval(interval);
 
             return {
-                eta: result.eta,
+                result
             };
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -298,7 +298,7 @@ export const useSubtitleOperations = (
             setPollInterval(interval);
 
             return {
-                eta: result.eta,
+                result
             };
         } catch (err: unknown) {
             if (err instanceof Error) {
@@ -374,7 +374,7 @@ export const useSubtitleOperations = (
             setPollInterval(interval);
 
             return {
-                eta: result.eta,
+                result
             };
         } catch (err: unknown) {
             if (err instanceof Error) {
