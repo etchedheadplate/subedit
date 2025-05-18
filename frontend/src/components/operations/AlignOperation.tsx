@@ -403,7 +403,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 {!sourceFile && !exampleFile && (
                     <div className="source-file-preview-container" style={{ flex: 1 }}>
                         {/* Align Button */}
-                        <div className="operation-controls-buttons" title='Upload source file'>
+                        <div className="operation-controls-buttons" title={t('operations.align.errors.uploadSource')}>
                             <button
                                 className={`operation-button ${" disabled"}`}
                                 onClick={handleAlign}
@@ -416,7 +416,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 )}
                 {/* If only Source file uploaded: Source file preview + Align button */}
                 {sourceFile && !exampleFile && (
-                    <div className="source-file-preview-container" title='Upload example file' style={{ flex: 1 }}>
+                    <div className="source-file-preview-container" title={t('operations.align.errors.uploadExample')} style={{ flex: 1 }}>
                         {/* Align Button */}
                         <div className="operation-controls-buttons">
                             <button
