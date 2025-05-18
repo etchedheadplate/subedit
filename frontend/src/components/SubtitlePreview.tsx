@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { apiService } from "../services/apiService";
 import { SubtitlePreview, SubtitleFile, SubtitleMetadata } from "../types";
+import { useLanguage } from "../hooks/useLanguage";
 
 interface SubtitlePreviewProps {
     sessionId: string | null;
@@ -18,6 +19,9 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     onSubtitleCountChange,
     onMetadataLoaded,
 }) => {
+    // Get translation function from language context
+    const { t } = useLanguage();
+
     const [subtitleMeta, setSubtitleMeta] = useState<SubtitleMetadata | null>(null);
     const [subtitlePreview, setSubtitlePreview] = useState<SubtitlePreview | null>(null);
     const [subtitleCount, setSubtitleCount] = useState<number>(0);
@@ -164,10 +168,10 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                             <div className="metadata-content">
                                 <center>
                                     <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                                        <strong>{fileType} file</strong>
-                                        {" | "}{subtitleMeta.language || "? lang"} {subtitleMeta.confidence || ""}%
-                                        {" | "}{subtitleMeta.encoding || "? encoding"}
-                                        {" | "}{subtitleCount || "? num of"} subtitles
+                                        <strong>{fileType}</strong>
+                                        {" | "}{subtitleMeta.language || `? ${t('preview.language')}`} {subtitleMeta.confidence || ""}%
+                                        {" | "}{subtitleMeta.encoding || `? ${t('preview.encoding')}`}
+                                        {" | "}{subtitleCount || `? ${t('preview.number')}`} {t('preview.subtitles')}
                                     </p>
                                     <p>
                                         {subtitleMeta.filename || "Unknown Filename"}

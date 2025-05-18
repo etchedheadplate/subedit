@@ -53,12 +53,29 @@ body {
 }
 
 .main-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.language-selector-container {}
+
+.language-selector-container select {
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+
+.main-block {
     padding: 20px;
     text-align: center;
     justify-content: center;
 }
 
 .main-title {
+    margin: 0 auto;
     margin-bottom: 50px;
     letter-spacing: 25px;
     padding-left: 25px;

@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef } from "react";
+import { useLanguage } from "../hooks/useLanguage";
 
 interface DragAndDropAreaProps {
     onFileUpload: (file: File) => Promise<void>;
@@ -16,13 +17,12 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
     onFileUpload,
     isLoading,
     uploadedFile,
-    preUploadInstructionText = "Upload subtitles, fren!",
-    preUploadSubInstructionText = "Drag & drop .srt file or click anywhere in this area",
-    postUploadIntroFileText = "Uploaded source file:",
-    postUploadSubInstructionText = "Select option below or upload new file",
     className = "",
     disabled = false,
 }) => {
+    // Get translation function from language context
+    const { t } = useLanguage();
+
     const [dragActive, setDragActive] = useState<boolean>(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -99,17 +99,17 @@ const DragAndDropArea: React.FC<DragAndDropAreaProps> = ({
             >
                 {!uploadedFile ? (
                     <>
-                        <p className="drag-and-drop-area-main-text">{preUploadInstructionText}</p>
+                        <p className="drag-and-drop-area-main-text">{t('drag-and-drop.preUploadInstructionText')}</p>
                         <p className="drag-and-drop-area-sub-text" style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                            {preUploadSubInstructionText}
+                            {t('drag-and-drop.preUploadSubInstructionText')}
                         </p>
                     </>
                 ) : (
                     <>
-                        <p className="drag-and-drop-area-sub-text">{postUploadIntroFileText}</p>
+                        <p className="drag-and-drop-area-sub-text">{t('drag-and-drop.postUploadIntroFileText')}</p>
                         <p className="drag-and-drop-area-main-text"><strong>{uploadedFile.filename}</strong></p>
                         <p className="drag-and-drop-area-sub-text" style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                            {postUploadSubInstructionText}
+                            {t('drag-and-drop.postUploadSubInstructionText')}
                         </p>
                     </>
                 )}

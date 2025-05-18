@@ -3,6 +3,8 @@ import UniversalSubtitlePreview from "../SubtitlePreview";
 import { SubtitleFile, SubtitleMetadata } from "../../types";
 import engineTranslationData from "../../../../shared/engines.json";
 import loadingAnimation from "../../assets/loading.gif";
+import { TranslatedParagraph } from "../translation/LanguageParagraph.tsx";
+import { useLanguage } from "../../hooks/useLanguage.ts";
 
 interface EngineTranslateResult {
     eta: number;
@@ -29,6 +31,9 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
     sourceFile,
     processedFile,
 }) => {
+    // Get translation function from language context
+    const { t } = useLanguage();
+
     // State for setting up target language
     const [targetLanguage, setTargetLanguage] = useState<string>("");
 
@@ -179,11 +184,11 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
         const minutes = Math.ceil(seconds / 60); // Round up to nearest minute
 
         if (minutes > 1) {
-            return `${minutes} minutes`;
+            return `${minutes} ${t('eta.minutes')}`;
         } else if (minutes === 1) {
-            return "1 minute";
+            return t('eta.oneMinute');
         } else {
-            return "less than 1 minute";
+            return t('eta.lessOneMinute');
         }
     };
 
@@ -193,7 +198,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={sourceFile}
             isDownloadable={false}
-            fileType="Source"
+            fileType={t('preview.source')}
             onMetadataLoaded={handleSourceLanguageDetected}
         />
     );
@@ -203,7 +208,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
-            fileType="Translated"
+            fileType={t('preview.translated')}
             isDownloadable={true}
         />
     ) : null;
@@ -212,8 +217,8 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
     const translationTimer = (
         <div className="translation-progress">
             <img src={loadingAnimation} alt="Translation in progress" />
-            <p className="translation-progress-eta">ETA: {formatTime(remainingTime)}</p>
-            <p className="translation-progress-text">This may take longer for MyMemory.</p>
+            <p className="translation-progress-eta">{t('eta.etaTite')}: {formatTime(remainingTime)}</p>
+            <p className="translation-progress-text">{t('eta.longerService')}</p>
         </div>
     );
 
@@ -222,21 +227,22 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
 
             {/* Description of Translate Operation */}
             <div className="operation-description">
-                <p>
-                    You can translate subtitles using translator engine provided by{' '}
-                    <a href="https://support.google.com/translate/" target="_blank" rel="noopener noreferrer">Google</a> or{' '}
-                    <a href="https://mymemory.translated.net/doc/" target="_blank" rel="noopener noreferrer">MyMemory</a>.
-                </p>
 
-                <p>
-                    Both engines have limits on the number of characters they can translate at once — 5000 for Google and 500 for MyMemory.
-                    Because of this, your subtitles are usually divided into multiple parts and translated one at a time. To comply with
-                    usage limits and respect the engine providers free services, a 2-second delay is added between each request.
-                </p>
+                <TranslatedParagraph
+                    path="operations.service.operationDescription1"
+                    components={{
+                        googleLink: <a href="https://support.google.com/translate/" target="_blank" rel="noopener noreferrer"></a>,
+                        mymemoryLink: <a href="https://mymemory.translated.net/doc/" target="_blank" rel="noopener noreferrer"></a>,
+                    }}
+                />
 
-                <p>
-                    You can also remove markup tags if they interfere with translation.
-                </p>
+                <TranslatedParagraph
+                    path="operations.service.operationDescription2"
+                />
+
+                <TranslatedParagraph
+                    path="operations.service.operationDescription3"
+                />
             </div>
 
             {/* Translate controls section */}
@@ -247,15 +253,15 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
 
                     {/* Original language selector */}
                     <div className="control-item">
-                        <p className="control-title">translate from</p>
+                        <p className="control-title">{t('operations.service.controlItems.translateFrom')}</p>
 
                         <div
                             className="select-drop-down-items"
                             title={
                                 !sourceFile
-                                    ? "Upload source file"
+                                    ? t('operations.service.errors.uploadSource')
                                     : isTranslating
-                                        ? "Wait for translation to finish"
+                                        ? t('operations.service.errors.waitFinish')
                                         : ""
                             }
                         >
@@ -267,7 +273,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                                 onChange={handleOriginalLanguageChange}
                                 disabled={!sourceFile || isTranslating}
                             >
-                                <option value="">Select a language</option>
+                                <option value="">{t('operations.service.controlItems.selectLanguage')}</option>
                                 {Object.entries(engineTranslationData.codes)
                                     .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
                                     .map(([code, name]) => (
@@ -281,15 +287,15 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
 
                     {/* Target language selector */}
                     <div className="control-item">
-                        <p className="control-title">translate to</p>
+                        <p className="control-title">{t('operations.service.controlItems.translateTo')}</p>
 
                         <div
                             className="select-drop-down-items"
                             title={
                                 !sourceFile
-                                    ? "Upload source file"
+                                    ? t('operations.service.errors.uploadSource')
                                     : isTranslating
-                                        ? "Wait for translation to finish"
+                                        ? t('operations.service.errors.waitFinish')
                                         : ""
                             }
                         >
@@ -301,7 +307,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                                 onChange={handleTargetLanguageChange}
                                 disabled={!sourceFile || isTranslating}
                             >
-                                <option value="">Select a language</option>
+                                <option value="">{t('operations.service.controlItems.selectLanguage')}</option>
                                 {Object.entries(engineTranslationData.codes)
                                     .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
                                     .map(([code, name]) => (
@@ -315,15 +321,15 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
 
                     {/* Engine selector */}
                     <div className="control-item">
-                        <p className="control-title">with engine</p>
+                        <p className="control-title">{t('operations.service.controlItems.withService')}</p>
 
                         <div
                             className="select-drop-down-items"
                             title={
                                 !sourceFile
-                                    ? "Upload source file"
+                                    ? t('operations.service.errors.uploadSource')
                                     : isTranslating
-                                        ? "Wait for translation to finish"
+                                        ? t('operations.service.errors.waitFinish')
                                         : ""
                             }
                         >
@@ -354,16 +360,16 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
 
                     {/* Controls for Markup flag */}
                     <div className="control-item">
-                        <p className="control-title">markup</p>
+                        <p className="control-title">{t('operations.service.controlItems.markup')}</p>
                         <div className="select-drop-down-items">
                             <div className="select-checkboxes">
                                 <label
                                     className="range-text"
                                     title={
                                         !sourceFile
-                                            ? "Upload source file"
+                                            ? t('operations.service.errors.uploadSource')
                                             : isTranslating
-                                                ? "Wait for translation to finish"
+                                                ? t('operations.service.errors.waitFinish')
                                                 : ""
                                     }
                                 >
@@ -375,7 +381,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                                         style={{ marginRight: "8px" }}
                                         disabled={!sourceFile || isTranslating}
                                     />
-                                    clean
+                                    {t('operations.service.controlItems.clean')}
                                 </label>
                             </div>
                         </div>
@@ -393,13 +399,13 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                         className="operation-controls-buttons"
                         title={
                             !sourceFile
-                                ? "Upload source file"
+                                ? t('operations.service.errors.uploadSource')
                                 : originalLanguage === ""
-                                    ? "Select 'from' language"
+                                    ? t('operations.service.errors.selectFrom')
                                     : targetLanguage === ""
-                                        ? "Select 'to' language"
+                                        ? t('operations.service.errors.selectTo')
                                         : isTranslating
-                                            ? "Wait for translation to finish"
+                                            ? t('operations.service.errors.waitFinish')
                                             : ""
                         }
                     >
@@ -408,7 +414,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                             onClick={handleEngineTranslate}
                             disabled={!sourceFile || targetLanguage === "" || originalLanguage === "" || isTranslating}
                         >
-                            Translate
+                            {t('operations.service.serviceButton')}
                         </button>
                     </div>
 
@@ -434,7 +440,7 @@ const EngineTranslateOperation: React.FC<EngineTranslateOperationProps> = ({
                             <>
                                 {/* Download Button */}
                                 <div className="operation-controls-buttons">
-                                    <button className="download-button" onClick={onDownload}>Download</button>
+                                    <button className="download-button" onClick={onDownload}>{t('operations.service.downloadButton')}</button>
                                 </div>
 
                                 {/* Translated file preview */}

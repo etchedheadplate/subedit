@@ -1,3 +1,4 @@
+import { TranslatedParagraph } from "./translation/LanguageParagraph.tsx";
 import "../styles/AlignHint.css";
 
 // Example table
@@ -142,14 +143,18 @@ const alignHint = (
                 </tbody>
             </table>
         </div>
-        <p>
-            After uploading both files, look for <span className="matching-text">matching lines</span> at the beginning and end. It can also help to
-            review the neighboring lines — in the case above the line <i>Any idea what they are?</i> increases confidence in the match. Next, enter the
-            corresponding <span className="source-index">source indices</span> and <span className="example-index">example indices</span> into
-            the form fields below, then press the <b>Align</b> button. You’ll see that the <span className="example-timing">example timing</span> is
-            correctly mapped to the source. Optionally, you can trim subtitles that fall outside the source range, as they are
-            likely to have <span className="wrong-timing">incorrect timing</span> now.
-        </p>
+        <TranslatedParagraph
+            path="operations.align.hintText"
+            components={{
+                matchingLines: <span className="matching-text"></span>,
+                anyIdea: <i></i>,
+                sourceIndices: <span className="source-index"></span>,
+                exampleIndices: <span className="example-index"></span>,
+                alignButton: <b></b>,
+                exampleTiming: <span className="example-timing"></span>,
+                incorrectTiming: <span className="wrong-timing"></span>
+            }}
+        />
     </div>
 );
 

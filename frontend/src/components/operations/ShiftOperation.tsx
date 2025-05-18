@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
+import { TranslatedParagraph } from "../translation/LanguageParagraph.tsx";
+import { useLanguage } from "../../hooks/useLanguage.ts";
 
 interface ShiftOperationProps {
     onShift: (delay: number, items?: number[] | undefined) => Promise<{ sourceFilename: string; status: string; } | null | undefined>;
@@ -18,6 +20,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
     sourceFile,
     processedFile,
 }) => {
+    // Get translation function from language context
+    const { t } = useLanguage();
+
     // State to store the subtitle count from the preview
     const [subtitleCount, setSubtitleCount] = useState<number>(1);
 
@@ -58,7 +63,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={sourceFile}
             isDownloadable={false}
-            fileType="Source"
+            fileType={t('preview.source')}
             onSubtitleCountChange={handleSubtitleCountChange}
         />
     );
@@ -68,7 +73,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
-            fileType="Shifted"
+            fileType={t('preview.shifted')}
             isDownloadable={true}
         />
     ) : null;
@@ -78,10 +83,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
             {/* Description of Shift Operation */}
             <div className="operation-description">
-                <p>You can shift subtitle timing by a fixed number of milliseconds (1 second = 1000 milliseconds).
-                    The value can be positive or negative. By default, all subtitles in the file are shifted.
-                    If you only want to shift a specific section, you can specify the range of subtitle lines to adjust.</p>
-                <p>For gradual time shifting, use the Align option instead.</p>
+                <TranslatedParagraph
+                    path="operations.shift.operationDescription"
+                />
             </div>
 
             {/* Shift controls section */}
@@ -92,9 +96,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
                     {/* Delay input control */}
                     <div className="control-item">
-                        <p className="control-title">shift timing by</p>
+                        <p className="control-title">{t('operations.shift.controlItems.shiftBy')}</p>
 
-                        <div className="select-range-items" title={!sourceFile ? 'Upload source file' : ''}>
+                        <div className="select-range-items" title={!sourceFile ? t('operations.shift.errors.uploadSource') : ''}>
                             <input
                                 className={`range-form ${!sourceFile ? " disabled" : ""}`}
                                 id="delay-input"
@@ -112,16 +116,16 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                                 }}
                                 disabled={!sourceFile}
                             />
-                            <label className="range-text" htmlFor="delay-input">ms</label>
+                            <label className="range-text" htmlFor="delay-input">{t('operations.shift.controlItems.ms')}</label>
                         </div>
                     </div>
 
                     {/* From input control */}
                     <div className="control-item">
-                        <p className="control-title">from subtitle</p>
+                        <p className="control-title">{t('operations.shift.controlItems.fromSubtitle')}</p>
 
-                        <div className="select-range-items" title={!sourceFile ? 'Upload source file' : ''}>
-                            <label className="range-text" htmlFor="range-start">number</label>
+                        <div className="select-range-items" title={!sourceFile ? t('operations.shift.errors.uploadSource') : ''}>
+                            <label className="range-text" htmlFor="range-start">{t('operations.shift.controlItems.number')}</label>
                             <input
                                 className={`range-form ${!sourceFile ? " disabled" : ""}`}
                                 id="range-start"
@@ -145,10 +149,10 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
 
                     {/* To input control */}
                     <div className="control-item">
-                        <p className="control-title">to subtitle</p>
+                        <p className="control-title">{t('operations.shift.controlItems.toSubtitle')}</p>
 
-                        <div className="select-range-items" title={!sourceFile ? 'Upload source file' : ''}>
-                            <label className="range-text" htmlFor="range-end">number</label>
+                        <div className="select-range-items" title={!sourceFile ? t('operations.shift.errors.uploadSource') : ''}>
+                            <label className="range-text" htmlFor="range-end">{t('operations.shift.controlItems.number')}</label>
                             <input
                                 className={`range-form ${!sourceFile ? " disabled" : ""}`}
                                 id="range-end"
@@ -184,9 +188,9 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                         className="operation-controls-buttons"
                         title={
                             !sourceFile
-                                ? "Upload source file"
+                                ? t('operations.shift.errors.uploadSource')
                                 : delay === 0
-                                    ? "Delay can't be 0"
+                                    ? t('operations.shift.errors.zeroDelay')
                                     : ""
                         }
                     >
@@ -195,7 +199,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                             onClick={handleShift}
                             disabled={!sourceFile || delay == 0}
                         >
-                            Shift
+                            {t('operations.shift.shiftButton')}
                         </button>
                     </div>
 
@@ -208,7 +212,7 @@ const ShiftOperation: React.FC<ShiftOperationProps> = ({
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
                         {/* Download Button */}
                         <div className="operation-controls-buttons">
-                            <button className="download-button" onClick={onDownload}>Download</button>
+                            <button className="download-button" onClick={onDownload}>{t('operations.shift.downloadButton')}</button>
                         </div>
 
                         {/* Shifted file preview */}

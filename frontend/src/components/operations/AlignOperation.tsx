@@ -4,6 +4,8 @@ import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
 import alignHint from "../AlignHint"
+import { TranslatedParagraph } from "../translation/LanguageParagraph";
+import { useLanguage } from "../../hooks/useLanguage";
 
 interface AlignOperationProps {
     onAlign: (
@@ -30,6 +32,9 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     sourceFile,
     resetResults,
 }) => {
+    // Get translation function from language context
+    const { t } = useLanguage();
+
     // State for the example file
     const {
         uploadedFile: exampleFile,
@@ -127,7 +132,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={sourceFile}
             isDownloadable={false}
-            fileType="Source"
+            fileType={t('preview.source')}
             onSubtitleCountChange={handleSourceSubtitleCntChange}
         />
     );
@@ -138,7 +143,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={exampleFile}
             isDownloadable={false}
-            fileType="Example"
+            fileType={t('preview.example')}
             onSubtitleCountChange={handleExampleSubtitleCntChange}
         />
     ) : null;
@@ -148,7 +153,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
-            fileType="Aligned"
+            fileType={t('preview.aligned')}
             isDownloadable={true}
         />
     ) : null;
@@ -158,16 +163,17 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
             {/* Description of Align operation */}
             <div className="operation-description">
-                <p>
-                    You can align the timing of your subtitles using an example file. This can be useful if you have a video
-                    rip with subtitles in another language, and the subtitles in your language are for a different rip — or
-                    if your rip and subtitles were created for different framerates. <span
-                        className="hint-button"
-                        onClick={handleShowHint}
-                    >
-                        {showHint ? 'Hide hint' : 'Show hint'}
-                    </span>
-                </p>
+                <TranslatedParagraph
+                    path="operations.align.operationDescription"
+                    components={{
+                        hintButton: <button
+                            className="hint-button"
+                            onClick={handleShowHint}
+                        >
+                        </button>,
+                    }}
+                />
+
                 {showHint && alignHint}
             </div>
 
@@ -175,10 +181,10 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                 onFileUpload={handleFileUpload}
                 isLoading={isExampleFileUploading}
                 uploadedFile={exampleFile}
-                preUploadInstructionText={sourceFile ? "Upload example subtitles, fren!" : "Source file required first"}
-                preUploadSubInstructionText={sourceFile ? "Drag & drop .srt file or click anywhere in this area" : "Upload source file before adding example file"}
-                postUploadIntroFileText="Uploaded example file:"
-                postUploadSubInstructionText="Tweak alignment option below or upload new file"
+                preUploadInstructionText={sourceFile ? t('operations.align.exampleDragAndDrop.examplePreUploadInstructionText') : t('operations.align.exampleDragAndDrop.examplePreUploadInstructionTextDisabled')}
+                preUploadSubInstructionText={sourceFile ? t('drag-and-drop.preUploadSubInstructionText') : t('operations.align.exampleDragAndDrop.examplePreUploadSubInstructionTextDisabled')}
+                postUploadIntroFileText={t('operations.align.exampleDragAndDrop.examplePostUploadIntroFileText')}
+                postUploadSubInstructionText={t('operations.align.exampleDragAndDrop.examplePostUploadSubInstructionText')}
                 className={!exampleFile ? "blinking" : ""}
                 disabled={!sourceFile}
             />
@@ -191,18 +197,18 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                         {/* Controls for Source file */}
                         <div className="control-item">
-                            <p className="control-title">align source subtitles</p>
+                            <p className="control-title">{t('operations.align.controlItems.alignSource')}</p>
 
                             {/* Select Source file range */}
                             <div className="select-range-items">
-                                <label className="range-text" htmlFor="source-start">from</label>
+                                <label className="range-text" htmlFor="source-start">{t('operations.align.controlItems.from')}</label>
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
                                     title={
                                         !sourceFile
-                                            ? "Upload source file"
+                                            ? t('operations.align.errors.uploadSource')
                                             : !exampleFile
-                                                ? "Upload example file"
+                                                ? t('operations.align.errors.uploadExample')
                                                 : ""
                                     }
                                     id="source-start"
@@ -221,14 +227,14 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     }}
                                     disabled={!sourceFile || !exampleFile}
                                 />
-                                <label className="range-text" htmlFor="source-end">to</label>
+                                <label className="range-text" htmlFor="source-end">{t('operations.align.controlItems.to')}</label>
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
                                     title={
                                         !sourceFile
-                                            ? "Upload source file"
+                                            ? t('operations.align.errors.uploadSource')
                                             : !exampleFile
-                                                ? "Upload example file"
+                                                ? t('operations.align.errors.uploadExample')
                                                 : ""
                                     }
                                     id="source-end"
@@ -252,21 +258,21 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                         {/* Controls for Example file */}
                         <div className="control-item">
-                            <p className="control-title">by example subtitles</p>
+                            <p className="control-title">{t('operations.align.controlItems.byExample')}</p>
 
                             {/* Select Example file range */}
                             <div className="select-range-items">
                                 {/* 'from' label */}
-                                <label className="range-text" htmlFor="example-start">from</label>
+                                <label className="range-text" htmlFor="example-start">{t('operations.align.controlItems.from')}</label>
 
                                 {/* Start input */}
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
                                     title={
                                         !sourceFile
-                                            ? "Upload source file"
+                                            ? t('operations.align.errors.uploadSource')
                                             : !exampleFile
-                                                ? "Upload example file"
+                                                ? t('operations.align.errors.uploadExample')
                                                 : ""
                                     }
                                     id="example-start"
@@ -287,16 +293,16 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 />
 
                                 {/* 'to' label */}
-                                <label className="range-text" htmlFor="example-end">to</label>
+                                <label className="range-text" htmlFor="example-end">{t('operations.align.controlItems.to')}</label>
 
                                 {/* End input */}
                                 <input
                                     className={`range-form ${!sourceFile || !exampleFile ? " disabled" : ""}`}
                                     title={
                                         !sourceFile
-                                            ? "Upload source file"
+                                            ? t('operations.align.errors.uploadSource')
                                             : !exampleFile
-                                                ? "Upload example file"
+                                                ? t('operations.align.errors.uploadExample')
                                                 : ""
                                     }
                                     id="example-end"
@@ -320,18 +326,18 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
 
                         {/* Controls for Trim flags */}
                         <div className="control-item">
-                            <p className="control-title">trim aligned subtitles</p>
+                            <p className="control-title">{t('operations.align.controlItems.trimAligned')}</p>
 
                             <div className="select-checkboxes">
                                 <label
                                     className="range-text"
                                     title={
                                         !sourceFile
-                                            ? "Upload source file"
+                                            ? t('operations.align.errors.uploadSource')
                                             : !exampleFile
-                                                ? "Upload example file"
+                                                ? t('operations.align.errors.uploadExample')
                                                 : sourceStart == 1
-                                                    ? "Change source 'from'"
+                                                    ? t('operations.align.errors.changeFrom')
                                                     : ""
                                     }
                                 >
@@ -345,11 +351,11 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     />
                                     {
                                         (!sourceFile || !exampleFile || sourceStart == 1)
-                                            ? "before source 'from'"
+                                            ? t('operations.align.controlItems.beforeSource')
                                             : sourceStart == 2
-                                                ? "first subtitle"
+                                                ? t('operations.align.controlItems.firstSubtitle')
                                                 : sourceStart > 2
-                                                    ? `from 1 to ${sourceStart - 1}`
+                                                    ? `${t('operations.align.controlItems.from')} 1 ${t('operations.align.controlItems.to')} ${sourceStart - 1}`
                                                     : ""
                                     }
                                 </label>
@@ -358,11 +364,11 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     className="range-text"
                                     title={
                                         !sourceFile
-                                            ? "Upload source file"
+                                            ? t('operations.align.errors.uploadSource')
                                             : !exampleFile
-                                                ? "Upload example file"
+                                                ? t('operations.align.errors.uploadExample')
                                                 : sourceEnd == sourceSubtitleCnt
-                                                    ? "Change source 'to'"
+                                                    ? t('operations.align.errors.changeTo')
                                                     : ""
                                     }
                                 >
@@ -376,11 +382,11 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                     />
                                     {
                                         (!sourceFile || !exampleFile || sourceEnd == sourceSubtitleCnt)
-                                            ? "after source 'to'"
+                                            ? t('operations.align.controlItems.afterSource')
                                             : sourceEnd == sourceSubtitleCnt - 1
-                                                ? "last subtitle"
+                                                ? t('operations.align.controlItems.lastSubtitle')
                                                 : sourceEnd < sourceSubtitleCnt - 1
-                                                    ? `from ${sourceEnd + 1} to ${sourceSubtitleCnt}`
+                                                    ? `${t('operations.align.controlItems.from')} ${sourceEnd + 1} ${t('operations.align.controlItems.to')} ${sourceSubtitleCnt}`
                                                     : ""
                                     }
                                 </label>
@@ -403,7 +409,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 onClick={handleAlign}
                                 disabled={true}
                             >
-                                Align
+                                {t('operations.align.alignButton')}
                             </button>
                         </div>
                     </div>
@@ -418,7 +424,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 onClick={handleAlign}
                                 disabled={true}
                             >
-                                Align
+                                {t('operations.align.alignButton')}
                             </button>
                         </div>
                         {/* Source file preview */}
@@ -435,7 +441,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                                 onClick={handleAlign}
                                 disabled={false}
                             >
-                                Align
+                                {t('operations.align.alignButton')}
                             </button>
                         </div>
                         <div className="uploaded-files-preview-container">
@@ -457,7 +463,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                         <div className="modified-file-preview-container">
                             {/* Download button */}
                             <div className="operation-controls-buttons">
-                                <button className="download-button" onClick={onDownload}>Download</button>
+                                <button className="download-button" onClick={onDownload}>{t('operations.align.downloadButton')}</button>
                             </div>
 
                             {alignedFilePreview}

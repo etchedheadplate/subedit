@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
+import { TranslatedParagraph } from "../translation/LanguageParagraph.tsx";
+import { useLanguage } from "../../hooks/useLanguage.ts";
 
 interface CleanOperationProps {
     onClean: (options: {
@@ -25,6 +27,9 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
     sourceFile,
     processedFile,
 }) => {
+    // Get translation function from language context
+    const { t } = useLanguage();
+
     // State for choosing options - with default "All" checked
     const [options, setOptions] = useState({
         all: true,
@@ -35,6 +40,17 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
         font: false,
         underline: false,
     });
+
+    // Create mapping between option keys and translation paths
+    const optionTranslationPaths = {
+        all: 'operations.clean.controlItems.all',
+        bold: 'operations.clean.controlItems.bold',
+        italic: 'operations.clean.controlItems.italic',
+        underline: 'operations.clean.controlItems.underline',
+        strikethrough: 'operations.clean.controlItems.strikethrough',
+        color: 'operations.clean.controlItems.color',
+        font: 'operations.clean.controlItems.font',
+    };
 
     // Loading state to show animation while processing
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -128,7 +144,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                 case 'strikethrough':
                     return { fontSize: "0.8em", textDecoration: 'line-through' };
                 case 'color':
-                    return { fontSize: "0.8em", color: '#00b4d8' };
+                    return { fontSize: "0.8em", color: '#5784FF' };
                 case 'font':
                     return { fontSize: "0.8em", fontFamily: 'serif' };
                 default:
@@ -144,7 +160,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={sourceFile}
-            fileType="Source"
+            fileType={t('preview.source')}
             isDownloadable={false}
         />
     );
@@ -154,7 +170,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
-            fileType="Cleaned"
+            fileType={t('preview.cleaned')}
             isDownloadable={true}
         />
     ) : null;
@@ -164,16 +180,23 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
 
             {/* Description of Clean Operation */}
             <div className="operation-description">
-                <p>You can clean a subtitle file by removing markup tags. By default, all markup is removed.
-                    If you only want to remove specific tags, you can select the ones to target on the right.</p>
-                <p>Please note that the <i>All</i> checkbox will remove all markup, not just the tags listed on the right.</p>
+                <TranslatedParagraph
+                    path="operations.clean.operationDescription1"
+                />
+
+                <TranslatedParagraph
+                    path="operations.clean.operationDescription2"
+                    components={{
+                        all: <b></b>,
+                    }}
+                />
             </div>
 
             {/* Clean controls section */}
             <div className="operation-controls-container">
 
                 {/* Clean controls block */}
-                <div className="operation-controls-items" title={!sourceFile ? 'Upload source file' : ''}>
+                <div className="operation-controls-items" title={!sourceFile ? t('operations.clean.errors.uploadSource') : ''}>
 
                     {/* All checkbox first */}
                     <label className="control-item" style={getLabelStyle('all')}>
@@ -185,7 +208,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                             style={{ marginRight: "8px" }}
                             disabled={!sourceFile}
                         />
-                        All
+                        {t(optionTranslationPaths.all)}
                     </label>
 
                     {/* Other checkboxes */}
@@ -208,14 +231,12 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                                         type="checkbox"
                                         checked={value}
                                         onChange={() =>
-                                            handleOptionChange(
-                                                key as keyof typeof options,
-                                            )
+                                            handleOptionChange(key as keyof typeof options)
                                         }
                                         style={{ marginRight: "8px" }}
                                         disabled={!sourceFile}
                                     />
-                                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                                    {t(optionTranslationPaths[key as keyof typeof optionTranslationPaths])}
                                 </label>
                             ))}
                     </div>
@@ -229,13 +250,13 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                 <div className="source-file-preview-container" style={{ flex: 1 }}>
 
                     {/* Clean Button */}
-                    <div className="operation-controls-buttons" title={!sourceFile ? 'Upload source file' : ''}>
+                    <div className="operation-controls-buttons" title={!sourceFile ? t('operations.clean.errors.uploadSource') : ''}>
                         <button
                             className={`operation-button ${(!sourceFile) ? " disabled" : ""}`}
                             onClick={handleClean}
                             disabled={!sourceFile}
                         >
-                            Clean
+                            {t('operations.clean.cleanButton')}
                         </button>
                     </div>
 
@@ -248,7 +269,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                     <div className="modified-file-preview-container" style={{ flex: 1 }}>
                         {/* Download Button */}
                         <div className="operation-controls-buttons">
-                            <button className="download-button" onClick={onDownload}>Download</button>
+                            <button className="download-button" onClick={onDownload}>{t('operations.clean.downloadButton')}</button>
                         </div>
 
                         {/* Cleaned file preview */}

@@ -1,13 +1,15 @@
 import { useState } from "react";
+import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
+import { useSession } from "./hooks/useSession";
+import { useFileUpload } from "./hooks/useFileUpload";
+import { useLanguage } from "./hooks/useLanguage";
+import LanguageSelector from "./components/translation/LanguageSelector";
 import ShiftOperation from "./components/operations/ShiftOperation";
 import AlignOperation from "./components/operations/AlignOperation";
 import CleanOperation from "./components/operations/CleanOperation";
 import EngineTranslateOperation from "./components/operations/EngineTranslateOperation";
 import DuckTranslateOperation from "./components/operations/DuckTranslateOperation";
 import DragAndDropArea from "./components/DragAndDropArea";
-import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
-import { useSession } from "./hooks/useSession";
-import { useFileUpload } from "./hooks/useFileUpload";
 import { OperationType, TranslateType } from "./types";
 import engineLogo from "./assets/engine_logo.png";
 import ddgLogo from "./assets/ddg_logo.png";
@@ -41,6 +43,9 @@ function App() {
         getDownloadLink,
         resetResults,
     } = useSubtitleOperations(sessionId, uploadedFile);
+
+    // Get translation function from language context
+    const { t } = useLanguage();
 
     // Local state
     const [activeOption, setActiveOption] = useState<OperationType | null>(null);
@@ -78,15 +83,15 @@ function App() {
     };
 
     const optionLabels: { label: string; key: OperationType; icon?: string }[] = [
-        { label: "Shift", key: "shift" },
-        { label: "Align", key: "align" },
-        { label: "Clean", key: "clean" },
-        { label: "Translate", key: "translate" },
+        { label: `${t('optionLabels.shift')}`, key: "shift" },
+        { label: t('optionLabels.align'), key: "align" },
+        { label: t('optionLabels.clean'), key: "clean" },
+        { label: t('optionLabels.translate'), key: "translate" },
     ];
 
     const translateOptionLabels: { label: string; key: TranslateType; icon?: string }[] = [
-        { label: "Engine", key: "enginetranslate", icon: engineLogo, },
-        { label: "Duck AI", key: "ducktranslate", icon: ddgLogo, },
+        { label: t('optionLabels.service'), key: "enginetranslate", icon: engineLogo, },
+        { label: t('optionLabels.duck'), key: "ducktranslate", icon: ddgLogo, },
     ];
 
     // Is any translation option active
@@ -99,11 +104,15 @@ function App() {
                 <div className="tile-layer" />
                 <div className="overlay-image" />
             </div>
-
-            {/* Header, always present */}
             <div className="main-header">
+                <div className="language-selector-container">
+                    <LanguageSelector />
+                </div>
+            </div>
+            {/* Header, always present */}
+            <div className="main-block">
 
-                {/* Main title */}
+                {/* Main title and language selector */}
                 <h1 className="main-title">[subedit]</h1>
 
                 {/* Drag-and-drop Area */}

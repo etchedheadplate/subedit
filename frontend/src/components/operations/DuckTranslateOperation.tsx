@@ -3,6 +3,8 @@ import UniversalSubtitlePreview from "../SubtitlePreview";
 import { SubtitleFile, SubtitleMetadata } from "../../types";
 import duckTranslationData from "../../../../shared/duck.json";
 import loadingAnimation from "../../assets/loading.gif";
+import { TranslatedParagraph } from "../translation/LanguageParagraph.tsx";
+import { useLanguage } from "../../hooks/useLanguage.ts";
 
 const DEBUG: boolean = import.meta.env.VITE_DEBUG === "true";
 
@@ -31,6 +33,9 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
     sourceFile,
     processedFile,
 }) => {
+    // Get translation function from language context
+    const { t } = useLanguage();
+
     // State for setting up target language
     const [targetLanguage, setTargetLanguage] = useState<string>("");
 
@@ -155,11 +160,11 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
         const minutes = Math.ceil(seconds / 60); // Round up to nearest minute
 
         if (minutes > 1) {
-            return `${minutes} minutes`;
+            return `${minutes} ${t('eta.minutes')}`;
         } else if (minutes === 1) {
-            return "1 minute";
+            return t('eta.oneMinute');
         } else {
-            return "less than 1 minute";
+            return t('eta.lessOneMinute');
         }
     };
 
@@ -176,7 +181,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
             sessionId={sessionId}
             subtitleFile={sourceFile}
             isDownloadable={false}
-            fileType="Source"
+            fileType={t('preview.source')}
             onMetadataLoaded={handleSourceLanguageDetected}
         />
     );
@@ -186,7 +191,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
         <UniversalSubtitlePreview
             sessionId={sessionId}
             subtitleFile={processedFile}
-            fileType="Translated"
+            fileType={t('preview.translated')}
             isDownloadable={true}
         />
     ) : null;
@@ -195,8 +200,8 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
     const translationTimer = (
         <div className="translation-progress">
             <img src={loadingAnimation} alt="Translation in progress" />
-            <p className="translation-progress-eta">ETA: {formatTime(remainingTime)}</p>
-            <p className="translation-progress-text">This may take longer for Claude and Mistral.</p>
+            <p className="translation-progress-eta">{t('eta.etaTite')}: {formatTime(remainingTime)}</p>
+            <p className="translation-progress-text">{t('eta.longerDuck')}</p>
         </div>
     );
 
@@ -206,39 +211,45 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
             {/* Description of Translate Operation */}
             <div className="operation-description">
                 {!DEBUG && (
-                    <p className="debug-message">
-                        This feature is available only in{' '}
-                        <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer"><b>self-hosting</b></a>{' '}
-                        mode.
-                    </p>
+
+                    <div className="debug-message">
+                        <TranslatedParagraph
+                            path="operations.duck.operationDescription1"
+                            components={{
+                                selfHost: <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer"></a>,
+                            }}
+                        />
+                    </div>
                 )}
 
                 {/* Conditionally apply muted styling */}
                 <div className={!DEBUG ? 'muted-text' : ''}>
-                    <p>
-                        You can translate subtitles using AI models provided by{' '}
-                        <a href="https://duckduckgo.com/duckduckgo-help-pages/duckai" target="_blank" rel="noopener noreferrer">Duck.ai</a>.
-                    </p>
+                    <TranslatedParagraph
+                        path="operations.duck.operationDescription2"
+                        components={{
+                            duckLink: <a href="https://duckduckgo.com/duckduckgo-help-pages/duckai" target="_blank" rel="noopener noreferrer"></a>,
+                        }}
+                    />
 
-                    <p>
-                        Since most models have limited context windows, your subtitles will usually be divided into multiple parts and translated one part
-                        at a time. The size of the context window varies by model: GPT-4o mini, o3-mini, and Llama 3.3 70B support up to 2048 tokens, while
-                        Claude 3 Haiku is estimated to handle around 1024, and Mistral Small 3 24B only 256.
-                    </p>
+                    <TranslatedParagraph
+                        path="operations.duck.operationDescription3"
+                    />
 
-                    <p>
-                        To comply with usage limits and respect DuckDuckGo's free service, there is a 15-second delay between each request to translate a
-                        part of the subtitles. You can try to speed up the process by adjusting the <i>adjusted by</i> slider. This slider controls how many
-                        subtitle lines are packed into each request sent to the model.
-                    </p>
+                    <TranslatedParagraph
+                        path="operations.duck.operationDescription4"
+                        components={{
+                            adjustedBy: <i></i>,
+                        }}
+                    />
 
-                    <p>
-                        <b>
-                            For the safest and most reliable option, use GPT-4o. Try to avoid Claude and Mistral, as they are more prone to errors due to their
-                            limited context. If you encounter errors during the translation process, try adjusting the slider toward the <i>accuracy</i> side
-                            for smaller, more manageable chunks.
-                        </b>
-                    </p>
+                    <b>
+                        <TranslatedParagraph
+                            path="operations.duck.operationDescription5"
+                            components={{
+                                accuracy: <i></i>,
+                            }}
+                        />
+                    </b>
                 </div>
             </div>
 
@@ -250,17 +261,17 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
 
                     {/* Original language selector */}
                     <div className="control-item">
-                        <p className="control-title">translate from</p>
+                        <p className="control-title">{t('operations.duck.controlItems.translateFrom')}</p>
 
                         <div
                             className="select-drop-down-items"
                             title={
                                 !DEBUG
-                                    ? "Available only when self-hosting"
+                                    ? t('operations.duck.errors.selfHosting')
                                     : !sourceFile
-                                        ? "Upload source file"
+                                        ? t('operations.duck.errors.uploadSource')
                                         : isTranslating
-                                            ? "Wait for translation to finish"
+                                            ? t('operations.duck.errors.waitFinish')
                                             : ""
                             }
                         >
@@ -272,7 +283,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                                 onChange={handleOriginalLanguageChange}
                                 disabled={!DEBUG || !sourceFile || isTranslating}
                             >
-                                <option value="">Select a language</option>
+                                <option value="">{t('operations.duck.controlItems.selectLanguage')}</option>
                                 {Object.entries(duckTranslationData.codes)
                                     .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
                                     .map(([code, name]) => (
@@ -286,17 +297,17 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
 
                     {/* Target language selector */}
                     <div className="control-item">
-                        <p className="control-title">translate to</p>
+                        <p className="control-title">{t('operations.duck.controlItems.translateTo')}</p>
 
                         <div
                             className="select-drop-down-items"
                             title={
                                 !DEBUG
-                                    ? "Available only when self-hosting"
+                                    ? t('operations.duck.errors.selfHosting')
                                     : !sourceFile
-                                        ? "Upload source file"
+                                        ? t('operations.duck.errors.uploadSource')
                                         : isTranslating
-                                            ? "Wait for translation to finish"
+                                            ? t('operations.duck.errors.waitFinish')
                                             : ""
                             }
                         >
@@ -308,7 +319,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                                 onChange={handleTargetLanguageChange}
                                 disabled={!DEBUG || !sourceFile || isTranslating}
                             >
-                                <option value="">Select a language</option>
+                                <option value="">{t('operations.duck.controlItems.selectLanguage')}</option>
                                 {Object.entries(duckTranslationData.codes)
                                     .sort((a, b) => a[1].localeCompare(b[1])) // Sort alphabetically by language name
                                     .map(([code, name]) => (
@@ -322,17 +333,17 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
 
                     {/* Model selector */}
                     <div className="control-item">
-                        <p className="control-title">with model</p>
+                        <p className="control-title">{t('operations.duck.controlItems.withModel')}</p>
 
                         <div
                             className="select-drop-down-items"
                             title={
                                 !DEBUG
-                                    ? "Available only when self-hosting"
+                                    ? t('operations.duck.errors.selfHosting')
                                     : !sourceFile
-                                        ? "Upload source file"
+                                        ? t('operations.duck.errors.uploadSource')
                                         : isTranslating
-                                            ? "Wait for translation to finish"
+                                            ? t('operations.duck.errors.waitFinish')
                                             : ""
                             }
                         >
@@ -355,17 +366,17 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
 
                     {/* Throttle selector */}
                     <div className="control-item">
-                        <p className="control-title">adjusted by</p>
+                        <p className="control-title">{t('operations.duck.controlItems.adjustedBy')}</p>
 
                         <div
                             className="select-slider-items"
                             title={
                                 !DEBUG
-                                    ? "Available only when self-hosting"
+                                    ? t('operations.duck.errors.selfHosting')
                                     : !sourceFile
-                                        ? "Upload source file"
+                                        ? t('operations.duck.errors.uploadSource')
                                         : isTranslating
-                                            ? "Wait for translation to finish"
+                                            ? t('operations.duck.errors.waitFinish')
                                             : ""
                             }
                         >
@@ -383,8 +394,8 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
 
                             {/* Bottom row: left label, value, right label */}
                             <div className="slider-info-row">
-                                <span className={accuracyLabelClass}>accuracy {100 - Number(percentage)}%</span>
-                                <span className={speedLabelClass}>{percentage}% speed</span>
+                                <span className={accuracyLabelClass}>{t('operations.duck.controlItems.accuracy')} {100 - Number(percentage)}%</span>
+                                <span className={speedLabelClass}>{percentage}% {t('operations.duck.controlItems.speed')}</span>
                             </div>
                         </div>
                     </div>
@@ -400,15 +411,17 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                     <div
                         className="operation-controls-buttons"
                         title={
-                            !sourceFile
-                                ? "Upload source file"
-                                : originalLanguage === ""
-                                    ? "Select 'from' language"
-                                    : targetLanguage === ""
-                                        ? "Select 'to' language"
-                                        : isTranslating
-                                            ? "Wait for translation to finish"
-                                            : ""
+                            !DEBUG
+                                ? t('operations.duck.errors.selfHosting')
+                                : !sourceFile
+                                    ? t('operations.duck.errors.uploadSource')
+                                    : originalLanguage === ""
+                                        ? t('operations.duck.errors.selectFrom')
+                                        : targetLanguage === ""
+                                            ? t('operations.duck.errors.selectTo')
+                                            : isTranslating
+                                                ? t('operations.duck.errors.waitFinish')
+                                                : ""
                         }
                     >
                         <button
@@ -416,7 +429,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                             onClick={handleDuckTranslate}
                             disabled={!sourceFile || targetLanguage === "" || originalLanguage === "" || isTranslating}
                         >
-                            Translate
+                            {t('operations.duck.duckButton')}
                         </button>
                     </div>
 
@@ -442,7 +455,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
                             <>
                                 {/* Download Button */}
                                 <div className="operation-controls-buttons">
-                                    <button className="download-button" onClick={onDownload}>Download</button>
+                                    <button className="download-button" onClick={onDownload}>{t('operations.duck.downloadButton')}</button>
                                 </div>
 
                                 {/* Translated file preview */}

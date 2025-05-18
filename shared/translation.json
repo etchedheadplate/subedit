@@ -1,0 +1,298 @@
+{
+    "en": {
+        "optionLabels": {
+            "shift": "Shift",
+            "align": "Align",
+            "clean": "Clean",
+            "translate": "Translate",
+            "service": "Service",
+            "duck": "Duck AI"
+        },
+        "drag-and-drop": {
+            "preUploadInstructionText": "Upload subtitles, fren!",
+            "preUploadSubInstructionText": "Drag & drop .srt file or click anywhere in this area",
+            "postUploadIntroFileText": "Uploaded source file:",
+            "postUploadSubInstructionText": "Select option below or upload new file"
+        },
+        "operations": {
+            "shift": {
+                "shiftButton": "Shift",
+                "downloadButton": "Download",
+                "operationDescription": "You can shift subtitle timing by a fixed number of milliseconds (1 second = 1000 milliseconds). The value can be positive or negative. By default, all subtitles in the file are shifted. If you only want to shift a specific interval, you can choose the range of subtitle lines to adjust.",
+                "controlItems": {
+                    "shiftBy": "shift timing by",
+                    "fromSubtitle": "from subtitle",
+                    "toSubtitle": "to subtitle",
+                    "ms": "ms",
+                    "number": "number"
+                },
+                "errors": {
+                    "uploadSource": "Upload source file",
+                    "zeroDelay": "Delay can't be 0"
+                }
+            },
+            "align": {
+                "alignButton": "Align",
+                "downloadButton": "Download",
+                "operationDescription": "You can align the timing of your subtitles using an example file. This can be useful if your rip and subtitles were created for different framerates. {hintButton}?{/hintButton}",
+                "hintText": "After uploading both files, look for {matchingLines}matching lines{/matchingLines} at the beginning and end. It can also help to review the neighboring lines – in the case above the line {anyIdea}Any idea what they are?{/anyIdea} increases confidence in the match. Next, enter the corresponding {sourceIndices}source indices{/sourceIndices} and {exampleIndices}example indices{/exampleIndices} into the form fields below, then press the {alignButton}Align{/alignButton} button. You'll see that the {exampleTiming}example timing{/exampleTiming} is correctly mapped to the source. Optionally, you can trim subtitles that fall outside the source range, as they are likely to have {incorrectTiming}incorrect timing{/incorrectTiming} now.",
+                "exampleDragAndDrop": {
+                    "examplePreUploadInstructionText": "Upload example subtitles, fren!",
+                    "examplePreUploadInstructionTextDisabled": "Source file required first",
+                    "examplePreUploadSubInstructionTextDisabled": "Upload source file before adding example file",
+                    "examplePostUploadIntroFileText": "Uploaded example file:",
+                    "examplePostUploadSubInstructionText": "Tweak alignment option below or upload new file"
+                },
+                "controlItems": {
+                    "alignSource": "align source subtitles",
+                    "byExample": "by example subtitles",
+                    "trimAligned": "trim aligned subtitles",
+                    "from": "from",
+                    "to": "to",
+                    "beforeSource": "before source 'from'",
+                    "afterSource": "after source 'to'",
+                    "firstSubtitle": "first subtitle",
+                    "lastSubtitle": "last subtitle"
+                },
+                "errors": {
+                    "uploadSource": "Upload source file",
+                    "uploadExample": "Upload example file",
+                    "changeFrom": "Change source 'from'",
+                    "changeTo": "Change source 'to'"
+                }
+            },
+            "clean": {
+                "cleanButton": "Clean",
+                "downloadButton": "Download",
+                "operationDescription1": "You can clean a subtitle file by removing markup tags. By default, all markup is removed. If you only want to remove specific tags, you can select the ones to target on the right.",
+                "operationDescription2": "Please note that the {all}All{/all} checkbox will remove all markup, not just the tags listed on the right.",
+                "controlItems": {
+                    "all": "All",
+                    "bold": "Bold",
+                    "color": "Color",
+                    "strikethrough": "Strikethrough",
+                    "italic": "Italic",
+                    "font": "Font",
+                    "underline": "Underline"
+                },
+                "errors": {
+                    "uploadSource": "Upload source file"
+                }
+            },
+            "service": {
+                "serviceButton": "Translate",
+                "downloadButton": "Download",
+                "operationDescription1": "You can translate subtitles using services provided by {googleLink}Google{/googleLink} or {mymemoryLink}MyMemory{/mymemoryLink}.",
+                "operationDescription2": "Both services have limits on the number of characters they can translate at once (5000 for Google and 500 for MyMemory), so your subtitles will be divided into multiple parts and translated one at a time. To comply with service limits and honor fair use principles, a 2-second delay is added between each request.",
+                "operationDescription3": "You can also remove markup tags if they interfere with translation.",
+                "controlItems": {
+                    "translateFrom": "translate from",
+                    "translateTo": "translate to",
+                    "selectLanguage": "Select a language",
+                    "withService": "with service",
+                    "markup": "markup",
+                    "clean": "clean"
+                },
+                "errors": {
+                    "uploadSource": "Upload source file",
+                    "waitFinish": "Wait for translation to finish",
+                    "selectFrom": "Select 'from' language",
+                    "selectTo": "Select 'to' language"
+                }
+            },
+            "duck": {
+                "duckButton": "Translate",
+                "downloadButton": "Download",
+                "operationDescription1": "This feature is available only in {selfHost}self-hosting{/selfHost} mode.",
+                "operationDescription2": "You can translate subtitles using AI models provided by {duckLink}Duck.ai{/duckLink}.",
+                "operationDescription3": "Since most models have limited context windows, your subtitles will be divided into multiple parts and translated one part at a time. The size of the context window varies by model: GPT-4o mini, o3-mini, and Llama 3.3 70B support up to 2048 tokens, while Claude 3 Haiku is estimated to handle around 1024, and Mistral Small 3 24B only 256.",
+                "operationDescription4": "To comply with DuckDuckGo's limits and honor fair use principles, a 15-second delay is added between each request. You can try to speed up the process by moving the {adjustedBy}adjusted by{/adjustedBy} slider. This slider controls how many subtitle lines are packed into each request sent to the model.",
+                "operationDescription5": "For the safest and most reliable option, use GPT-4o. Try to avoid Claude and Mistral, as they are more prone to errors due to their limited context. If you encounter errors during the translation process, try to move the slider toward the {accuracy}accuracy{/accuracy} side for smaller, more manageable chunks.",
+                "controlItems": {
+                    "translateFrom": "translate from",
+                    "translateTo": "translate to",
+                    "selectLanguage": "Select a language",
+                    "withModel": "with model",
+                    "adjustedBy": "adjusted by",
+                    "accuracy": "accuracy",
+                    "speed": "speed"
+                },
+                "errors": {
+                    "uploadSource": "Upload source file",
+                    "selfHosting": "Available only when self-hosting",
+                    "waitFinish": "Wait for translation to finish",
+                    "selectFrom": "Select 'from' language",
+                    "selectTo": "Select 'to' language"
+                }
+            }
+        },
+        "eta": {
+            "etaTite": "ETA",
+            "minutes": "minutes",
+            "oneMinute": "1 minute",
+            "lessOneMinute": "less than 1 minute",
+            "longerService": "This may take longer for MyMemory.",
+            "longerDuck": "This may take longer for Claude and Mistral."
+        },
+        "preview": {
+            "language": "language",
+            "encoding": "encoding",
+            "number": "number",
+            "subtitles": "subtitles",
+            "source": "Source file",
+            "shifted": "Shifted file",
+            "example": "Example file",
+            "aligned": "Aligned file",
+            "cleaned": "Cleaned file",
+            "translated": "Translated file"
+        }
+    },
+    "ru": {
+        "optionLabels": {
+            "shift": "Сдвинуть",
+            "align": "Выровнять",
+            "clean": "Очистить",
+            "translate": "Перевести",
+            "service": "Сервис",
+            "duck": "Duck AI"
+        },
+        "drag-and-drop": {
+            "preUploadInstructionText": "Загрузи субтитры!",
+            "preUploadSubInstructionText": "Перетащи .srt файл или кликни здесь",
+            "postUploadIntroFileText": "Загруженный исходный файл:",
+            "postUploadSubInstructionText": "Выбери опцию ниже или загрузи новый файл"
+        },
+        "operations": {
+            "shift": {
+                "shiftButton": "Сдвинуть",
+                "downloadButton": "Скачать",
+                "operationDescription": "Ты можешь сдвинуть тайминг субтитров на определенное количество миллисекунд (1 секунда = 1000 миллисекунд). Число может быть положительным или отрицательным. По умолчанию сдвигаются все субтитры в файле. Если хочешь сдвинуть только определенный интервал, то можешь выбрать диапазон субтитров.",
+                "controlItems": {
+                    "shiftBy": "сдвинуть на",
+                    "fromSubtitle": "от субтитра",
+                    "toSubtitle": "до субтитра",
+                    "ms": "мс",
+                    "number": "номер"
+                },
+                "errors": {
+                    "uploadSource": "Загрузи исходный файл",
+                    "zeroDelay": "Число не может быть 0"
+                }
+            },
+            "align": {
+                "alignButton": "Выровнять",
+                "downloadButton": "Скачать",
+                "operationDescription": "Ты можешь выровнять свои субтитры по файлу-образцу. Это может быть полезно, если твой рип и субтитры были созданы для разных частот кадров. {hintButton}?{/hintButton}",
+                "hintText": "После загрузки обоих файлов найди {matchingLines}совпадающий текст{/matchingLines} в начале и конце. Иногда полезно обратить внимание на соседние строки – в примере вверху текст {anyIdea}Any idea what they are?{/anyIdea} добавляет уверенности в правильном выборе. Далее введи соответсвующие {sourceIndices}номера исходника{/sourceIndices} и {exampleIndices}номера образца{/exampleIndices} в формы внизу, после чего нажми кнопку {alignButton}Выровнять{alignButton}. Ты увидишь, что {exampleTiming}тайминг образца{/exampleTiming} правильно сопоставлен с исходником. Опционально ты можешь обрезать субтитры вне диапазона номеров исходника, так как скорее всего теперь у них будет {incorrectTiming}некорректный тайминг{/incorrectTiming}.",
+                "exampleDragAndDrop": {
+                    "examplePreUploadInstructionText": "Загрузи субтитры-образец!",
+                    "examplePreUploadInstructionTextDisabled": "Сначала требуется исходный файл",
+                    "examplePreUploadSubInstructionTextDisabled": "Загрузи исходный файл перед добавлением файла-образца",
+                    "examplePostUploadIntroFileText": "Загруженный файл-образец:",
+                    "examplePostUploadSubInstructionText": "Настрой параметры выравнивания внизу или загрузи новый файл"
+                },
+                "controlItems": {
+                    "alignSource": "выровнять исходник",
+                    "byExample": "по образцу",
+                    "trimAligned": "обрезать выравнивание",
+                    "from": "с",
+                    "to": "по",
+                    "beforeSource": "до начала исходника",
+                    "afterSource": "после конца исходника",
+                    "firstSubtitle": "первый субтитр",
+                    "lastSubtitle": "последний субтитр"
+                },
+                "errors": {
+                    "uploadSource": "Загрузи исходный файл",
+                    "uploadExample": "Загрузи файл-образец",
+                    "changeFrom": "Измени начало диапазона исходника",
+                    "changeTo": "Измени конец диапазона исходника"
+                }
+            },
+            "clean": {
+                "cleanButton": "Очистить",
+                "downloadButton": "Скачать",
+                "operationDescription1": "Ты можешь очистить субтитры убрав теги разметки. По умолчанию убираются вся разметка. Если ты хочешь убрать только определенные теги, то справа можешь выбрать какие именно.",
+                "operationDescription2": "Пожалуйста обрати внимание, что опция {all}Все{/all} убирает всю разметку, а не только ту, которая перечислена справа.",
+                "controlItems": {
+                    "all": "Все",
+                    "bold": "Жирный",
+                    "color": "Цвет",
+                    "strikethrough": "Зачеркивание",
+                    "italic": "Курсив",
+                    "font": "Шрифт",
+                    "underline": "Подчеркивание"
+                },
+                "errors": {
+                    "uploadSource": "Загрузи исходный файл"
+                }
+            },
+            "service": {
+                "serviceButton": "Перевести",
+                "downloadButton": "Скачать",
+                "operationDescription1": "Ты можешь перевести субтитры с помощью сервиса {googleLink}Google{/googleLink} или {mymemoryLink}MyMemory{/mymemoryLink}.",
+                "operationDescription2": "У обоих сервисов есть лимиты на количество символов за раз (5000 у Google и 500 у MyMemory), поэтому твои субтитры будут разделены на несколько частей и переведены очередью запросов. Для соблюдения лимитов сервиса и из уважения к принципу fair use между каждый запросом добавлена задержка в 2 секунды.",
+                "operationDescription3": "Также ты можешь удалить теги разметки, если они мешают переводу.",
+                "controlItems": {
+                    "translateFrom": "перевести с",
+                    "translateTo": "перевести на",
+                    "selectLanguage": "Выбери язык",
+                    "withService": "сервисом",
+                    "markup": "разметка",
+                    "clean": "очистить"
+                },
+                "errors": {
+                    "uploadSource": "Загрузи исходный файл",
+                    "waitFinish": "Дождись окончания перевода",
+                    "selectFrom": "Выбери оригинальный язык",
+                    "selectTo": "Выбери требуемый язык"
+                }
+            },
+            "duck": {
+                "duckButton": "Перевести",
+                "downloadButton": "Скачать",
+                "operationDescription1": "Эта функция доступна только в режиме {selfHost}самостоятельного хостинга{/selfHost}.",
+                "operationDescription2": "Ты можешь перевести субтитры с помощью ИИ-модели представленной на {duckLink}Duck.ai{/duckLink}.",
+                "operationDescription3": "Так как большинство моделей имеют ограниченное контекстное окно, то твои субтитры будут разделены на несколько частей и переведены очередью запросов. Размер контекстного окна отличается между моделями: GPT-4o mini, o3-mini, и Llama 3.3 70B поддерживают до 2048 токенов, в то время как Claude 3 Haiku примерно 1024, а Mistral Small 3 24B только 256.",
+                "operationDescription4": "Для соблюдения лимитов DuckDuckGo и из уважения к принципу fair use между каждый запросом добавлена задержка в 15 секунд. Ты можешь попробовать ускорить процесс двигая слайдер {adjustedBy}с упором на{/adjustedBy}. Этот слайдер контролирует как много строк будет послано модели в одном запросе.",
+                "operationDescription5": "Для самого надежного результата используй GPT-4o. Лучше избегай Claude и Mistral, так как они более остальных склонны к ошибкам во время перевода из-за маленького контекстного окна. При возникновении ошибок во время перевода попробуй сдвинуть слайдер к стороне {accuracy}точность{/accuracy} для уменьшения размера запросов.",
+                "controlItems": {
+                    "translateFrom": "перевести с",
+                    "translateTo": "перевести на",
+                    "selectLanguage": "Выбери язык",
+                    "withModel": "используя модель",
+                    "adjustedBy": "с упором на",
+                    "accuracy": "точность",
+                    "speed": "скорость"
+                },
+                "errors": {
+                    "uploadSource": "Загрузи исходный файл",
+                    "selfHosting": "Доступно только при самостоятельном хостинге",
+                    "waitFinish": "Дождись окончания перевода",
+                    "selectFrom": "Выбери оригинальный язык",
+                    "selectTo": "Выбери требуемый язык"
+                }
+            }
+        },
+        "eta": {
+            "etaTite": "ETA",
+            "minutes": "мин.",
+            "oneMinute": "1 минута",
+            "lessOneMinute": "менее 1 минуты",
+            "longerService": "Может быть дольше при использовании MyMemory.",
+            "longerDuck": "Может быть дольше при использовании Claude и Mistral."
+        },
+        "preview": {
+            "language": "язык",
+            "encoding": "кодировка",
+            "number": "число",
+            "subtitles": "субтитров",
+            "source": "Исходный файл",
+            "shifted": "Сдвинутый файл",
+            "example": "Образцовый файл",
+            "aligned": "Выровненный файл",
+            "cleaned": "Очищенный файл",
+            "translated": "Переведенный файл"
+        }
+    }
+}
