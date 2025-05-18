@@ -1,6 +1,7 @@
 .hint-button {
     cursor: pointer;
-    color: #110e1b;
+    color: #6C757D;
+    font-weight: bold;
     border: none;
     border-radius: 50%;
     background-color: #DEE2E6;
@@ -8,21 +9,11 @@
     width: 2em;
     height: 2em;
     padding: 0;
-    animation: blink 2s ease-in-out infinite;
 }
 
-@keyframes blink {
-    0% {
-        background-color: #6C757D;
-    }
-
-    50% {
-        background-color: #DEE2E6;
-    }
-
-    100% {
-        background-color: #6C757D;
-    }
+.hint-button:hover {
+    color: #DEE2E6;
+    background-color: #157D07;
 }
 
 .example-hint {

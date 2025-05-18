@@ -144,7 +144,7 @@ const CleanOperation: React.FC<CleanOperationProps> = ({
                 case 'strikethrough':
                     return { fontSize: "0.8em", textDecoration: 'line-through' };
                 case 'color':
-                    return { fontSize: "0.8em", color: '#5784FF' };
+                    return { fontSize: "0.8em", color: '#FED82E' };
                 case 'font':
                     return { fontSize: "0.8em", fontFamily: 'serif' };
                 default:
