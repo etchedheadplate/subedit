@@ -3,7 +3,7 @@ import DragAndDropArea from "../../components/DragAndDropArea";
 import UniversalSubtitlePreview from "../../components/SubtitlePreview";
 import { SubtitleFile } from "../../types";
 import { useFileUpload } from "../../hooks/useFileUpload";
-import alignHint from "../AlignHint"
+import AlignHint from "../AlignHint"
 import { TranslatedParagraph } from "../translation/LanguageParagraph";
 import { useLanguage } from "../../hooks/useLanguage";
 
@@ -174,7 +174,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
                     }}
                 />
 
-                {showHint && alignHint}
+                {showHint && <AlignHint />}
             </div>
 
             <DragAndDropArea
