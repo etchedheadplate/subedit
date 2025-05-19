@@ -182,18 +182,18 @@
             "align": {
                 "alignButton": "Синхронизировать",
                 "downloadButton": "Скачать",
-                "operationDescription": "Ты можешь синхронизировать тайминг субтитров с файлом-образцом. Это может быть полезно, если твой рип и субтитры были созданы для разных частот кадров. {hintButton}?{/hintButton}",
-                "hintText": "После загрузки обоих файлов найди {matchingLines}совпадающий текст{/matchingLines} в начале и конце. Иногда полезно обратить внимание на соседние строки – в примере вверху текст {anyIdea}Any idea what they are?{/anyIdea} добавляет уверенности в выборе. Далее введи соответсвующие {sourceIndices}номера исходника{/sourceIndices} и {exampleIndices}номера образца{/exampleIndices} в формы внизу, после чего нажми кнопку {alignButton}Синхронизировать{/alignButton}. Ты увидишь, что теперь {exampleTiming}тайминг образца{/exampleTiming} правильно сопоставлен с исходником. Опционально ты можешь обрезать субтитры вне диапазона номеров исходника, так как скорее всего теперь у них будет {incorrectTiming}некорректный тайминг{/incorrectTiming}.",
+                "operationDescription": "Тут можно синхронизировать свои субтитры с правильными. Идеально, если у видео и субтитров разная частота кадров. {hintButton}?{/hintButton}",
+                "hintText": "После загрузки обоих файлов найди {matchingLines}совпадающий текст{/matchingLines} в начале и конце. Иногда полезно обратить внимание на соседние строки – в примере вверху текст {anyIdea}Any idea what they are?{/anyIdea} добавляет уверенности в выборе. Далее введи соответсвующие {sourceIndices}номера исходника{/sourceIndices} и {exampleIndices}номера субтитров с правильным таймингом{/exampleIndices} в формы внизу, после чего нажми кнопку {alignButton}Синхронизировать{/alignButton}. Ты увидишь, что теперь у исходника {exampleTiming}правильный тайминг{/exampleTiming}. При желании ты можешь обрезать субтитры вне диапазона номеров исходника, так как скорее всего теперь у них будет {incorrectTiming}неправильный тайминг{/incorrectTiming}.",
                 "exampleDragAndDrop": {
-                    "examplePreUploadInstructionText": "Загрузи субтитры-образец!",
+                    "examplePreUploadInstructionText": "Загрузи субтитры с правильным таймингом!",
                     "examplePreUploadInstructionTextDisabled": "Сначала требуется исходный файл",
-                    "examplePreUploadSubInstructionTextDisabled": "Загрузи исходный файл перед добавлением файла-образца",
-                    "examplePostUploadIntroFileText": "Загруженный файл-образец:",
-                    "examplePostUploadSubInstructionText": "Настрой параметры выравнивания внизу или загрузи новый файл"
+                    "examplePreUploadSubInstructionTextDisabled": "Загрузи исходный файл перед добавлением правильных субтитров",
+                    "examplePostUploadIntroFileText": "Загруженные правильные субтитры:",
+                    "examplePostUploadSubInstructionText": "Настрой параметры синхронизации внизу или загрузи новый файл"
                 },
                 "controlItems": {
                     "alignSource": "выровнять исходник",
-                    "byExample": "по файлу-образцу",
+                    "byExample": "по правильным субтитрам",
                     "trimAligned": "обрезать результат",
                     "from": "с",
                     "to": "по",
@@ -204,7 +204,7 @@
                 },
                 "errors": {
                     "uploadSource": "Загрузи исходный файл",
-                    "uploadExample": "Загрузи файл-образец",
+                    "uploadExample": "Загрузи правильные субтитры",
                     "changeFrom": "Измени начало диапазона исходника",
                     "changeTo": "Измени конец диапазона исходника"
                 }
@@ -287,12 +287,12 @@
             "encoding": "кодировка",
             "number": "число",
             "subtitles": "субтитров",
-            "source": "Исходный файл",
-            "shifted": "Сдвинутый файл",
-            "example": "Образцовый файл",
-            "aligned": "Синхронизированный файл",
-            "cleaned": "Очищенный файл",
-            "translated": "Переведенный файл"
+            "source": "Исходные субтитры",
+            "shifted": "Сдвинутые субтитры",
+            "example": "Правильные субтитры",
+            "aligned": "Синхронизированные субтитры",
+            "cleaned": "Очищенные субтитры",
+            "translated": "Переведенные субтитры"
         }
     }
 }
