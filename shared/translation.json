@@ -2,7 +2,7 @@
     "en": {
         "optionLabels": {
             "shift": "Shift",
-            "align": "Align",
+            "align": "Sync",
             "clean": "Clean",
             "translate": "Translate",
             "service": "Service",
@@ -32,21 +32,21 @@
                 }
             },
             "align": {
-                "alignButton": "Align",
+                "alignButton": "Sync",
                 "downloadButton": "Download",
-                "operationDescription": "You can align the timing of your subtitles using an example file. This can be useful if your rip and subtitles were created for different framerates. {hintButton}?{/hintButton}",
-                "hintText": "After uploading both files, look for {matchingLines}matching lines{/matchingLines} at the beginning and end. It can also help to review the neighboring lines – in the case above the line {anyIdea}Any idea what they are?{/anyIdea} increases confidence in the match. Next, enter the corresponding {sourceIndices}source indices{/sourceIndices} and {exampleIndices}example indices{/exampleIndices} into the form fields below, then press the {alignButton}Align{/alignButton} button. You'll see that the {exampleTiming}example timing{/exampleTiming} is correctly mapped to the source. Optionally, you can trim subtitles that fall outside the source range, as they are likely to have {incorrectTiming}incorrect timing{/incorrectTiming} now.",
+                "operationDescription": "You can sync the timing of your subtitles using an example file. This can be useful if your rip and subtitles were created for different framerates. {hintButton}?{/hintButton}",
+                "hintText": "After uploading both files, look for {matchingLines}matching lines{/matchingLines} at the beginning and end. It can also help to review the neighboring lines – in the case above the line {anyIdea}Any idea what they are?{/anyIdea} increases confidence in the match. Next, enter the corresponding {sourceIndices}source indices{/sourceIndices} and {exampleIndices}example indices{/exampleIndices} into the form fields below, then press the {alignButton}Sync{/alignButton} button. You'll see that the {exampleTiming}example timing{/exampleTiming} is correctly mapped to the source. Optionally, you can trim subtitles that fall outside the source range, as they are likely to have {incorrectTiming}incorrect timing{/incorrectTiming} now.",
                 "exampleDragAndDrop": {
                     "examplePreUploadInstructionText": "Upload example subtitles, fren!",
                     "examplePreUploadInstructionTextDisabled": "Source file required first",
                     "examplePreUploadSubInstructionTextDisabled": "Upload source file before adding example file",
                     "examplePostUploadIntroFileText": "Uploaded example file:",
-                    "examplePostUploadSubInstructionText": "Tweak alignment option below or upload new file"
+                    "examplePostUploadSubInstructionText": "Tweak sync options below or upload new file"
                 },
                 "controlItems": {
-                    "alignSource": "align source subtitles",
+                    "alignSource": "sync source subtitles",
                     "byExample": "by example subtitles",
-                    "trimAligned": "trim aligned subtitles",
+                    "trimAligned": "trim synced subtitles",
                     "from": "from",
                     "to": "to",
                     "beforeSource": "before source 'from'",
@@ -142,7 +142,7 @@
             "source": "Source file",
             "shifted": "Shifted file",
             "example": "Example file",
-            "aligned": "Aligned file",
+            "aligned": "Synced file",
             "cleaned": "Cleaned file",
             "translated": "Translated file"
         }
@@ -150,7 +150,7 @@
     "ru": {
         "optionLabels": {
             "shift": "Сдвинуть",
-            "align": "Выровнять",
+            "align": "Синхронизировать",
             "clean": "Очистить",
             "translate": "Перевести",
             "service": "Сервис",
@@ -180,10 +180,10 @@
                 }
             },
             "align": {
-                "alignButton": "Выровнять",
+                "alignButton": "Синхронизировать",
                 "downloadButton": "Скачать",
-                "operationDescription": "Ты можешь выровнять свои субтитры по файлу-образцу. Это может быть полезно, если твой рип и субтитры были созданы для разных частот кадров. {hintButton}?{/hintButton}",
-                "hintText": "После загрузки обоих файлов найди {matchingLines}совпадающий текст{/matchingLines} в начале и конце. Иногда полезно обратить внимание на соседние строки – в примере вверху текст {anyIdea}Any idea what they are?{/anyIdea} добавляет уверенности в выборе. Далее введи соответсвующие {sourceIndices}номера исходника{/sourceIndices} и {exampleIndices}номера образца{/exampleIndices} в формы внизу, после чего нажми кнопку {alignButton}Выровнять{/alignButton}. Ты увидишь, что теперь {exampleTiming}тайминг образца{/exampleTiming} правильно сопоставлен с исходником. Опционально ты можешь обрезать субтитры вне диапазона номеров исходника, так как скорее всего теперь у них будет {incorrectTiming}некорректный тайминг{/incorrectTiming}.",
+                "operationDescription": "Ты можешь синхронизировать тайминг субтитров с файлом-образцом. Это может быть полезно, если твой рип и субтитры были созданы для разных частот кадров. {hintButton}?{/hintButton}",
+                "hintText": "После загрузки обоих файлов найди {matchingLines}совпадающий текст{/matchingLines} в начале и конце. Иногда полезно обратить внимание на соседние строки – в примере вверху текст {anyIdea}Any idea what they are?{/anyIdea} добавляет уверенности в выборе. Далее введи соответсвующие {sourceIndices}номера исходника{/sourceIndices} и {exampleIndices}номера образца{/exampleIndices} в формы внизу, после чего нажми кнопку {alignButton}Синхронизировать{/alignButton}. Ты увидишь, что теперь {exampleTiming}тайминг образца{/exampleTiming} правильно сопоставлен с исходником. Опционально ты можешь обрезать субтитры вне диапазона номеров исходника, так как скорее всего теперь у них будет {incorrectTiming}некорректный тайминг{/incorrectTiming}.",
                 "exampleDragAndDrop": {
                     "examplePreUploadInstructionText": "Загрузи субтитры-образец!",
                     "examplePreUploadInstructionTextDisabled": "Сначала требуется исходный файл",
@@ -290,7 +290,7 @@
             "source": "Исходный файл",
             "shifted": "Сдвинутый файл",
             "example": "Образцовый файл",
-            "aligned": "Выровненный файл",
+            "aligned": "Синхронизированный файл",
             "cleaned": "Очищенный файл",
             "translated": "Переведенный файл"
         }
