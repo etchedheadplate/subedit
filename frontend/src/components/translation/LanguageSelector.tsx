@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../hooks/useLanguage';
-import langLogo from "../../assets/switch_language.svg";
+import LangLogo from "../../assets/switch_language.svg?react";
+import '../../styles/MainHeader.css';
 
 const LanguageSelector = () => {
     const { language, setLanguage } = useLanguage();
@@ -32,7 +33,9 @@ const LanguageSelector = () => {
                 aria-haspopup="listbox"
                 aria-expanded={open}
             >
-                <img src={langLogo} alt="Lang icon" className="language-icon" />
+                <span className="language-icon-wrapper">
+                    <LangLogo className="language-icon" />
+                </span>
                 <span>{languageLabels[language]}</span>
             </button>
 

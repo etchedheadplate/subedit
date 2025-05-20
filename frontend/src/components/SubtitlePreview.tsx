@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { apiService } from "../services/apiService";
 import { SubtitlePreview, SubtitleFile, SubtitleMetadata } from "../types";
 import { useLanguage } from "../hooks/useLanguage";
+import "../styles/SubtitlePreview.css";
 
 interface SubtitlePreviewProps {
     sessionId: string | null;

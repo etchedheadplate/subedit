@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef } from "react";
 import { useLanguage } from "../hooks/useLanguage";
+import "../styles/DragAndDropArea.css";
 
 interface DragAndDropAreaProps {
     onFileUpload: (file: File) => Promise<void>;

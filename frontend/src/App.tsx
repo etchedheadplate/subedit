@@ -4,6 +4,7 @@ import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { useLanguage } from "./hooks/useLanguage";
 import LanguageSelector from "./components/translation/LanguageSelector";
+import InfoPopup from "./components/InfoPopup";
 import ShiftOperation from "./components/operations/ShiftOperation";
 import AlignOperation from "./components/operations/AlignOperation";
 import CleanOperation from "./components/operations/CleanOperation";
@@ -11,11 +12,10 @@ import EngineTranslateOperation from "./components/operations/EngineTranslateOpe
 import DuckTranslateOperation from "./components/operations/DuckTranslateOperation";
 import DragAndDropArea from "./components/DragAndDropArea";
 import { OperationType, TranslateType } from "./types";
+import GitHubLogo from "./assets/github-mark.svg?react";
 import engineLogo from "./assets/engine_logo.png";
 import ddgLogo from "./assets/ddg_logo.png";
 import "./styles/OperationSection.css";
-import "./styles/SubtitlePreview.css";
-import "./styles/DragAndDropArea.css";
 import "./styles/App.css";
 
 function App() {
@@ -44,6 +44,9 @@ function App() {
         resetResults,
     } = useSubtitleOperations(sessionId, uploadedFile);
 
+    // State for info button
+    const [isInfoPopupOpen, setIsInfoPopupOpen] = useState(false);
+
     // Get translation function from language context
     const { t } = useLanguage();
 
@@ -54,6 +57,14 @@ function App() {
     // Combine errors for display
     const errorMessage = sessionError || uploadError || processingError;
     const isLoading = isUploading || isProcessing;
+
+    // Handle info button clics
+    const handleInfoButtonClick = () => {
+        setIsInfoPopupOpen(!isInfoPopupOpen);
+    };
+    const handleCloseInfoPopup = () => {
+        setIsInfoPopupOpen(false);
+    };
 
     // Handle return to initial state when new file uploaded
     const handleFileUpload = async (file: File) => {
@@ -105,6 +116,20 @@ function App() {
                 <div className="overlay-image" />
             </div>
             <div className="main-header">
+                <button
+                    className="info-button"
+                    onClick={handleInfoButtonClick}
+                    title="Information"
+                >
+                    i
+                </button>
+
+                <div className="github-icon-wrapper">
+                    <a href="https://github.com/etchedheadplate/subedit" target="_blank" rel="noopener noreferrer">
+                        <GitHubLogo className="github-icon" />
+                    </a>
+                </div>
+
                 <div className="language-selector-container">
                     <LanguageSelector />
                 </div>
@@ -169,72 +194,89 @@ function App() {
             </div>
 
             {/* Errors, if any */}
-            {errorMessage && (
-                <div className="error-message">
-                    <p>
-                        <strong>Error:</strong>{" "}
-                        {errorMessage || "Unknown error"}
-                    </p>
-                </div>
-            )}
+            {
+                errorMessage && (
+                    <div className="error-message">
+                        <p>
+                            <strong>Error:</strong>{" "}
+                            {errorMessage || "Unknown error"}
+                        </p>
+                    </div>
+                )
+            }
 
             {/* Active option content */}
-            {activeOption === "shift" && (
-                <ShiftOperation
-                    onShift={shiftSubtitles}
-                    sessionId={sessionId}
-                    onDownload={handleDownload}
-                    sourceFile={uploadedFile}
-                    hasProcessedFile={!!processedFile}
-                    processedFile={processedFile}
-                />
-            )}
+            {
+                activeOption === "shift" && (
+                    <ShiftOperation
+                        onShift={shiftSubtitles}
+                        sessionId={sessionId}
+                        onDownload={handleDownload}
+                        sourceFile={uploadedFile}
+                        hasProcessedFile={!!processedFile}
+                        processedFile={processedFile}
+                    />
+                )
+            }
 
-            {activeOption === "align" && (
-                <AlignOperation
-                    onAlign={alignSubtitles}
-                    sessionId={sessionId}
-                    onDownload={handleDownload}
-                    sourceFile={uploadedFile}
-                    hasProcessedFile={!!processedFile}
-                    processedFile={processedFile}
-                    resetResults={resetResults}
-                />
-            )}
+            {
+                activeOption === "align" && (
+                    <AlignOperation
+                        onAlign={alignSubtitles}
+                        sessionId={sessionId}
+                        onDownload={handleDownload}
+                        sourceFile={uploadedFile}
+                        hasProcessedFile={!!processedFile}
+                        processedFile={processedFile}
+                        resetResults={resetResults}
+                    />
+                )
+            }
 
-            {activeOption === "clean" && (
-                <CleanOperation
-                    onClean={cleanSubtitles}
-                    sessionId={sessionId}
-                    onDownload={handleDownload}
-                    sourceFile={uploadedFile}
-                    hasProcessedFile={!!processedFile}
-                    processedFile={processedFile}
-                />
-            )}
+            {
+                activeOption === "clean" && (
+                    <CleanOperation
+                        onClean={cleanSubtitles}
+                        sessionId={sessionId}
+                        onDownload={handleDownload}
+                        sourceFile={uploadedFile}
+                        hasProcessedFile={!!processedFile}
+                        processedFile={processedFile}
+                    />
+                )
+            }
 
-            {isTranslateActive && activeTranslateType === "enginetranslate" && (
-                <EngineTranslateOperation
-                    onEngineTranslate={engineTranslateSubtitles}
-                    sessionId={sessionId}
-                    onDownload={handleDownload}
-                    sourceFile={uploadedFile}
-                    hasProcessedFile={!!processedFile}
-                    processedFile={processedFile}
-                />
-            )}
+            {
+                isTranslateActive && activeTranslateType === "enginetranslate" && (
+                    <EngineTranslateOperation
+                        onEngineTranslate={engineTranslateSubtitles}
+                        sessionId={sessionId}
+                        onDownload={handleDownload}
+                        sourceFile={uploadedFile}
+                        hasProcessedFile={!!processedFile}
+                        processedFile={processedFile}
+                    />
+                )
+            }
 
-            {isTranslateActive && activeTranslateType === "ducktranslate" && (
-                <DuckTranslateOperation
-                    onDuckTranslate={duckTranslateSubtitles}
-                    sessionId={sessionId}
-                    onDownload={handleDownload}
-                    sourceFile={uploadedFile}
-                    hasProcessedFile={!!processedFile}
-                    processedFile={processedFile}
-                />
-            )}
-        </div>
+            {
+                isTranslateActive && activeTranslateType === "ducktranslate" && (
+                    <DuckTranslateOperation
+                        onDuckTranslate={duckTranslateSubtitles}
+                        sessionId={sessionId}
+                        onDownload={handleDownload}
+                        sourceFile={uploadedFile}
+                        hasProcessedFile={!!processedFile}
+                        processedFile={processedFile}
+                    />
+                )
+            }
+
+            <InfoPopup
+                isOpen={isInfoPopupOpen}
+                onClose={handleCloseInfoPopup}
+            />
+        </div >
     );
 }
 
