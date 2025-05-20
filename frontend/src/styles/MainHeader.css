@@ -1,0 +1,221 @@
+.main-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 10px;
+    height: 40px;
+}
+
+.info-popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.info-popup {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 90%;
+    max-height: 80%;
+    overflow-y: auto;
+    animation: popupSlideIn 0.3s ease-out;
+}
+
+@keyframes popupSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.info-popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px 0 24px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 20px;
+}
+
+.info-popup-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.4em;
+    font-weight: 600;
+}
+
+.info-popup-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.info-popup-close:hover {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.info-popup-content {
+    padding: 0 24px 24px 24px;
+    color: #555;
+    line-height: 1.6;
+}
+
+.info-popup-content p {
+    margin: 0 0 16px 0;
+}
+
+.info-popup-content ul {
+    margin: 16px 0;
+    padding-left: 20px;
+}
+
+.info-popup-content li {
+    margin-bottom: 8px;
+}
+
+.info-popup-content strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.info-button {
+    gap: 6px;
+    padding: 8px 10px;
+    color: #DEE2E6;
+    border: 1px solid #DEE2E6;
+    border-radius: 50%;
+    box-sizing: border-box;
+    width: auto;
+    height: auto;
+    max-height: 30px;
+    max-width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.6em;
+    font-weight: bold;
+    margin-left: 12px;
+    transition: all 0.2s ease;
+}
+
+.info-button:hover {
+    border-color: #977DE3;
+    color: #977DE3;
+}
+
+.info-button:active {
+    transform: scale(0.95);
+}
+
+.github-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    width: 30px;
+}
+
+.github-icon {
+    width: 2rem;
+    height: 2rem;
+    max-height: 30px;
+    max-width: 30px;
+    fill: currentColor;
+    color: #DEE2E6;
+    display: block;
+    transition: all 0.2s ease;
+}
+
+.github-icon:hover {
+    border-color: #977DE3;
+    color: #977DE3;
+}
+
+
+.github-icon path {
+    fill: currentColor !important;
+}
+
+.custom-language-selector {
+    position: relative;
+    display: inline-block;
+}
+
+.custom-language-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    max-height: 30px;
+    width: 100px;
+    color: #DEE2E6;
+    /* Needed so that children can inherit currentColor */
+    border: 1px solid #DEE2E6;
+    box-sizing: border-box;
+    border-radius: 50px;
+    font-size: 0.6em;
+    cursor: pointer;
+    transition: color 0.3s, border-color 0.3s;
+}
+
+.custom-language-button:hover {
+    color: #977DE3;
+    border-color: #977DE3;
+}
+
+.language-icon-wrapper {
+    display: flex;
+    align-items: center;
+    color: inherit;
+    /* Ensure inheritance of color to SVG */
+}
+
+.language-icon {
+    width: 1rem;
+    height: 1rem;
+    fill: currentColor;
+    color: inherit;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+.custom-language-menu {
+    position: absolute;
+    top: 100%;
+    font-size: 0.6em;
+    list-style: none;
+    padding: 0;
+    width: auto;
+}
+
+.language-option {
+    padding: 6px 12px;
+    color: #DEE2E6;
+    cursor: pointer;
+}
