@@ -150,6 +150,9 @@ async def upload_file(
 
     print("Received file:", file.filename)  # Debugging
 
+    # Update statistics file
+    props.update_statitics('upload')
+
     return {
         "session_id": session_id,
         "filename": safe_filename,
@@ -172,6 +175,10 @@ async def download_file(session_id: str, filename: str) -> FileResponse:
         HTTPException: If the requested file is not found.
     """
     file_path = os.path.join(USER_FILES_DIR, session_id, filename)
+
+    # Update statistics file
+    props.update_statitics('download')
+
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")

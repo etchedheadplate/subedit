@@ -26,6 +26,9 @@ class SubEdit:
         self.example_file: Optional[str] = file_list[1] if len(file_list) == 2 else None
         self.processed_file:str = ''
 
+        # Create statistics file if file doesn't exists
+        props.update_statitics()
+
         # Fill self.subtitles_data
         if len(file_list) <= 2:
             for file in file_list:
@@ -189,6 +192,9 @@ class SubEdit:
         self._create_file(self.shifted_file)
         self.processed_file = os.path.basename(self.shifted_file)
 
+        # Update statistics file
+        props.update_statitics('shift')
+
     def align_timing(
         self,
         source_slice: Optional[List[int]] = None,
@@ -309,9 +315,12 @@ class SubEdit:
             if old_index in aligned_subtitles
         }
 
-    # Create output subtitle file and store path for reference
+        # Create output subtitle file and store path for reference
         self._create_file(self.aligned_file)
         self.processed_file = os.path.basename(self.aligned_file)
+
+        # Update statistics file
+        props.update_statitics('align')
 
     def clean_markup(
         self,
@@ -381,6 +390,9 @@ class SubEdit:
         # Create output subtitle file and store path for reference
         self._create_file(self.cleaned_file)
         self.processed_file = os.path.basename(self.cleaned_file)
+
+        # Update statistics file
+        props.update_statitics('clean')
 
     async def engine_translate(
             self,
@@ -500,6 +512,9 @@ class SubEdit:
         self._create_file(self.engine_translated_file)
         self.processed_file = os.path.basename(self.engine_translated_file)
 
+        # Update statistics file
+        props.update_statitics('translate')
+
     # Method accesible only on localhost
     if DEBUG:
         async def duck_translate(
@@ -617,3 +632,6 @@ class SubEdit:
                 # Create output subtitle file and store path for reference
             self._create_file(self.duck_translated_file)
             self.processed_file = os.path.basename(self.duck_translated_file)
+
+            # Update statistics file
+            props.update_statitics('translate')

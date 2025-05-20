@@ -175,30 +175,6 @@ def update_estimated_response_time(new_response_time: float) -> None:
 
     # Load the existing data from the JSON file
     statistics_file = Path(__file__).parent / '../shared/statistics.json'
-    default_statistics = {
-        "last_update": current_timestamp,
-        "files_processed": {
-            "shift": 1,
-            "align": 1,
-            "clean": 1,
-            "translate": 1
-        },
-        "duck_statistics": {
-            "total_count_of_responses": 1,
-            "total_responses_duration": new_response_time,
-            "average_response_duration": new_response_time
-        }
-    }
-
-    # Check if the file exists
-    if not os.path.exists(statistics_file):
-        # If it does not exist, create the file and write the default content
-        with open(statistics_file, 'w') as file:
-            json.dump(default_statistics, file, indent=4)
-        print(f"{statistics_file} created with default content.")
-        return  # Exit the function after creating the file
-
-    # If the file exists, read the data
     with open(statistics_file, 'r') as file:
         data = json.load(file)
 
@@ -309,3 +285,70 @@ def process_newlines(subtitles: List[str]) -> List[str]:
             result.append(' '.join(lines))
 
     return result
+
+def update_statitics(command: str = 'init') -> None:
+    """Updates the statistics based on procesed commands.
+
+    Args:
+        new_response_time (float): The response time for the latest translation request, in seconds.
+
+    Returns:
+        None: This function does not return a value. It modifies the statistics stored in the JSON file.
+    """
+    current_timestamp = time.time()
+
+    # Load the existing data from the JSON file
+    statistics_file = Path(__file__).parent / '../shared/statistics.json'
+    default_statistics = {
+        "last_update": current_timestamp,
+        "files_processed": {
+            "shift": 1,
+            "align": 1,
+            "clean": 1,
+            "translate": 1,
+            "upload": 1,
+            "download": 1,
+            "total": 1
+        },
+        "duck_statistics": {
+            "total_count_of_responses": 1,
+            "total_responses_duration": 1669.9005346091487,
+            "average_response_duration": 10.154964839442117
+        }
+    }
+
+    # Check if the file exists
+    if command == 'init':
+        if not os.path.exists(statistics_file):
+            # If it does not exist, create the file and write the default content
+            with open(statistics_file, 'w') as file:
+                json.dump(default_statistics, file, indent=4)
+            print(f"{statistics_file} created with default content.")
+            return  # Exit the function after creating the file
+    else:
+        # If the file exists, read the data
+        with open(statistics_file, 'r') as file:
+            data = json.load(file)
+
+        # Update data based on command
+        data['last_update'] = current_timestamp
+        if command =='shift':
+            data['files_processed']['shift'] += 1
+            data['files_processed']['total'] += 1
+        if command =='align':
+            data['files_processed']['align'] += 1
+            data['files_processed']['total'] += 1
+        if command =='clean':
+            data['files_processed']['clean'] += 1
+            data['files_processed']['total'] += 1
+        if command =='translate':
+            data['files_processed']['translate'] += 1
+            data['files_processed']['total'] += 1
+        if command =='upload':
+            data['files_processed']['upload'] += 1
+        if command =='download':
+            data['files_processed']['download'] += 1
+
+        # Write the updated data back to the JSON file
+        with open(statistics_file, 'w') as file:
+            json.dump(data, file, indent=4)

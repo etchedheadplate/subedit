@@ -90,6 +90,9 @@ class FilesProcessed(TypedDict):
     align: int
     clean: int
     translate: int
+    upload: int
+    download: int
+    total: int
 
 class DuckStats(TypedDict):
     total_count_of_responses: int
