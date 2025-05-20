@@ -17,7 +17,6 @@ body {
     z-index: 1;
 }
 
-
 .background-container {
     position: fixed;
     top: 0;
@@ -61,13 +60,43 @@ body {
     margin-bottom: 15px;
 }
 
-.language-selector-container {}
-
-.language-selector-container select {
-    cursor: pointer;
-    transition: all 0.3s ease;
+.custom-language-selector {
+    position: relative;
+    display: inline-block;
 }
 
+.custom-language-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    color: #DEE2E6;
+    border: 1px solid #DEE2E6;
+    border-radius: 50px;
+    font-size: 0.6em;
+    cursor: pointer;
+    width: auto;
+}
+
+.language-icon {
+    width: 1rem;
+    height: 1rem;
+}
+
+.custom-language-menu {
+    position: absolute;
+    top: 100%;
+    font-size: 0.6em;
+    list-style: none;
+    padding: 0;
+    width: auto;
+}
+
+.language-option {
+    padding: 6px 12px;
+    color: #DEE2E6;
+    cursor: pointer;
+}
 
 .main-block {
     padding: 20px;
