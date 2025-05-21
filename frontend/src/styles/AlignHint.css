@@ -1,6 +1,6 @@
 .hint-button {
     cursor: pointer;
-    color: #6C757D;
+    color: #0D0D0D;
     font-weight: bold;
     border: none;
     border-radius: 50%;
@@ -9,11 +9,13 @@
     width: 2em;
     height: 2em;
     padding: 0;
+    transition: all 0.2s ease;
 }
 
 .hint-button:hover {
     color: #DEE2E6;
-    background-color: #157D07;
+    background-color: transparent;
+    border: #DEE2E6 solid 1px;
 }
 
 .example-hint {

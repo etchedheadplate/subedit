@@ -4,7 +4,7 @@
     min-height: 160px;
     max-height: 200px;
     border: 2px dashed #6c757d;
-    border-radius: 0px;
+    border-radius: 5px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -16,12 +16,21 @@
     padding: 0 50px;
     box-sizing: border-box;
     cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 @media (max-width: 600px) {
     .drag-and-drop-area {
         font-size: 0.75em;
     }
+}
+
+.drag-and-drop-area:hover {
+    background-color: #6C757D1A;
+}
+
+.drag-and-drop-area.disabled:hover {
+    background-color: inherit;
 }
 
 .drag-and-drop-area.drag-active {

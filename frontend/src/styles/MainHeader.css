@@ -12,17 +12,19 @@
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: #0D0D0DBF;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    transition: all 0.2s ease;
 }
 
 .info-popup {
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    border: #6C757D80 solid 1px;
+    border-radius: 10px;
+    background-color: #0D0D0D;
+    padding: 15px;
     max-width: 500px;
     width: 90%;
     max-height: 80%;
@@ -47,22 +49,14 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px 24px 0 24px;
-    border-bottom: 1px solid #e0e0e0;
     margin-bottom: 20px;
-}
-
-.info-popup-header h3 {
-    margin: 0;
-    color: #333;
-    font-size: 1.4em;
-    font-weight: 600;
 }
 
 .info-popup-close {
     background: none;
     border: none;
     font-size: 24px;
-    color: #666;
+    color: #6C757D;
     cursor: pointer;
     padding: 0;
     width: 30px;
@@ -75,32 +69,76 @@
 }
 
 .info-popup-close:hover {
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: #DEE2E6;
+    color: #0D0D0D;
+}
+
+.info-popup-header {
+    align-items: center;
+}
+
+.info-popup-header img {
+    height: 100px;
+    width: 100px;
 }
 
 .info-popup-content {
     padding: 0 24px 24px 24px;
-    color: #555;
-    line-height: 1.6;
+    color: #DEE2E6;
 }
 
-.info-popup-content p {
-    margin: 0 0 16px 0;
+.info-section {
+    position: relative;
+    overflow: hidden;
+    border: #6C757D80 dashed 1px;
+    border-radius: 10px;
+    margin-bottom: 20px;
 }
 
-.info-popup-content ul {
-    margin: 16px 0;
-    padding-left: 20px;
+.info-section ul {
+    list-style-type: none;
+    margin-top: 0
 }
 
-.info-popup-content li {
-    margin-bottom: 8px;
+.info-section li {
+    padding: 0.25rem 0;
 }
 
-.info-popup-content strong {
-    color: #333;
-    font-weight: 600;
+.info-title {
+    text-align: center;
+}
+
+.stats-container {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+}
+
+.sub-stats-items,
+.main-stats-items {
+    flex: 1;
+}
+
+.main-stats-items {
+    font-size: 1em;
+}
+
+.sub-stats-items {
+    font-size: 0.65em;
+    color: #ADB5BD;
+}
+
+.translators-image {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 40%;
+    height: 60%;
+    background-image: url('/translators.gif');
+    background-repeat: no-repeat;
+    background-size: contain;
+    background-position: bottom right;
+    pointer-events: none;
 }
 
 .info-button {
@@ -125,12 +163,8 @@
 }
 
 .info-button:hover {
-    border-color: #977DE3;
-    color: #977DE3;
-}
-
-.info-button:active {
-    transform: scale(0.95);
+    background-color: #DEE2E6;
+    color: #0D0D0D;
 }
 
 .github-icon-wrapper {
@@ -144,8 +178,10 @@
 .github-icon {
     width: 2rem;
     height: 2rem;
-    max-height: 30px;
-    max-width: 30px;
+    max-height: 29px;
+    max-width: 29px;
+    border: 1px solid transparent;
+    border-radius: 50%;
     fill: currentColor;
     color: #DEE2E6;
     display: block;
@@ -153,10 +189,9 @@
 }
 
 .github-icon:hover {
-    border-color: #977DE3;
-    color: #977DE3;
+    background-color: #DEE2E6;
+    color: #0D0D0D;
 }
-
 
 .github-icon path {
     fill: currentColor !important;
@@ -175,25 +210,23 @@
     max-height: 30px;
     width: 100px;
     color: #DEE2E6;
-    /* Needed so that children can inherit currentColor */
     border: 1px solid #DEE2E6;
     box-sizing: border-box;
     border-radius: 50px;
     font-size: 0.6em;
     cursor: pointer;
-    transition: color 0.3s, border-color 0.3s;
+    transition: all 0.2s ease;
 }
 
 .custom-language-button:hover {
-    color: #977DE3;
-    border-color: #977DE3;
+    background-color: #DEE2E6;
+    color: #0D0D0D;
 }
 
 .language-icon-wrapper {
     display: flex;
     align-items: center;
     color: inherit;
-    /* Ensure inheritance of color to SVG */
 }
 
 .language-icon {
@@ -211,11 +244,17 @@
     font-size: 0.6em;
     list-style: none;
     padding: 0;
-    width: auto;
+    width: 100px;
 }
 
 .language-option {
     padding: 6px 12px;
     color: #DEE2E6;
     cursor: pointer;
+}
+
+.language-option:hover {
+    background-color: #DEE2E6;
+    color: #0D0D0D;
+    transition: all 0.2s ease;
 }
