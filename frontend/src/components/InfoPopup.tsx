@@ -109,10 +109,10 @@ const InfoPopup: React.FC<InfoPopupProps> = ({ isOpen, onClose }) => {
                         <h3 className="info-title">{t('info.translators')}</h3>
                         <ul className="translators-items">
                             <li>English:{" "}
-                                <a href="https://sonyn.dev" target="_blank" rel="noopener noreferrer"><strong>Sonyn.dev</strong></a>
+                                <a href="https://sonyn.dev" target="_blank" rel="noopener noreferrer"><strong>sonyn.dev</strong></a>
                             </li>
                             <li>Русский:{" "}
-                                <a href="https://sonyn.dev" target="_blank" rel="noopener noreferrer"><strong>Sonyn.dev</strong></a> |{" "}
+                                <a href="https://sonyn.dev" target="_blank" rel="noopener noreferrer"><strong>sonyn.dev</strong></a> |{" "}
                                 <a href="https://t.me/kinoza300" target="_blank" rel="noopener noreferrer"><strong>KATYA</strong></a>
                             </li>
                             <li>한국어:{" "}

@@ -188,6 +188,11 @@ input:hover {
     border: 1px solid #DEE2E6;
 }
 
+select.disabled:hover,
+input.disabled:hover {
+    border: 1px solid #ADB5BD;
+}
+
 .translation-progress {
     margin-top: 10px;
     width: 100%;
