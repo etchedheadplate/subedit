@@ -3,6 +3,7 @@ import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
 import { useLanguage } from "./hooks/useLanguage";
+import { apiService } from "./services/apiService";
 import LanguageSelector from "./components/translation/LanguageSelector";
 import InfoPopup from "./components/InfoPopup";
 import ShiftOperation from "./components/operations/ShiftOperation";
@@ -40,7 +41,6 @@ function App() {
         cleanSubtitles,
         engineTranslateSubtitles,
         duckTranslateSubtitles,
-        getDownloadLink,
         resetResults,
     } = useSubtitleOperations(sessionId, uploadedFile);
 
@@ -89,7 +89,7 @@ function App() {
     // Handle download
     const handleDownload = () => {
         if (processedFile && sessionId) {
-            window.location.href = getDownloadLink();
+            apiService.downloadFile(sessionId, processedFile.filename);
         }
     };
 

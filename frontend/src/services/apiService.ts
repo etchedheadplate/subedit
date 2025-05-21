@@ -49,8 +49,17 @@ export const apiService = {
         };
     },
 
-    downloadFile: (sessionId: string, filename: string): string => {
-        return `${API_BASE_URL}/download?session_id=${sessionId}&filename=${filename}`;
+    downloadFile: (sessionId: string, filename: string): void => {
+        const url = `${API_BASE_URL}/download?session_id=${sessionId}&filename=${filename}`;
+
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = filename; // Optional: helps some browsers
+        anchor.style.display = "none";
+
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
     },
 
     // Subtitle operations
