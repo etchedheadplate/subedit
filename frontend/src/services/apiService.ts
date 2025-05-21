@@ -92,6 +92,37 @@ export const apiService = {
         };
     },
 
+    getStatistics: async (): Promise<{
+        uploaded: number;
+        downloaded: number;
+        total: number;
+        shifted: number;
+        aligned: number;
+        cleaned: number;
+        translated: number;
+    }> => {
+        const response = await fetch(`${API_BASE_URL}/statistics`, {
+            method: "GET",
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // The FastAPI endpoint returns the data in the exact format we need
+        return {
+            uploaded: data.uploaded,
+            downloaded: data.downloaded,
+            total: data.total,
+            shifted: data.shifted,
+            aligned: data.aligned,
+            cleaned: data.cleaned,
+            translated: data.translated,
+        };
+    },
+
     // Check task status
     checkTaskStatus: async (
         sessionId: string,

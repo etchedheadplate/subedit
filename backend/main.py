@@ -1,17 +1,19 @@
 import os
 import time
+import json
 import shutil
 import uuid
 import threading
 import asyncio
 import props
 from dotenv import load_dotenv
+from pathlib import Path
 from typing import Dict, Any, AsyncGenerator, Optional, List, Coroutine
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from structures import StatusRequest, ShowRequest, ShiftRequest, AlignRequest, CleanRequest, EngineRequest, DuckRequest
+from structures import StatusRequest, ShowRequest, ShiftRequest, AlignRequest, CleanRequest, EngineRequest, DuckRequest, StatisticsData
 from subedit import SubEdit
 
 # Load environment variables from .env file
@@ -87,6 +89,35 @@ def ping():
     return {
         "status": "ok",
         "debug": DEBUG
+    }
+
+@app.get("/statistics")
+def statistics():
+    """Send stats."""
+    # Check if statistics file exists
+    props.check_statistics()
+
+    # Load the existing data from the JSON file
+    statistics_file = Path(__file__).parent / '../shared/statistics.json'
+    with open(statistics_file, 'r') as file:
+        data: StatisticsData = json.load(file)
+
+    count_uploaded = data['files_processed']['upload']
+    count_downloaded = data['files_processed']['download']
+    count_total = data['files_processed']['total']
+    count_shifted = data['files_processed']['shift']
+    count_aligned = data['files_processed']['align']
+    count_cleaned = data['files_processed']['clean']
+    count_translated = data['files_processed']['translate']
+
+    return {
+        "uploaded": count_uploaded,
+        "downloaded": count_downloaded,
+        "total": count_total,
+        "shifted": count_shifted,
+        "aligned": count_aligned,
+        "cleaned": count_cleaned,
+        "translated": count_translated,
     }
 
 @app.post("/get-session")
