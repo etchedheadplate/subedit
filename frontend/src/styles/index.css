@@ -1,0 +1,39 @@
+:root {
+    font-family: "Source Code Pro", monospace;
+    line-height: 1.5;
+    color-scheme: dark;
+    background-color: #0D0D0D;
+    color: #DEE2E6;
+}
+
+a {
+    font-weight: 500;
+    color: #28BA15;
+    text-decoration: inherit;
+}
+
+a:hover {
+    color: #535BF2;
+}
+
+body {
+    margin: 0;
+    place-items: center;
+    min-width: 320px;
+    min-height: 100vh;
+}
+
+h1 {
+    font-size: 3.2em;
+    line-height: 1.1;
+}
+
+button {
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: transparent;
+    cursor: pointer;
+    transition: border-color 0.25s;
+}
