@@ -147,14 +147,14 @@
             "translated": "Translated file"
         },
         "info": {
-            "statistics": "Statistics",
-            "filesShifted": "Files shifted:",
-            "filesAligned": "Files synced:",
-            "filesCleaned": "Files cleaned:",
-            "filesTranslated": "Files translated:",
-            "filesUploaded": "Files uploaded:",
-            "filesDownloaded": "Files downloaded:",
-            "filesProcessed": "Files processed:",
+            "statistics": "Files Statistics",
+            "filesShifted": "shifted:",
+            "filesAligned": "synced:",
+            "filesCleaned": "cleaned:",
+            "filesTranslated": "translated:",
+            "filesUploaded": "uploaded:",
+            "filesDownloaded": "downloaded:",
+            "filesProcessed": "processed:",
             "translators": "Translators"
         }
     },
@@ -306,14 +306,14 @@
             "translated": "Переведенные субтитры"
         },
         "info": {
-            "statistics": "Статистика",
-            "filesShifted": "Файлов сдвинуто:",
-            "filesAligned": "Файлов синхронизировано:",
-            "filesCleaned": "Файлов очищено:",
-            "filesTranslated": "Файлов переведено:",
-            "filesUploaded": "Файлов загружено:",
-            "filesDownloaded": "Файлов скачано:",
-            "filesProcessed": "Файлов обработано:",
+            "statistics": "Статистика файлов",
+            "filesShifted": "сдвинуто:",
+            "filesAligned": "синхронизировано:",
+            "filesCleaned": "очищено:",
+            "filesTranslated": "переведено:",
+            "filesUploaded": "загружено:",
+            "filesDownloaded": "скачано:",
+            "filesProcessed": "обработано:",
             "translators": "Переводчики"
         }
     },
@@ -465,14 +465,14 @@
             "translated": "번역된 파일"
         },
         "info": {
-            "statistics": "통계",
-            "filesShifted": "타이밍 조정된 파일:",
-            "filesAligned": "싱크 맞춘 파일:",
-            "filesCleaned": "정리된 파일:",
-            "filesTranslated": "번역된 파일:",
-            "filesUploaded": "업로드된 파일 수",
-            "filesDownloaded": "다운로드된 파일 수",
-            "filesProcessed": "처리된 파일 수",
+            "statistics": "통계 파일",
+            "filesShifted": "타이밍 조정된:",
+            "filesAligned": "싱크 맞춘:",
+            "filesCleaned": "정리된:",
+            "filesTranslated": "번역된:",
+            "filesUploaded": "업로드된 수:",
+            "filesDownloaded": "다운로드된 수:",
+            "filesProcessed": "처리된 수:",
             "translators": "번역가들"
         }
     }
