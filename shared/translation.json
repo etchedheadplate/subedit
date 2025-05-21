@@ -145,6 +145,17 @@
             "aligned": "Synced file",
             "cleaned": "Cleaned file",
             "translated": "Translated file"
+        },
+        "statistics": {
+            "statistics": "Statistics",
+            "filesShifted": "Files shifted:",
+            "filesAligned": "Files synced:",
+            "filesCleaned": "Files cleaned:",
+            "filesTranslated": "Files translated:",
+            "filesUploaded": "Files uploaded:",
+            "filesDownloaded": "Files downloaded:",
+            "filesProcessed": "Files processed:",
+            "translators": "Translators"
         }
     },
     "ru": {
@@ -293,6 +304,176 @@
             "aligned": "Синхронизированные субтитры",
             "cleaned": "Очищенные субтитры",
             "translated": "Переведенные субтитры"
+        },
+        "statistics": {
+            "statistics": "Статистика",
+            "filesShifted": "Файлов сдвинуто:",
+            "filesAligned": "Файлов синхронизировано:",
+            "filesCleaned": "Файлов очищено:",
+            "filesTranslated": "Файлов переведено:",
+            "filesUploaded": "Файлов загружено:",
+            "filesDownloaded": "Файлов скачано:",
+            "filesProcessed": "Файлов обработано:",
+            "translators": "Переводчики"
+        }
+    },
+    "ko": {
+        "optionLabels": {
+            "shift": "움직이기",
+            "align": "싱크 맞추기~",
+            "clean": "지우기",
+            "translate": "번역하다",
+            "service": "서비스",
+            "duck": "Duck AI"
+        },
+        "drag-and-drop": {
+            "preUploadInstructionText": "자막 올려줘, 프렌~!",
+            "preUploadSubInstructionText": ".srt 파일을 드래그해서 놓거나 이 영역을 아무 데나 눌러줘!",
+            "postUploadIntroFileText": "업로드된 원본 파일",
+            "postUploadSubInstructionText": "아래에서 골라봐~ 아니면 새 파일 올려줘!"
+        },
+        "operations": {
+            "shift": {
+                "shiftButton": "움직이기",
+                "downloadButton": "다운로드",
+                "operationDescription": "자막 타이밍을 원하는 만큼 밀거나 당길 수 있어~ (1초 = 1000밀리초!) 숫자는 플러스도 되고 마이너스도 돼. 기본으로는 파일에 있는 모든 자막이 한꺼번에 조정돼! 특정 구간만 바꾸고 싶으면, 자막 줄 범위를 직접 골라서 조절할 수도 있어~!",
+                "controlItems": {
+                    "shiftBy": "타이밍을 ~~만큼 움직이기",
+                    "fromSubtitle": "시작 자막~",
+                    "toSubtitle": "끝 자막~",
+                    "ms": "밀리초",
+                    "number": "자막 번호~"
+                },
+                "errors": {
+                    "uploadSource": "원본 파일 업로드해줘~",
+                    "zeroDelay": "0 밀리초는 안 돼요~ 다른 값을 넣어줘!"
+                }
+            },
+            "align": {
+                "alignButton": "싱크 맞추기~",
+                "downloadButton": "다운로드",
+                "operationDescription": "여기서 네 자막을 정확한 자막이랑 싱크 맞출 수 있어~! 영상이랑 자막 프레임레이트가 다를 때 완전 딱이야~! {hintButton}?{/hintButton}",
+                "hintText": "파일을 업로드한 후, 두 파일에서 {matchingLines}일치하는 자막을{/matchingLines} 찾아봐~ 주변 자막도 확인해서 선택이 맞는지 다시 한 번 확인해봐! 예를 들어: {anyIdea}Any idea what they are?{/anyIdea} 이제 {sourceIndices}너의 파일{/sourceIndices} 과 {exampleIndices}정확한 파일{/exampleIndices} 에서 맞는 번호를 입력하고 {alignButton}싱크 맞추기{/alignButton}. 버튼을 눌러줘. 축하해! {exampleTiming}자막 싱크 맞춰졌어!{/exampleTiming}. {incorrectTiming}필요하면 타이밍이 맞지 않는 자막은 잘라낼 수 있어~{/incorrectTiming}.",
+                "exampleDragAndDrop": {
+                    "examplePreUploadInstructionText": "정확한 자막 업로드해줘, 프렌~!",
+                    "examplePreUploadInstructionTextDisabled": "먼저 원본 파일부터 올려줘~!",
+                    "examplePreUploadSubInstructionTextDisabled": "З정확한 자막 파일을 추가하기 전에 먼저 원본 파일을 업로드해줘~!",
+                    "examplePostUploadIntroFileText": "업로드된 정확한 자막:",
+                    "examplePostUploadSubInstructionText": "아래에서 싱크 옵션을 조정하거나 새 파일을 업로드해줘~"
+                },
+                "controlItems": {
+                    "alignSource": "자막 싱크 맞추기",
+                    "byExample": "맞는 자막 기준으로~",
+                    "trimAligned": "동기화된 자막 자르기",
+                    "from": "부터",
+                    "to": "까지",
+                    "beforeSource": "원본 자막 시작 전",
+                    "afterSource": "원본 자막 끝 후",
+                    "firstSubtitle": "첫 번째 자막",
+                    "lastSubtitle": "마지막 자막"
+                },
+                "errors": {
+                    "uploadSource": "원본 파일 업로드해줘~",
+                    "uploadExample": "정확한 자막 업로드해줘~",
+                    "changeFrom": "원본 자막의 시작 위치를 바꿔줘",
+                    "changeTo": "원본 자막의 끝 위치를 바꿔줘"
+                }
+            },
+            "clean": {
+                "cleanButton": "지우기",
+                "downloadButton": "다운로드",
+                "operationDescription1": "자막에서 마크업 태그를 제거하여 깨끗하게 만들 수 있어~ 기본적으로 모든 마크업이 제거돼. 특정 태그만 제거하고 싶으면 오른쪽에서 원하는 태그를 선택할 수 있어!",
+                "operationDescription2": "{all}모든{/all} 체크박스를 선택하면 오른쪽에 나열된 태그뿐만 아니라 모든 마크업이 제거된다는 점에 유의해 주세요.",
+                "controlItems": {
+                    "all": "모두",
+                    "bold": "굵은",
+                    "color": "색",
+                    "strikethrough": "취소선",
+                    "italic": "기울임꼴",
+                    "font": "글꼴",
+                    "underline": "밑줄"
+                },
+                "errors": {
+                    "uploadSource": "원본 파일 업로드해줘~"
+                }
+            },
+            "service": {
+                "serviceButton": "번역하다",
+                "downloadButton": "다운로드",
+                "operationDescription1": "{googleLink}Google{/googleLink} 이나 {mymemoryLink}MyMemory{/mymemoryLink} 서비스로 자막을 번역할 수 있어.",
+                "operationDescription2": "두 서비스는 한 번에 번역할 수 있는 문자 수에 제한이 있어 (5000은 5000자 500는 500자), 그래서 자막이 여러 부분으로 나누어져 차례대로 번역될 거야. 서비스 제한을 지키고 fair use 원칙을 존중하기 위해 각 요청 사이에 2초 간격이 있어.",
+                "operationDescription3": "번역에 방해가 된다면 마크업 태그를 제거할 수도 있어.",
+                "controlItems": {
+                    "translateFrom": "에서 번역하기",
+                    "translateTo": "로 번역하기",
+                    "selectLanguage": "언어 선택하기",
+                    "withService": "서비스로",
+                    "markup": "마크업",
+                    "clean": "지우기"
+                },
+                "errors": {
+                    "uploadSource": "원본 파일 업로드해줘~",
+                    "waitFinish": "번역이 끝날 때까지 기다려줘",
+                    "selectFrom": "원본 언어를 선택해줘",
+                    "selectTo": "번역하고 싶은 언어를 선택해줘"
+                }
+            },
+            "duck": {
+                "duckButton": "번역하다",
+                "downloadButton": "다운로드",
+                "operationDescription1": "이 기능은 {selfHost}셀프 호스팅{/selfHost} 모드에서만 사용할 수 있어.",
+                "operationDescription2": "{duckLink}Duck.ai{/duckLink}에서 제공하는 AI 모델로 자막을 번역할 수 있어.",
+                "operationDescription3": "대부분의 모델은 컨텍스트 윈도 크기에 제한이 있어서 자막이 여러 부분으로 나뉘고 하나씩 번역돼. 모델마다 이 컨텍스트 크기가 다른데, GPT-4o mini, o3-mini, 그리고  Llama 3.3 70B 최대 2048토큰까지 되고, Claude 3 Haiku는 약 1024, Mistral Small 3 24B는 겨우 256밖에 안 돼.",
+                "operationDescription4": "DuckDuckGo의 제한을 지키고 fair 원칙을 존중하기 위해 각 요청 사이에 15초 지연이 있어. 슬라이더 {adjustedBy}정확도 쪽으로{/adjustedBy}를 조정해서 좀 더 빠르게 진행할 수도 있어. 이 슬라이더는 한 번에 요청되는 자막 줄 수를 조절해줘.",
+                "operationDescription5": "더 정확한 결과를 원하면 GPT-4o를 써봐. Claude랑 Mistral 은 컨텍스트 창이 작아서 번역 중에 오류가 생기기 쉬우니까 피하는 게 좋아. 만약 번역하면서 오류가 생기면, 슬라이더를 {accuracy}정확도{/accuracy} 쪽으로 옮겨서 요청 크기를 줄여봐.",
+                "controlItems": {
+                    "translateFrom": "에서 번역하기",
+                    "translateTo": "로 번역하기",
+                    "selectLanguage": "언어 선택하기",
+                    "withModel": "모델로",
+                    "adjustedBy": "쪽으로",
+                    "accuracy": "정확도",
+                    "speed": "속도"
+                },
+                "errors": {
+                    "uploadSource": "원본 파일 업로드해줘~",
+                    "selfHosting": "셀프 호스팅일 때만 사용 가능해요",
+                    "waitFinish": "번역이 끝날 때까지 기다려줘",
+                    "selectFrom": "원본 언어를 선택해줘",
+                    "selectTo": "번역하고 싶은 언어를 선택해줘"
+                }
+            }
+        },
+        "eta": {
+            "etaTite": "ETA",
+            "minutes": "분",
+            "oneMinute": "1분",
+            "lessOneMinute": "1분 미만",
+            "longerService": "MyMemory 를 사용할 경우 시간이 더 걸릴 수 있어.",
+            "longerDuck": "Claude랑 Mistral을 사용할 경우 시간이 더 걸릴 수 있어."
+        },
+        "preview": {
+            "language": "언어",
+            "encoding": "부호화",
+            "number": "숫자",
+            "subtitles": "자막",
+            "source": "원본 파일",
+            "shifted": "시간이 조정된 파일",
+            "example": "정답 자막",
+            "aligned": "싱크 맞춘 파일",
+            "cleaned": "정리된 파일",
+            "translated": "번역된 파일"
+        },
+        "statistics": {
+            "statistics": "통계",
+            "filesShifted": "타이밍 조정된 파일:",
+            "filesAligned": "싱크 맞춘 파일:",
+            "filesCleaned": "정리된 파일:",
+            "filesTranslated": "번역된 파일:",
+            "filesUploaded": "업로드된 파일 수",
+            "filesDownloaded": "다운로드된 파일 수",
+            "filesProcessed": "처리된 파일 수",
+            "translators": "번역가들"
         }
     }
 }
