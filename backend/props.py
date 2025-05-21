@@ -286,6 +286,39 @@ def process_newlines(subtitles: List[str]) -> List[str]:
 
     return result
 
+def check_statistics() -> None:
+    """Checks if statistics file exists and creates it if needed."""
+    current_timestamp = time.time()
+
+    # Load the existing data from the JSON file
+    statistics_file = Path(__file__).parent / '../shared/statistics.json'
+    default_statistics = {
+        "last_update": current_timestamp,
+        "files_processed": {
+            "shift": 0,
+            "align": 0,
+            "clean": 0,
+            "translate": 0,
+            "upload": 0,
+            "download": 0,
+            "total": 0
+        },
+        # Duck statistics are pre-filled for more prescice measurements
+        "duck_statistics": {
+            "total_count_of_responses": 1,
+            "total_responses_duration": 1669.9005346091487,
+            "average_response_duration": 10.154964839442117
+        }
+    }
+
+    # Check if the file exists
+    if not os.path.exists(statistics_file):
+        # If it does not exist, create the file and write the default content
+        with open(statistics_file, 'w') as file:
+            json.dump(default_statistics, file, indent=4)
+        print(f"{statistics_file} created with default content.")
+        return  # Exit the function after creating the file
+
 def update_statitics(command: str = 'init') -> None:
     """Updates the statistics based on procesed commands.
 
@@ -296,35 +329,11 @@ def update_statitics(command: str = 'init') -> None:
         None: This function does not return a value. It modifies the statistics stored in the JSON file.
     """
     current_timestamp = time.time()
-
-    # Load the existing data from the JSON file
     statistics_file = Path(__file__).parent / '../shared/statistics.json'
-    default_statistics = {
-        "last_update": current_timestamp,
-        "files_processed": {
-            "shift": 1,
-            "align": 1,
-            "clean": 1,
-            "translate": 1,
-            "upload": 1,
-            "download": 1,
-            "total": 1
-        },
-        "duck_statistics": {
-            "total_count_of_responses": 1,
-            "total_responses_duration": 1669.9005346091487,
-            "average_response_duration": 10.154964839442117
-        }
-    }
 
     # Check if the file exists
     if command == 'init':
-        if not os.path.exists(statistics_file):
-            # If it does not exist, create the file and write the default content
-            with open(statistics_file, 'w') as file:
-                json.dump(default_statistics, file, indent=4)
-            print(f"{statistics_file} created with default content.")
-            return  # Exit the function after creating the file
+        check_statistics()
     else:
         # If the file exists, read the data
         with open(statistics_file, 'r') as file:
