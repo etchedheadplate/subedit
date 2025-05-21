@@ -146,7 +146,7 @@
             "cleaned": "Cleaned file",
             "translated": "Translated file"
         },
-        "statistics": {
+        "info": {
             "statistics": "Statistics",
             "filesShifted": "Files shifted:",
             "filesAligned": "Files synced:",
@@ -305,7 +305,7 @@
             "cleaned": "Очищенные субтитры",
             "translated": "Переведенные субтитры"
         },
-        "statistics": {
+        "info": {
             "statistics": "Статистика",
             "filesShifted": "Файлов сдвинуто:",
             "filesAligned": "Файлов синхронизировано:",
@@ -464,7 +464,7 @@
             "cleaned": "정리된 파일",
             "translated": "번역된 파일"
         },
-        "statistics": {
+        "info": {
             "statistics": "통계",
             "filesShifted": "타이밍 조정된 파일:",
             "filesAligned": "싱크 맞춘 파일:",
