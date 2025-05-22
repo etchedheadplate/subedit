@@ -22,10 +22,10 @@ Then follow the setup instructions in:
 ## Contributions
 
 Feel free to submit issues or pull requests. Here’s how to get started:
-	1.	Fork this repo
-	2.	Create a new branch (git checkout -b feature-xyz)
-	3.	Commit your changes
-	4.	Open a pull request
+1. Fork this repo
+2. Create a new branch (`git checkout -b feature-xyz`)
+3. Commit your changes
+4. Open a pull request
 
 Want to help translate SubEdit into your language? Edit the shared [translation file](./shared/translation.json).
 
