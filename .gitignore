@@ -14,5 +14,4 @@ user_files
 .htaccess
 
 # Junk
-*.md
 *.DS_Store
