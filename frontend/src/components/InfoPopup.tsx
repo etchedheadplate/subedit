@@ -82,7 +82,7 @@ const InfoPopup: React.FC<InfoPopupProps> = ({ isOpen, onClose }) => {
         <div className="info-popup-overlay">
             <div className="info-popup" ref={popupRef}>
                 <div className="info-popup-header">
-                    <h2>Made by frens for frens</h2>
+                    <h2>Made for frens by frens</h2>
                     <button className="info-popup-close" onClick={onClose}>
                         ×
                     </button>
