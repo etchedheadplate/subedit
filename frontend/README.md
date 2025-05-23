@@ -42,7 +42,7 @@ You should replace them with your own images or remove them from code manually.
 
 Ensure your FastAPI backend is running and CORS is properly configured to accept requests from your frontend origin (e.g., http://localhost:5173 or your deployed domain).
 
-# Usage
+## Usage
 
 To start dev server with hot reload:
 
