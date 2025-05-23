@@ -36,7 +36,7 @@ frontend/src/assets/loading.gif
 frontend/src/assets/switch_language.svg
 ```
 
-You should replace them if your own images or remove them from code manually.
+You should replace them with your own images or remove them from code manually.
 
 ## Backend Integration
 
