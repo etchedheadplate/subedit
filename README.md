@@ -16,7 +16,7 @@ git clone https://github.com/etchedheadplate/subedit.git
 ```
 
 Then follow the setup instructions in:
-- [Backend directory](./backend/) – Python FastAPI backend
+- [Backend directory](./backend/) – Python FastAPI + Uvicorn
 - [Frontend directory](./frontend/) – React + TypeScript SPA
 
 ## Contributions

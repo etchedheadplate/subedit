@@ -63,7 +63,7 @@ Subtitle translation using [Duck.ai](https://duckduckgo.com/duckduckgo-help-page
 If you want to enable subtitle translation with Duck.ai:
 1. Ensure that stpyv8 can be compiled and installed in your local Python environment (Linux/Mac recommended).
 2. Uncomment corresponding lines at the end of `requirements.txt` and run `pip install -r requirements.txt` again.
-3. Make `DEBUG=0` in `.env` and remove `if DEBUG` conditions in `main.py` and `subedit.py` to run in production.
+3. By default AI translation is available only in debug mode. If you want to run in production make `DEBUG=0` in `.env` and remove `if DEBUG` conditions in `main.py` and `subedit.py`.
 
 ## Contributions
 

@@ -8,7 +8,7 @@ This is the frontend component of the SubEdit web application. It is built with 
 
 Install component dependencies and plugins:
 ```bash
-cd frontend
+cd subedit/frontend
 npm install
 ```
 
