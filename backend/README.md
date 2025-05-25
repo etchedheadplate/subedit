@@ -32,6 +32,15 @@ FRONTEND_URL=https://your.frontend.domain
 
 # Defaults to ../user_files when DEBUG=1
 USER_FILES_PATH=/path/to/your/upload/directory
+
+# Defaults to ../logs when DEBUG=1
+LOG_PATH=/path/to/your/logs/directory
+
+# Defaults to backend.log when DEBUG=1
+LOG_FILE=filename.log
+
+# Defaults to 30 when DEBUG=1
+LOG_AGE=30
 ```
 
 Ensure the directory specified in `USER_FILES_PATH` exists and is writable.
