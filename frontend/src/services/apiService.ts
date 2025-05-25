@@ -8,6 +8,21 @@ if (DEBUG) {
 }
 
 export const apiService = {
+    // Errors logger
+    logClientError: async (message: string) => {
+        try {
+            await fetch(`${import.meta.env.VITE_BACKEND_URL}/frontend-error`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    message,
+                }),
+            });
+        } catch (err) {
+            console.error("Failed to log client error:", err);
+        }
+    },
+
     // Session management
     getSession: async (): Promise<string> => {
         const response = await fetch(`${API_BASE_URL}/get-session`, {
