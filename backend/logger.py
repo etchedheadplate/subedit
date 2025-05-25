@@ -9,7 +9,7 @@ load_dotenv()
 # Constants
 DEBUG = bool(int(os.getenv('DEBUG', '1')))
 LOG_DIR: str = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "logs")
-LOG_FILE: str = os.getenv('LOG_FILE', "backend.log")
+LOG_FILE: str = os.getenv('LOG_FILE', "main_log.log")
 LOG_PATH: str = os.path.join(LOG_DIR, LOG_FILE)
 LOG_AGE: int = int(os.getenv('LOG_AGE', 30))
 
