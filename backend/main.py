@@ -86,10 +86,7 @@ app.add_middleware(
 # Service endpoints
 @app.get("/ping")
 def ping():
-    return {
-        "status": "ok",
-        "debug": DEBUG
-    }
+    return {"status": "ok", "debug": DEBUG}
 
 @app.get("/statistics")
 def statistics():
@@ -119,6 +116,11 @@ def statistics():
         "cleaned": count_cleaned,
         "translated": count_translated,
     }
+
+@app.post("/frontend-error")
+async def log_error(error: str):
+    main_logger.info("/frontend-error endpoint called:", error)
+    return {"status": "ok"}
 
 @app.post("/get-session")
 async def get_session() -> Dict[str, str]:
