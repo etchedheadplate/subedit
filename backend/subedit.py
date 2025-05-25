@@ -524,7 +524,7 @@ class SubEdit:
             file_path: Optional[str] = None,
             model_name: str = 'gpt-4o-mini',
             model_throttle: float = 0.5,
-            request_timeout: int = 10,
+            request_timeout: int = 15,
             response_timeout: int = 45
             ) -> None:
             """Translates subtitles using LLM provided by DuckDuckGo.
