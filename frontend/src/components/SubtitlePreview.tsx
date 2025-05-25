@@ -26,7 +26,6 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     const [subtitleMeta, setSubtitleMeta] = useState<SubtitleMetadata | null>(null);
     const [subtitlePreview, setSubtitlePreview] = useState<SubtitlePreview | null>(null);
     const [subtitleCount, setSubtitleCount] = useState<number>(0);
-    const [error, setError] = useState<string | null>(null);
 
     // Get all subtitles set
     const allSubtitles = new Set<number>();
@@ -101,8 +100,6 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
         const fetchFilePreview = async () => {
             if (!subtitleFile || !sessionId) return;
 
-            setError(null);
-
             try {
                 const result = await apiService.fetchSubtitlesInfo(
                     sessionId,
@@ -143,14 +140,8 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
                     onSubtitleCountChange(count);
                 }
 
-            } catch (err: unknown) {
-                // Narrow the error type to `Error` before accessing properties
-                if (err instanceof Error) {
-                    setError(err.message);
-                } else {
-                    setError("An unexpected error occurred.");
-                }
-                return null;
+            } catch {
+                return;
             }
         };
         fetchFilePreview();
@@ -159,64 +150,56 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
     return (
         <>
             {/* Metadata content rendered only if file uploaded and metadata fetched */}
-            {!error ? (
-                <div className="metadata-and-subtitle-preview-section">
-                    {/* Container for file metadata */}
-                    <div className="metadata-preview-container">
-                        {/* Metadata content rendered only if file uploaded and metadata fetched */}
-                        {subtitleFile && subtitleMeta && (
-                            <div className="metadata-content">
-                                <center>
-                                    <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
-                                        <strong>{fileType}</strong>
-                                        {" | "}{subtitleMeta.language || `? ${t('preview.language')}`} {subtitleMeta.confidence || ""}%
-                                        {" | "}{subtitleMeta.encoding || `? ${t('preview.encoding')}`}
-                                        {" | "}{subtitleCount || `? ${t('preview.number')}`} {t('preview.subtitles')}
-                                    </p>
-                                    <p>
-                                        {subtitleMeta.filename || "Unknown Filename"}
-                                    </p>
-                                </center>
-                            </div>
-                        )}
-                    </div>
-                    {/* Container for file subtitles */}
-                    <div className="subtitle-preview-container">
-                        {/* Subtitle content rendered only if file uploaded and subtitles fetched */}
-                        {subtitleFile && subtitlePreview && (
-                            <div className="subtitle-content">
-                                {/* Subtitle entries rendered one-by-one in ascending order */}
-                                {sortedSubtitles.map((key) => (
-                                    <div key={`source-${key}`} className="subtitle-entry">
-                                        {/* Subtitle rendered only if it's found in subtitlePreview by key index */}
-                                        {subtitlePreview[key] ? (
-                                            <>
-                                                <div>{key}</div>
-                                                <div>
-                                                    {subtitlePreview[key].start}{" --> "}
-                                                    {subtitlePreview[key].end}
-                                                </div>
-                                                <div
-                                                    dangerouslySetInnerHTML={renderSubtitleWithMarkup(subtitlePreview[key].text)}
-                                                />
-                                            </>
-                                        ) : (
-                                            <div>-</div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
+            <div className="metadata-and-subtitle-preview-section">
+                {/* Container for file metadata */}
+                <div className="metadata-preview-container">
+                    {/* Metadata content rendered only if file uploaded and metadata fetched */}
+                    {subtitleFile && subtitleMeta && (
+                        <div className="metadata-content">
+                            <center>
+                                <p style={{ fontSize: "0.8em", color: "#6c757d" }}>
+                                    <strong>{fileType}</strong>
+                                    {" | "}{subtitleMeta.language || `? ${t('preview.language')}`} {subtitleMeta.confidence || ""}%
+                                    {" | "}{subtitleMeta.encoding || `? ${t('preview.encoding')}`}
+                                    {" | "}{subtitleCount || `? ${t('preview.number')}`} {t('preview.subtitles')}
+                                </p>
+                                <p>
+                                    {subtitleMeta.filename || "Unknown Filename"}
+                                </p>
+                            </center>
+                        </div>
+                    )}
                 </div>
-            ) : (
-                <div className="error-message">
-                    <p>
-                        <strong>Error:</strong>{" "}
-                        {error || "Unknown error"}
-                    </p>
+                {/* Container for file subtitles */}
+                <div className="subtitle-preview-container">
+                    {/* Subtitle content rendered only if file uploaded and subtitles fetched */}
+                    {subtitleFile && subtitlePreview && (
+                        <div className="subtitle-content">
+                            {/* Subtitle entries rendered one-by-one in ascending order */}
+                            {sortedSubtitles.map((key) => (
+                                <div key={`source-${key}`} className="subtitle-entry">
+                                    {/* Subtitle rendered only if it's found in subtitlePreview by key index */}
+                                    {subtitlePreview[key] ? (
+                                        <>
+                                            <div>{key}</div>
+                                            <div>
+                                                {subtitlePreview[key].start}{" --> "}
+                                                {subtitlePreview[key].end}
+                                            </div>
+                                            <div
+                                                dangerouslySetInnerHTML={renderSubtitleWithMarkup(subtitlePreview[key].text)}
+                                            />
+                                        </>
+                                    ) : (
+                                        <div>-</div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-            )}
+            </div>
+
         </>
     )
 };
