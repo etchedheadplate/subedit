@@ -597,15 +597,15 @@ class SubEdit:
 
                 response_timestamp = time.time()
                 translation_time.append(response_timestamp - request_timestamp)
-                main_logger.info(f"Prompt {prompt_number}/{prompts_count}: Response received in {response_timestamp - request_timestamp:.2f}s")
+                main_logger.info(f"prompt {prompt_number}/{prompts_count}: response received in {response_timestamp - request_timestamp:.2f}s")
                 translated_text += translated_chunk
 
                 # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
                 current_index = indices_limit
-                main_logger.info(f"Prompt {prompt_number}/{prompts_count}: Waiting for {request_timeout}s timeout")
+                main_logger.info(f"prompt {prompt_number}/{prompts_count}: waiting for {request_timeout}s timeout")
                 await asyncio.sleep(request_timeout) # Use async sleep instead of blocking sleep
                 loop_end_timestamp = time.time()
-                main_logger.info(f"Prompt {prompt_number}/{prompts_count}: Completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
+                main_logger.info(f"prompt {prompt_number}/{prompts_count}: completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
                 prompt_number += 1
 
             translation_end_timestamp = time.time()

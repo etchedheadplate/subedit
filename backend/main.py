@@ -58,7 +58,7 @@ def cleanup_old_sessions() -> None:
             last_modified = os.path.getmtime(session_path)
             if now - last_modified > SESSION_LIFETIME:
                 shutil.rmtree(session_path)
-                main_logger.info(f"removed {session_id}")
+                main_logger.info(session_id)
 
 def run_cleanup() -> None:
     """Run cleanup function every SESSION_LIFETIME.
@@ -108,7 +108,7 @@ def statistics():
     count_cleaned = data['files_processed']['clean']
     count_translated = data['files_processed']['translate']
 
-    main_logger.info("statistics sent")
+    main_logger.info("sent")
 
     return {
         "uploaded": count_uploaded,
@@ -382,7 +382,6 @@ async def perform_shift_task(
     """Perform the subtitle shifting task in the background."""
     try:
         subedit.shift_timing(delay=delay, items=items)
-        main_logger.info("shifted successfully")
     except Exception as e:
         main_logger.info(f"error: {str(e)}")
 
@@ -444,7 +443,6 @@ async def perform_align_task(
     """Perform the subtitle alignment task in the background."""
     try:
         subedit.align_timing(source_slice=source_slice, example_slice=example_slice, trim_start=trim_start, trim_end=trim_end)
-        main_logger.info("aligned successfully")
     except Exception as e:
         main_logger.info(f"error: {str(e)}")
 
@@ -515,7 +513,6 @@ async def perform_clean_task(
             color=color,
             font=font
         )
-        main_logger.info("cleaned successfully")
     except Exception as e:
         main_logger.info(f"error: {str(e)}")
 
@@ -580,7 +577,6 @@ async def perform_engine_task(
             clean_markup=clean_markup
         )
 
-        main_logger.info("translated successfully")
     except asyncio.TimeoutError:
         main_logger.info("timed out")
     except Exception as e:
@@ -655,7 +651,6 @@ if DEBUG:
                 response_timeout=response_timeout
             )
 
-            main_logger.info("translated successfully")
         except asyncio.TimeoutError:
             main_logger.info("timed out")
         except Exception as e:
