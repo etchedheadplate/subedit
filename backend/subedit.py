@@ -9,6 +9,7 @@ from dotenv import load_dotenv
 from datetime import datetime, timedelta
 from typing import cast, List, Dict, Union, Optional
 from structures import SubtitleMetadata, SubtitleEntry, SubtitlesDataDict, TranslatorProtocol, DuckData
+from logger import main_logger
 
 load_dotenv()
 DEBUG = bool(int(os.getenv('DEBUG', '1')))
@@ -596,19 +597,19 @@ class SubEdit:
 
                 response_timestamp = time.time()
                 translation_time.append(response_timestamp - request_timestamp)
-                print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Response received in {response_timestamp - request_timestamp:.2f}s")
+                main_logger.info(f"Prompt {prompt_number}/{prompts_count}: Response received in {response_timestamp - request_timestamp:.2f}s")
                 translated_text += translated_chunk
 
                 # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
                 current_index = indices_limit
-                print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Waiting for {request_timeout}s timeout")
+                main_logger.info(f"Prompt {prompt_number}/{prompts_count}: Waiting for {request_timeout}s timeout")
                 await asyncio.sleep(request_timeout) # Use async sleep instead of blocking sleep
                 loop_end_timestamp = time.time()
-                print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
+                main_logger.info(f"Prompt {prompt_number}/{prompts_count}: Completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
                 prompt_number += 1
 
             translation_end_timestamp = time.time()
-            print(f"[DEBUG] [DUCK TRANSLATE] Translation completed in {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
+            print(f"Translation completed in {translation_end_timestamp - tanslation_start_timestamp:.2f}s "\
                 f"(est: {self.subtitles_data[file_path]['duck_eta']:.2f}, "\
                 f"dif: {self.subtitles_data[file_path]['duck_eta'] - (translation_end_timestamp - tanslation_start_timestamp):.2f}) "\
                 f"with avg {sum(translation_time)/len(translation_time):.2f}s response ")

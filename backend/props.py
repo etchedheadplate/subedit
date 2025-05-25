@@ -8,6 +8,7 @@ import langdetect # type: ignore
 from typing import List
 from pathlib import Path
 from structures import SubtitleMetadata, SubtitleData, StatisticsData
+from logger import main_logger
 
 def sanitize_filename(filename_to_sanitize: str) -> str:
     safe_filename = re.sub(r'[^a-zA-Z0-9.-]', '-', filename_to_sanitize)
@@ -316,7 +317,7 @@ def check_statistics() -> None:
         # If it does not exist, create the file and write the default content
         with open(statistics_file, 'w') as file:
             json.dump(default_statistics, file, indent=4)
-        print(f"{statistics_file} created with default content.")
+        main_logger.info(f"{statistics_file} created with default content.")
         return  # Exit the function after creating the file
 
 def update_statitics(command: str = 'init') -> None:

@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from structures import StatusRequest, ShowRequest, ShiftRequest, AlignRequest, CleanRequest, EngineRequest, DuckRequest, StatisticsData
 from subedit import SubEdit
+from logger import main_logger
 
 # Load environment variables from .env file
 load_dotenv()
@@ -57,7 +58,7 @@ def cleanup_old_sessions() -> None:
             last_modified = os.path.getmtime(session_path)
             if now - last_modified > SESSION_LIFETIME:
                 shutil.rmtree(session_path)
-                print(f"[DEBUG] [API] cleanup_old_sessions: {session_id}")
+                main_logger.info(f"cleanup_old_sessions: {session_id}")
 
 def run_cleanup() -> None:
     """Run cleanup function every SESSION_LIFETIME.
@@ -132,7 +133,7 @@ async def get_session() -> Dict[str, str]:
     session_id = str(uuid.uuid4())
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
-    print("[DEBUG] [API] /get-session endpoint called:", session_id)
+    main_logger.info("/get-session endpoint called:", session_id)
     return {"session_id": session_id}
 
 @app.post("/upload")
@@ -178,7 +179,7 @@ async def upload_file(
     with open(file_location, "wb") as buffer:
         buffer.write(contents)
 
-    print("Received file:", file.filename)  # Debugging
+    main_logger.info("Received file:", file.filename)  # Debugging
 
     # Update statistics file
     props.update_statitics('upload')
@@ -263,7 +264,7 @@ async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
     try:
         # Load the session and file
         session_id, filename = request.session_id, request.filename
-        print(f"[DEBUG] [API] /info endpoint called: session_id={session_id}, filename={filename}")
+        main_logger.info(f"/info endpoint called: session_id={session_id}, filename={filename}")
 
         # Initialize SubEdit object
         file_path = os.path.join(USER_FILES_DIR, session_id, filename)
@@ -334,12 +335,12 @@ class TaskManager:
 async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
     """Shift the timing of subtitles by a specified delay."""
     try:
-        print("[DEBUG] [API] /shift endpoint called")
+        main_logger.info("/shift endpoint called")
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
         shift_delay, shift_items = request.delay, request.items
-        print(f"Received shift request: session_id={session_id}, filename={source_filename}, delay={shift_delay}, items={shift_items}")
+        main_logger.info(f"Received shift request: session_id={session_id}, filename={source_filename}, delay={shift_delay}, items={shift_items}")
 
         # Initialize SubEdit object
         file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
@@ -373,15 +374,15 @@ async def perform_shift_task(
     try:
         # Apply shifting in the background
         subedit.shift_timing(delay=delay, items=items)
-        print(f"[DEBUG] [BACKGROUND] Shifting for {source_filename} completed successfully")
+        main_logger.info(f"Shifting for {source_filename} completed successfully")
     except Exception as e:
-        print(f"[DEBUG] [BACKGROUND] Shifting error: {str(e)}")
+        main_logger.info(f"Shifting error: {str(e)}")
 
 @app.post("/align")
 async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
     """Align subtitles timing based on an example file."""
     try:
-        print("[DEBUG] [API] /align endpoint called")
+        main_logger.info("/align endpoint called")
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -428,15 +429,15 @@ async def perform_align_task(
     try:
         # Apply alignment in the background
         subedit.align_timing(source_slice=source_slice, example_slice=example_slice, trim_start=trim_start, trim_end=trim_end)
-        print("[DEBUG] [BACKGROUND] Alignment completed successfully")
+        main_logger.info("Alignment completed successfully")
     except Exception as e:
-        print(f"[DEBUG] [BACKGROUND] Alignment error: {str(e)}")
+        main_logger.info(f"Alignment error: {str(e)}")
 
 @app.post("/clean")
 async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
     """Clean markup from subtitles based on specified options."""
     try:
-        print("[DEBUG] [API] /clean endpoint called")
+        main_logger.info("/clean endpoint called")
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -490,15 +491,15 @@ async def perform_clean_task(
             color=color,
             font=font
         )
-        print("[DEBUG] [BACKGROUND] Markup cleaning completed successfully")
+        main_logger.info("Markup cleaning completed successfully")
     except Exception as e:
-        print(f"[DEBUG] [BACKGROUND] Markup cleaning error: {str(e)}")
+        main_logger.info(f"Markup cleaning error: {str(e)}")
 
 @app.post("/engine")
 async def engine_translate_subtitles(request: EngineRequest) -> Dict[str, Any]:
     """Translates subtitles using the selected translation engine."""
     try:
-        print("[DEBUG] [API] /engine endpoint called")
+        main_logger.info("/engine endpoint called")
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -541,7 +542,7 @@ async def perform_engine_task(
 ) -> None:
     """Perform the engine translation task in the background."""
     try:
-        print("[DEBUG] [API] perform_engine_task started")
+        main_logger.info("perform_engine_task started")
 
         await subedit.engine_translate(
             target_language=target_language,
@@ -550,11 +551,11 @@ async def perform_engine_task(
             clean_markup=clean_markup
         )
 
-        print(f"[DEBUG] [BACKGROUND] Engine translation for {source_filename} completed successfully")
+        main_logger.info(f"Engine translation for {source_filename} completed successfully")
     except asyncio.TimeoutError:
-        print("[DEBUG] [BACKGROUND] Engine translation timed out")
+        main_logger.info("Engine translation timed out")
     except Exception as e:
-        print(f"[DEBUG] [BACKGROUND] Engine translation error: {str(e)}")
+        main_logger.info(f"Engine translation error: {str(e)}")
 
 # Endpoint accesible only on localhost
 if DEBUG:
@@ -562,7 +563,7 @@ if DEBUG:
     async def duck_translate_subtitles(request: DuckRequest) -> Dict[str, Any]:
         """Translates subtitles using the selected LLM provided by Duck.ai."""
         try:
-            print("[DEBUG] [API] /duck endpoint called")
+            main_logger.info("/duck endpoint called")
 
             # Load the session and file information
             session_id, source_filename = request.session_id, request.source_filename
@@ -584,7 +585,7 @@ if DEBUG:
                     request.response_timeout
                 )
             )
-            print("[DEBUG] [API] /duck task created")
+            main_logger.info("/duck task created")
 
             # Return immediate response with status
             return {
@@ -608,7 +609,7 @@ if DEBUG:
     ) -> None:
         """Perform the duck translation task in the background."""
         try:
-            print("[DEBUG] [API] perform_duck_task started")
+            main_logger.info("perform_duck_task started")
 
             await subedit.duck_translate(
                 target_language=target_language,
@@ -619,11 +620,11 @@ if DEBUG:
                 response_timeout=response_timeout
             )
 
-            print(f"[DEBUG] [BACKGROUND] Duck Translation to {target_language} completed successfully")
+            main_logger.info(f"Duck Translation to {target_language} completed successfully")
         except asyncio.TimeoutError:
-            print(f"[DEBUG] [BACKGROUND] Duck Translation timed out after {response_timeout * 10} seconds")
+            main_logger.info(f"Duck Translation timed out after {response_timeout * 10} seconds")
         except Exception as e:
-            print(f"[DEBUG] [BACKGROUND] Duck Translation error: {str(e)}")
+            main_logger.info(f"Duck Translation error: {str(e)}")
 
 if __name__ == '__main__':
     run_cleanup()
