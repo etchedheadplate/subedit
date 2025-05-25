@@ -8,7 +8,6 @@ passenger_wsgi.py
 
 # Testing
 test.py
-*.log
 
 # Junk
 tmp
