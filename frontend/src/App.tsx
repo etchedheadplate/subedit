@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSubtitleOperations } from "./hooks/useSubtitleOperations";
 import { useSession } from "./hooks/useSession";
 import { useFileUpload } from "./hooks/useFileUpload";
@@ -92,6 +92,13 @@ function App() {
             apiService.downloadFile(sessionId, processedFile.filename);
         }
     };
+
+    // Send client erros to backend for logging
+    useEffect(() => {
+        if (errorMessage) {
+            apiService.logClientError(errorMessage);
+        }
+    }, [errorMessage]);
 
     const optionLabels: { label: string; key: OperationType; icon?: string }[] = [
         { label: `${t('optionLabels.shift')}`, key: "shift" },
@@ -198,8 +205,7 @@ function App() {
                 errorMessage && (
                     <div className="error-message">
                         <p>
-                            <strong>Error:</strong>{" "}
-                            {errorMessage || "Unknown error"}
+                            <strong>{t('defaultErrorMessage') || "An error occurred. Please try again later."}</strong>
                         </p>
                     </div>
                 )
