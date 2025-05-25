@@ -58,7 +58,7 @@ def cleanup_old_sessions() -> None:
             last_modified = os.path.getmtime(session_path)
             if now - last_modified > SESSION_LIFETIME:
                 shutil.rmtree(session_path)
-                main_logger.info(f"cleanup_old_sessions: {session_id}")
+                main_logger.info(f"removed {session_id}")
 
 def run_cleanup() -> None:
     """Run cleanup function every SESSION_LIFETIME.
@@ -86,6 +86,7 @@ app.add_middleware(
 # Service endpoints
 @app.get("/ping")
 def ping():
+    main_logger.info("pong")
     return {"status": "ok", "debug": DEBUG}
 
 @app.get("/statistics")
@@ -107,6 +108,8 @@ def statistics():
     count_cleaned = data['files_processed']['clean']
     count_translated = data['files_processed']['translate']
 
+    main_logger.info("statistics sent")
+
     return {
         "uploaded": count_uploaded,
         "downloaded": count_downloaded,
@@ -118,8 +121,8 @@ def statistics():
     }
 
 @app.post("/frontend-error")
-async def log_error(error: str):
-    main_logger.info("/frontend-error endpoint called:", error)
+async def frontend_error(error: str):
+    main_logger.info(error)
     return {"status": "ok"}
 
 @app.post("/get-session")
@@ -135,7 +138,7 @@ async def get_session() -> Dict[str, str]:
     session_id = str(uuid.uuid4())
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
-    main_logger.info("/get-session endpoint called:", session_id)
+    main_logger.info(session_id)
     return {"session_id": session_id}
 
 @app.post("/upload")
@@ -181,7 +184,7 @@ async def upload_file(
     with open(file_location, "wb") as buffer:
         buffer.write(contents)
 
-    main_logger.info("Received file:", file.filename)  # Debugging
+    main_logger.info(f"session_id={session_id}, filename={file.filename}")
 
     # Update statistics file
     props.update_statitics('upload')
@@ -214,6 +217,7 @@ async def download_file(session_id: str, filename: str) -> FileResponse:
 
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
+    main_logger.info(f"session_id={session_id}, filename={filename}")
     return FileResponse(file_path, filename=filename, media_type="application/octet-stream")
 
 @app.post("/task-status")
@@ -266,7 +270,6 @@ async def show_subtitles(request: ShowRequest) -> Dict[str, Any]:
     try:
         # Load the session and file
         session_id, filename = request.session_id, request.filename
-        main_logger.info(f"/info endpoint called: session_id={session_id}, filename={filename}")
 
         # Initialize SubEdit object
         file_path = os.path.join(USER_FILES_DIR, session_id, filename)
@@ -337,12 +340,16 @@ class TaskManager:
 async def shift_subtitles(request: ShiftRequest) -> Dict[str, Any]:
     """Shift the timing of subtitles by a specified delay."""
     try:
-        main_logger.info("/shift endpoint called")
+        main_logger.info(
+            f"session_id={request.session_id}, "
+            f"filename={request.source_filename}, "
+            f"delay={request.delay}, "
+            f"items={request.items}"
+        )
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
         shift_delay, shift_items = request.delay, request.items
-        main_logger.info(f"Received shift request: session_id={session_id}, filename={source_filename}, delay={shift_delay}, items={shift_items}")
 
         # Initialize SubEdit object
         file_path = os.path.join(USER_FILES_DIR, session_id, source_filename)
@@ -374,17 +381,24 @@ async def perform_shift_task(
 ) -> None:
     """Perform the subtitle shifting task in the background."""
     try:
-        # Apply shifting in the background
         subedit.shift_timing(delay=delay, items=items)
-        main_logger.info(f"Shifting for {source_filename} completed successfully")
+        main_logger.info("shifted successfully")
     except Exception as e:
-        main_logger.info(f"Shifting error: {str(e)}")
+        main_logger.info(f"error: {str(e)}")
 
 @app.post("/align")
 async def align_subtitles(request: AlignRequest) -> Dict[str, Any]:
     """Align subtitles timing based on an example file."""
     try:
-        main_logger.info("/align endpoint called")
+        main_logger.info(
+            f"session_id={request.session_id}, "
+            f"filename={request.source_filename}, "
+            f"example_filename={request.example_filename}, "
+            f"source_slice={request.source_slice}, "
+            f"example_slice={request.example_slice}, "
+            f"trim_start={request.trim_start}, "
+            f"trim_end={request.trim_end}"
+        )
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -429,17 +443,25 @@ async def perform_align_task(
 ) -> None:
     """Perform the subtitle alignment task in the background."""
     try:
-        # Apply alignment in the background
         subedit.align_timing(source_slice=source_slice, example_slice=example_slice, trim_start=trim_start, trim_end=trim_end)
-        main_logger.info("Alignment completed successfully")
+        main_logger.info("aligned successfully")
     except Exception as e:
-        main_logger.info(f"Alignment error: {str(e)}")
+        main_logger.info(f"error: {str(e)}")
 
 @app.post("/clean")
 async def clean_subtitles(request: CleanRequest) -> Dict[str, Any]:
     """Clean markup from subtitles based on specified options."""
     try:
-        main_logger.info("/clean endpoint called")
+        main_logger.info(
+            f"session_id={request.session_id}, "
+            f"filename={request.source_filename}, "
+            f"bold={request.bold}, "
+            f"italic={request.italic}, "
+            f"underline={request.underline}, "
+            f"strikethrough={request.strikethrough}, "
+            f"color={request.color}"
+            f"font={request.font}"
+        )
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -493,15 +515,22 @@ async def perform_clean_task(
             color=color,
             font=font
         )
-        main_logger.info("Markup cleaning completed successfully")
+        main_logger.info("cleaned successfully")
     except Exception as e:
-        main_logger.info(f"Markup cleaning error: {str(e)}")
+        main_logger.info(f"error: {str(e)}")
 
 @app.post("/engine")
 async def engine_translate_subtitles(request: EngineRequest) -> Dict[str, Any]:
     """Translates subtitles using the selected translation engine."""
     try:
-        main_logger.info("/engine endpoint called")
+        main_logger.info(
+            f"session_id={request.session_id}, "
+            f"filename={request.source_filename}, "
+            f"target_language={request.target_language}, "
+            f"original_language={request.original_language}, "
+            f"engine={request.engine}, "
+            f"clean_markup={request.clean_markup}, "
+        )
 
         # Load the session and file
         session_id, source_filename = request.session_id, request.source_filename
@@ -544,8 +573,6 @@ async def perform_engine_task(
 ) -> None:
     """Perform the engine translation task in the background."""
     try:
-        main_logger.info("perform_engine_task started")
-
         await subedit.engine_translate(
             target_language=target_language,
             original_language=original_language,
@@ -553,11 +580,11 @@ async def perform_engine_task(
             clean_markup=clean_markup
         )
 
-        main_logger.info(f"Engine translation for {source_filename} completed successfully")
+        main_logger.info("translated successfully")
     except asyncio.TimeoutError:
-        main_logger.info("Engine translation timed out")
+        main_logger.info("timed out")
     except Exception as e:
-        main_logger.info(f"Engine translation error: {str(e)}")
+        main_logger.info(f"error: {str(e)}")
 
 # Endpoint accesible only on localhost
 if DEBUG:
@@ -565,7 +592,16 @@ if DEBUG:
     async def duck_translate_subtitles(request: DuckRequest) -> Dict[str, Any]:
         """Translates subtitles using the selected LLM provided by Duck.ai."""
         try:
-            main_logger.info("/duck endpoint called")
+            main_logger.info(
+                f"session_id={request.session_id}, "
+                f"filename={request.source_filename}, "
+                f"target_language={request.target_language}, "
+                f"original_language={request.original_language}, "
+                f"model_name={request.model_name}, "
+                f"model_throttle={request.model_throttle}, "
+                f"request_timeout={request.request_timeout}, "
+                f"response_timeout={request.response_timeout}, "
+            )
 
             # Load the session and file information
             session_id, source_filename = request.session_id, request.source_filename
@@ -587,7 +623,6 @@ if DEBUG:
                     request.response_timeout
                 )
             )
-            main_logger.info("/duck task created")
 
             # Return immediate response with status
             return {
@@ -611,8 +646,6 @@ if DEBUG:
     ) -> None:
         """Perform the duck translation task in the background."""
         try:
-            main_logger.info("perform_duck_task started")
-
             await subedit.duck_translate(
                 target_language=target_language,
                 original_language=original_language,
@@ -622,11 +655,11 @@ if DEBUG:
                 response_timeout=response_timeout
             )
 
-            main_logger.info(f"Duck Translation to {target_language} completed successfully")
+            main_logger.info("translated successfully")
         except asyncio.TimeoutError:
-            main_logger.info(f"Duck Translation timed out after {response_timeout * 10} seconds")
+            main_logger.info("timed out")
         except Exception as e:
-            main_logger.info(f"Duck Translation error: {str(e)}")
+            main_logger.info(f"error: {str(e)}")
 
 if __name__ == '__main__':
     run_cleanup()
