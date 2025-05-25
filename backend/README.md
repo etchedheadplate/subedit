@@ -36,7 +36,7 @@ USER_FILES_PATH=/path/to/your/upload/directory
 # Defaults to ../logs when DEBUG=1
 LOG_PATH=/path/to/your/logs/directory
 
-# Defaults to backend.log when DEBUG=1
+# Defaults to main_log.log when DEBUG=1
 LOG_FILE=filename.log
 
 # Defaults to 30 when DEBUG=1
