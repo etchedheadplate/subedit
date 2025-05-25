@@ -16,7 +16,7 @@ export const useFileUpload = (sessionId: string | null) => {
             return result; // Return the uploaded file info
         } catch (err: unknown) {
             if (err instanceof Error) {
-                setError(err.message); // Now it's safe to access `err.message`
+                setError(err.message);
             } else {
                 setError("An unexpected error occurred.");
             }

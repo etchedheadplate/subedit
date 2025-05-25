@@ -508,7 +508,7 @@ class SubEdit:
             translated[key]['text'] = subtitle
 
 
-        # Create output subtitle file and store path for reference# Create output subtitle file and store path for reference
+        # Create output subtitle file and store path for reference
         self._create_file(self.engine_translated_file)
         self.processed_file = os.path.basename(self.engine_translated_file)
 
@@ -602,8 +602,7 @@ class SubEdit:
                 # Reset current subtitle index and make delay to reduce abuse of Duck.ai API
                 current_index = indices_limit
                 print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Waiting for {request_timeout}s timeout")
-                # Use async sleep instead of blocking sleep
-                await asyncio.sleep(request_timeout)
+                await asyncio.sleep(request_timeout) # Use async sleep instead of blocking sleep
                 loop_end_timestamp = time.time()
                 print(f"[DEBUG] [DUCK TRANSLATE] [PROMPT {prompt_number}/{prompts_count}] Completed in {loop_end_timestamp - loop_start_timestamp:.2f}s")
                 prompt_number += 1

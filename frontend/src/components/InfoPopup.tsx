@@ -53,7 +53,6 @@ const InfoPopup: React.FC<InfoPopupProps> = ({ isOpen, onClose }) => {
     useEffect(() => {
         const loadStatistics = async () => {
             try {
-                // Use the new API service method instead of direct fetch
                 const data = await apiService.getStatistics();
                 setStatistics(data);
             } catch (error) {

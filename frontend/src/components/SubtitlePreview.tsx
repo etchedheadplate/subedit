@@ -104,7 +104,6 @@ const UniversalSubtitlePreview: React.FC<SubtitlePreviewProps> = ({
             setError(null);
 
             try {
-                // Make API empty shift request to get preview elements
                 const result = await apiService.fetchSubtitlesInfo(
                     sessionId,
                     subtitleFile.filename,

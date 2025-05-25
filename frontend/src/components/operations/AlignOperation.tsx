@@ -52,7 +52,7 @@ const AlignOperation: React.FC<AlignOperationProps> = ({
     const [exampleStart, setExampleStart] = useState<number>(1);
     const [exampleEnd, setExampleEnd] = useState<number>(exampleSubtitleCnt > 0 ? exampleSubtitleCnt : 2);
 
-    // State for trim flags:
+    // State for trim flags
     const [trimStart, setTrimStart] = useState<boolean>(true);
     const [trimEnd, setTrimEnd] = useState<boolean>(true);
 

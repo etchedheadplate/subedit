@@ -40,7 +40,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
     # Cancel any running tasks when shutting down
-    # Use the public method to get session IDs
     session_ids: List[str] = TaskManager.get_all_session_ids()
     for session_id in session_ids:
         TaskManager.cancel_tasks(session_id)

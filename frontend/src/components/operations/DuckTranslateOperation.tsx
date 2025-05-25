@@ -155,7 +155,7 @@ const DuckTranslateOperation: React.FC<DuckTranslateOperationProps> = ({
         };
     }, [isTranslating, remainingTime]);
 
-    /// Format the remaining time as approximate minutes
+    // Format the remaining time as approximate minutes
     const formatTime = (seconds: number): string => {
         const minutes = Math.ceil(seconds / 60); // Round up to nearest minute
 
