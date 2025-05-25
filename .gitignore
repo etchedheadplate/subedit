@@ -13,5 +13,9 @@ user_files
 /shared/statistics.json
 .htaccess
 
+# Logs
+*.log
+/logs
+
 # Junk
 *.DS_Store
