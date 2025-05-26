@@ -147,6 +147,7 @@
             "translated": "Translated file"
         },
         "info": {
+            "about": "About SubEdit",
             "statistics": "Files Statistics",
             "filesShifted": "shifted:",
             "filesAligned": "synced:",
@@ -307,6 +308,7 @@
             "translated": "Переведенные субтитры"
         },
         "info": {
+            "about": "О SubEdit",
             "statistics": "Статистика файлов",
             "filesShifted": "сдвинуто:",
             "filesAligned": "синхронизировано:",
@@ -467,6 +469,7 @@
             "translated": "번역된 파일"
         },
         "info": {
+            "about": "SubEdit에 대하여",
             "statistics": "통계 파일",
             "filesShifted": "타이밍 조정된:",
             "filesAligned": "싱크 맞춘:",

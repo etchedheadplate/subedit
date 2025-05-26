@@ -81,7 +81,7 @@ const InfoPopup: React.FC<InfoPopupProps> = ({ isOpen, onClose }) => {
         <div className="info-popup-overlay">
             <div className="info-popup" ref={popupRef}>
                 <div className="info-popup-header">
-                    <h2>Made for frens by frens</h2>
+                    <h2><a href="https://sonyn.dev/blog/2025-05-24-tl-note-use-subedit/" target="_blank" rel="noopener noreferrer"><strong>{t('info.about')}</strong></a></h2>
                     <button className="info-popup-close" onClick={onClose}>
                         ×
                     </button>
