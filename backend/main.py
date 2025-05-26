@@ -58,7 +58,7 @@ def cleanup_old_sessions() -> None:
             last_modified = os.path.getmtime(session_path)
             if now - last_modified > SESSION_LIFETIME:
                 shutil.rmtree(session_path)
-                main_logger.info(session_id)
+                main_logger.info(f"session_id={session_id}")
 
 def run_cleanup() -> None:
     """Run cleanup function every SESSION_LIFETIME.
@@ -138,7 +138,7 @@ async def get_session() -> Dict[str, str]:
     session_id = str(uuid.uuid4())
     session_path = os.path.join(USER_FILES_DIR, session_id)
     os.makedirs(session_path, exist_ok=True)
-    main_logger.info(session_id)
+    main_logger.info(f"session_id={session_id}")
     return {"session_id": session_id}
 
 @app.post("/upload")
